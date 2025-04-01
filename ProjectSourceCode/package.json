@@ -1,0 +1,13 @@
+{
+    "name": "buffs-bulletin",
+    "main": "index.js",
+    "dependencies": {
+        "express": "^5.1.0",
+        "express-handlebars": "^8.0.1",
+        "nodemon": "^3.1.9"
+    },
+        "scripts": {
+        "prestart": "npm install",
+        "start": "nodemon src/index.js"
+    }
+}
