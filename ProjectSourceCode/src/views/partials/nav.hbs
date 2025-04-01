@@ -1,4 +1,5 @@
 <header>
+  <link rel="stylesheet" href="../resources/css/nav.css">
   <nav>
     <ul class="nav nav-tabs d-flex w-100">
       <li class="nav-item">
@@ -7,6 +8,19 @@
       <li class="nav-item">
         <a class="nav-link" href="/events">Events</a>
       </li>
+      
+      <!-- Search Bar -->
+      <li class="nav-item ms-auto">
+        <form class="d-flex" action="/search" method="GET">
+          <div class="input-group">
+            <i class="fas fa-search search-icon"></i>
+            <input class="form-control search-input" type="search" placeholder="Search by event, club, or user" aria-label="Search" name="keyword">
+          </div>
+            <button class="btn btn-outline-success" type="submit">Search</button>
+        </form>
+      </li>
+
+
       <li class="nav-item">
         <a class="nav-link" href="/profile">Profile</a>
       </li>

@@ -1,0 +1,22 @@
+.search-input {
+    border-radius: 30px; /* Makes the input more rounded */
+    padding-left: 35px; /* Adds space for the icon */
+    width: 50%; /* Adjust width to make the search bar longer */
+  }
+  
+  .input-group {
+    position: relative;
+  }
+  
+  .search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #aaa; /* Icon color */
+  }
+  
+  .btn {
+    border-radius: 30px; /* Make the button rounded to match the input */
+  }
+  
