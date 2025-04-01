@@ -1,0 +1,11 @@
+<ul class="list-group">
+  <!-- Listing all events in sidebar -->
+  <!-- TODO: get list of events from db -->
+  {{#each events}}
+    <!-- class will change. I can't see what it will look like yet, and still need to alter for images -->
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+      <a href="/events/{{this.id}}">{{this.name}}</a>
+      <span class="badge bg-primary rounded-pill">{{this.time}}</span>
+    </li>
+  {{/each}}
+</ul>
