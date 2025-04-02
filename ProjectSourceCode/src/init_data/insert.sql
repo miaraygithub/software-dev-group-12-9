@@ -1,22 +1,22 @@
-INSERT INTO Users (userName, userPassword, usertype)
+INSERT INTO users (userName, userPassword, userAdmin)
 VALUES 
-('DevOrg1', '123', 'organizer'),
-('DevOrg2', '123', 'organizer'),
-('DevUser1', '123', 'participant'),
-('DevUser2', '123', 'participant'),
-('DevUser3', '123', 'participant');
+('DevOrg1', '123', True),
+('DevOrg2', '123', True),
+('DevUser1', '123', False),
+('DevUser2', '123', False),
+('DevUser3', '123', False);
 
-INSERT INTO Clubs (clubName, organizer)
+INSERT INTO clubs (clubName, organizer)
 VALUES 
 ('Club1', 1),
 ('Club2', 2);
 
-INSERT INTO Locations (buildingName, mapReference)
+INSERT INTO locations (buildingName, mapReference)
 VALUES
 ('Building1', '(0,0)'),
 ('Building2', '(0,0)');
 
-INSERT INTO Events (eventName, building, eventDate, clubSponser, roomNumber, eventDescription, startTime, endTime)
+INSERT INTO events (eventName, building, eventDate, clubSponser, roomNumber, eventDescription, startTime, endTime)
 VALUES 
 ('Event1', 1, '2025-05-01', 1, 'A100', 'Sample Event 1', '12:00:00', '12:30:00'),
 ('Event2', 2, '2025-05-01', 1, 'A100', 'Sample Event 2', '12:30:00', '13:00:00'),

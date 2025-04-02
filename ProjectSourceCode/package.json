@@ -4,10 +4,12 @@
     "dependencies": {
         "express": "^5.1.0",
         "express-handlebars": "^8.0.1",
-        "nodemon": "^3.1.9"
+        "nodemon": "^3.1.9",
+        "pg": "^8.14.1",
+        "pg-promise": "^11.13.0"
     },
-        "scripts": {
+    "scripts": {
         "prestart": "npm install",
-        "start": "nodemon src/index.js"
+        "start": "node src/index.js"
     }
 }
