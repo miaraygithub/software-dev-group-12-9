@@ -20,6 +20,6 @@ services:
       - '3000:3000'
     volumes:
       - ./:/directory
-    command: 'npm start'
+    command: 'npm run testandrun' # 'npm start'
 volumes:
   group-project:
