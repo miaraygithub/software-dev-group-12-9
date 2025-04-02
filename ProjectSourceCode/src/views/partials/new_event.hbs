@@ -1,0 +1,49 @@
+<div class="custom-container">
+    <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#event_modal">Create Event</button>
+</div>
+
+
+<div class="modal" tabindex="-1" id="event_modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Event</h5>
+            </div>
+            <div class="modal-body">
+                <form id="data-form">
+                    <h2>Event Details</h2>
+                    
+                    <div class="mb-3">
+                        <label for="event_name" class="form-label">Event Name:</label>
+                        <input type="text" class="form-control" id="event_name" placeholder="Enter event name" >
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="event_building" class="form-label">Event Building:</label>
+                        <input type="text" class="form-control" id="event_building" placeholder="Enter event building name" >
+                    </div>
+
+                    <div class="mb-3" id="event_room_number">
+                        <label for="event_room_number" class="form-label">Room Number:</label>
+                        <input type="text" class="event_room_number" id = "event_room_number" placeholder="Enter event room number">
+                    </div>                    
+
+                    <div class="mb-3">
+                        <label for="event_start_time" class="form-label">Start Time:</label>
+                        <input type="time" id="event_start_time" class="form-control">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="event_end_time" class="form-label">End Time:</label>
+                        <input type="time" id="event_end_time" class="form-control">
+                    </div>                    
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >Close</button>
+                <button type="button" class="btn btn-primary" onclick="saveEvent()">Create Event</button>
+            </div>
+        </div>
+    </div>
+</div>
