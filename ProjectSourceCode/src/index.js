@@ -91,12 +91,31 @@ app.post('/login', async(req, res) => {
   }
 })
 
+app.get('/register', (req, res) => {
+  res.render('pages/register');
+});
+
+// TODO: test and debug POST /register
+app.post('/register', async(req,res) => {
+  try {
+    const hash = await bcrypt.hash(req.body.password, 10);
+
+    const query = 'INSERT INTO users(userName, userPassword) VALUES($1, $2)';
+    await db.none(query, [req.body.username, hash]);
+
+    res.redirect('/login');
+  } catch (error) {
+    console.error('Error during registration:', error);
+    res.redirect('/register');
+  }
+});
+
 app.get('/logout', (req, res) => {
   res.render('pages/logout');
 });
 
 app.get('/events', async (req, res) => {
-  var query = `SELECT * FROM events`;
+  var query = `SELECT * FROM users`;
   try {
     const response = await db.any(query);
     console.log(response);
