@@ -4,12 +4,9 @@ const handlebars = require('express-handlebars');
 const path = require('path');
 const pgp = require('pg-promise')();
 const bodyParser = require('body-parser');
-// const bcrypt = require('bcryptjs'); //  To hash passwords
+const bcrypt = require('bcryptjs'); //  To hash passwords
 
 const app = express();
-app.use(bodyParser.json());
-
-
 /**************************************************** HANDLEBARS CONFIG ****************************************************/
 //configuration borrowed from previous lab and altered by Julia
 
@@ -25,6 +22,7 @@ app.engine('hbs', hbs.engine);
 app.set('view engine', 'hbs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'resources')));
+app.use(bodyParser.json());
 
 /**************************************************** DATABASE CONFIG ****************************************************/
 
@@ -63,14 +61,16 @@ app.get('/login', (req, res) => {
 });
 
 // TODO: Finish POST login
-app.post('login', async(req, res) => {
+app.post('/login', async(req, res) => {
   try {
     const username = req.body.username;
     const password = req.body.password;
-    const query = 'select * from Users where Users.userName = $1 LIMIT 1';
+    const query = 'select * from users where users.userName = $1 LIMIT 1';
     const values = [username];
   
     const user = await db.oneOrNone(query, values);
+    console.log(user);
+    
     if (!user) {
       return res.redirect('/register');
     }
@@ -86,14 +86,14 @@ app.post('login', async(req, res) => {
     res.redirect('/home');
   } catch (err) {
     console.log('Login failed.');
+    res.status(400).json({ error: err.message});
     res.render('pages/login', {message: 'Login failed.'});
   }
 })
 
 app.get('/logout', (req, res) => {
   res.render('pages/logout');
-
-})
+});
 
 app.get('/events', async (req, res) => {
   var query = `SELECT * FROM events`;
