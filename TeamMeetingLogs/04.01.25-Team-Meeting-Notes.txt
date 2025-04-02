@@ -1,0 +1,16 @@
+A big takeaway from this meeting is that we will no longer be dividing work between frontend and backend because of issues we ran into with overlapping work
+and having to wait for others to complete their tasks before we could get started on our own. Going forward, work will be divided based on feature.
+
+What we did this week:
+    Julia: added the pop up side bar that will serve as the events filter in the future, added the base code to the setup file so everyone could start working
+    Mia: created the database and set up the individual events page
+    Jessie: set up login/logout pages with routes, Readme file
+    Makaela: added a search bar to the nav bar and added the interactive CU Boulder map to the home page
+    Jules:
+
+What we will work on next week:
+    Julia: add filters to the pop up side bar and display each event in the side bar
+    Mia: add authorizations to index.js 
+    Jessie: add register new user forms and user profile page (with edit user profile option)
+    Makaela: add pins to the map for each event, add search results page
+    Jules: add commenting to the bottom of the events page
