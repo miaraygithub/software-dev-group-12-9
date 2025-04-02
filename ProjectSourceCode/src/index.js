@@ -50,8 +50,26 @@ app.use(express.static(path.join(__dirname, 'resources')));
 
 //Render the homepage -- Julia
 app.get('/', (req, res) => {
-  res.render('pages/home')
-})
+  res.render('pages/home');
+});
+
+// Render the login page -- Jessie
+app.get('/login', (req, res) => {
+  res.render('pages/login');
+});
+
+// TODO: Finish POST login
+// app.post('login', async(req, res) => {
+//   try {
+
+//   } catch {
+
+//   }
+// })
+
+app.get('/logout', (req, res) => {
+  res.render('pages/logout');
+});
 
 //The app simply closes if it isn't listening for anything so this is load bearing. -- Julia
 const port = 3000
