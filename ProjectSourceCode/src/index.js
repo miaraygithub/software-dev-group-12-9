@@ -4,6 +4,10 @@ const express = require('express');
 const app = express();
 const handlebars = require('express-handlebars');
 const path = require('path');
+// const pgp = require('pg-promise')(); // To connect to the Postgres DB from the node server
+// const bodyParser = require('body-parser');
+// const session = require('express-session'); // To set the session object. To store or access session data, use the `req.session`, which is (generally) serialized as JSON by the store.
+// const bcrypt = require('bcryptjs'); //  To hash passwords
 
 
 /**************************************************** HANDLEBARS CONFIG ****************************************************/
@@ -59,13 +63,32 @@ app.get('/login', (req, res) => {
 });
 
 // TODO: Finish POST login
-// app.post('login', async(req, res) => {
-//   try {
+app.post('login', async(req, res) => {
+  try {
+    const username = req.body.username;
+    const password = req.body.password;
+    const query = 'select * from Users where Users.userName = $1 LIMIT 1';
+    const values = [username];
+  
+    const user = await db.oneOrNone(query, values);
+    if (!user) {
+      return res.redirect('/register');
+    }
 
-//   } catch {
+    // check if password from request matches with password in DB
+    const match = await bcrypt.compare(password, user.userPassword);
+    if (!match) {
+      return res.render('pages/login', {message: 'Incorrect username or password'});
+    }
 
-//   }
-// })
+    req.session.user = user;
+    req.session.save();
+    res.redirect('/home');
+  } catch (err) {
+    console.log('Login failed.');
+    res.render('pages/login', {message: 'Login failed.'});
+  }
+})
 
 app.get('/logout', (req, res) => {
   res.render('pages/logout');
