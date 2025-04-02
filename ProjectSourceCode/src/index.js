@@ -61,7 +61,25 @@ module.exports = app.listen(3000);
 // Render the homepage -- Julia
 app.get('/', (req, res) => {
   res.render('pages/home');
-})
+});
+
+// Render the login page -- Jessie
+app.get('/login', (req, res) => {
+  res.render('pages/login');
+});
+
+// TODO: Finish POST login
+// app.post('login', async(req, res) => {
+//   try {
+
+//   } catch {
+
+//   }
+// })
+
+app.get('/logout', (req, res) => {
+  res.render('pages/logout');
+});
 
 app.get('/events', async (req, res) => {
   var query = `SELECT * FROM events`;
