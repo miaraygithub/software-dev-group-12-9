@@ -41,23 +41,14 @@ const db = pgp(dbConfig);
 const maxRetries = 10;
 let retries = 0;
 
-const connectWithRetry = async () => {
-  try {
-    await db.connect();
-    console.log('Database connection successful');
-  } catch (err) {
-    retries++;
-    console.error(`Database connection failed (${retries}/${maxRetries}):`, err);
-    if (retries < maxRetries) {
-      setTimeout(connectWithRetry, 5000); // Retry after 5 seconds
-    } else {
-      console.error('Max retries reached. Exiting.');
-      process.exit(1);
-    }
-  }
-};
-
-connectWithRetry();
+db.connect()
+  .then(obj => {
+    console.log('Database connection successful'); // you can view this message in the docker compose logs
+    obj.done(); // success, release the connection;
+  })
+  .catch(error => {
+    console.log('ERROR:', error.message || error);
+  });
 /**************************************************** PAGES ****************************************************/
 
 //Render the homepage -- Julia
@@ -66,7 +57,7 @@ app.get('/', (req, res) => {
 })
 
 app.get('/events', async (req, res) => {
-  var query = `SELECT * FROM users`;
+  var query = `SELECT * FROM events`;
   try {
     const response = await db.any(query);
     console.log(response);
