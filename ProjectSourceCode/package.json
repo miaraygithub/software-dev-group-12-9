@@ -21,7 +21,7 @@
     },
     "scripts": {
         "prestart": "npm install",
-        "start": "nodemon src/index.js",
+        "start": "node src/index.js",
         "test": "mocha",
         "testandrun": "npm run prestart && npm run test && npm start"
     }

@@ -4,6 +4,7 @@ const handlebars = require('express-handlebars');
 const path = require('path');
 const pgp = require('pg-promise')();
 const bodyParser = require('body-parser');
+const bcrypt = require('bcryptjs')
 
 const app = express();
 app.use(bodyParser.json());
@@ -61,29 +62,20 @@ module.exports = app.listen(3000);
 // Register routes from lab 8
 
 app.get('/register', (req, res) => {
-  res.render('pages/register');
+  res.render('pages/home');
 });
 
 app.post('/register', async (req, res) => {
 try {
-  const hash = await bcrypt.hash(req.body.password, 10); 
+  const result = await db.one(`INSERT INTO users (username, password_hash) VALUES ($1, $2);`, [req.body.username, req.body.password]);
 
-  // check if username already exists in db
-  const existingUser = await db.oneOrNone('SELECT user_id FROM users WHERE username = $1;', [req.body.username]);
-  if (existingUser) {
-    throw new Error('Username already exists. Please choose another one.');
-  }
+  console.log(result);
 
-  await db.none(`INSERT INTO users (username, password_hash) VALUES ($1, $2);`, [req.body.username, hash]);
-
-  res.render('pages/login', {
-    message: 'Sucessfully registered. Please login.'
-  })
+  res.status(200);
+  res.body.message('Success');
 } catch (err) {
-  res.render('pages/register', {
-    error: true,
-    message: err.message
-  })
+  res.status(400);
+  res.body.message('Fail');
 }
 });
 
