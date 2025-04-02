@@ -1,13 +1,13 @@
 /**************************************************** DEPENDENCIES ****************************************************/
-
 const express = require('express');
-const app = express();
 const handlebars = require('express-handlebars');
 const path = require('path');
-// const pgp = require('pg-promise')(); // To connect to the Postgres DB from the node server
-// const bodyParser = require('body-parser');
-// const session = require('express-session'); // To set the session object. To store or access session data, use the `req.session`, which is (generally) serialized as JSON by the store.
+const pgp = require('pg-promise')();
+const bodyParser = require('body-parser');
 // const bcrypt = require('bcryptjs'); //  To hash passwords
+
+const app = express();
+app.use(bodyParser.json());
 
 
 /**************************************************** HANDLEBARS CONFIG ****************************************************/
@@ -26,30 +26,30 @@ app.set('view engine', 'hbs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'resources')));
 
+/**************************************************** DATABASE CONFIG ****************************************************/
 
-/**************************************************** DB CONFIG + CONNECT ****************************************************/
+const dbConfig = {
+  host: 'db', // the database server
+  port: 5432, // the database port
+  database: process.env.POSTGRES_DB, // the database name
+  user: process.env.POSTGRES_USER, // the user account to connect with
+  password: process.env.POSTGRES_PASSWORD, // the password of the user account
+};
 
-// database configuration taken from previous lab
-// const dbConfig = {
-//   host: 'db', // the database server
-//   port: 5432, // the database port
-//   database: process.env.POSTGRES_DB, // the database name
-//   user: process.env.POSTGRES_USER, // the user account to connect with
-//   password: process.env.POSTGRES_PASSWORD, // the password of the user account
-// };
+const db = pgp(dbConfig);
 
-// const db = pgp(dbConfig);
+// test your database
+const maxRetries = 10;
+let retries = 0;
 
-// // test your database
-// db.connect()
-//   .then(obj => {
-//     console.log('Database connection successful'); // you can view this message in the docker compose logs
-//     obj.done(); // success, release the connection;
-//   })
-//   .catch(error => {
-//     console.log('ERROR:', error.message || error);
-//   });
-
+db.connect()
+  .then(obj => {
+    console.log('Database connection successful'); // you can view this message in the docker compose logs
+    obj.done(); // success, release the connection;
+  })
+  .catch(error => {
+    console.log('ERROR:', error.message || error);
+  });
 /**************************************************** PAGES ****************************************************/
 
 //Render the homepage -- Julia
@@ -92,6 +92,18 @@ app.post('login', async(req, res) => {
 
 app.get('/logout', (req, res) => {
   res.render('pages/logout');
+
+})
+
+app.get('/events', async (req, res) => {
+  var query = `SELECT * FROM events`;
+  try {
+    const response = await db.any(query);
+    console.log(response);
+  } catch (err) {
+    console.error('Error fetching data: ', err);
+    res.status(400).json({ error: err.message});
+  }
 });
 
 //The app simply closes if it isn't listening for anything so this is load bearing. -- Julia
