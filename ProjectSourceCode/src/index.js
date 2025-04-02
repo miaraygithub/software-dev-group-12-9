@@ -47,7 +47,14 @@ db.connect()
   });
 /**************************************************** PAGES ****************************************************/
 
-//Render the homepage -- Julia
+// Testing
+app.get('/welcome', (req, res) => {
+  res.json({status: 'success', message: 'Welcome!'});
+});
+
+module.exports = app.listen(3000);
+
+// Render the homepage -- Julia
 app.get('/', (req, res) => {
   res.render('pages/home');
 })
@@ -65,8 +72,9 @@ app.get('/events', async (req, res) => {
   }
 });
 
-//The app simply closes if it isn't listening for anything so this is load bearing. -- Julia
+// The app simply closes if it isn't listening for anything so this is load bearing. -- Julia
 const port = 3000
 app.listen(port, () => {
   console.log(`Buff's Bulletin listening on port ${port}`)
 })
+
