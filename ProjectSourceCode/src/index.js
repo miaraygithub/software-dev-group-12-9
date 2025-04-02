@@ -1,6 +1,5 @@
 /**************************************************** DEPENDENCIES ****************************************************/
 const express = require('express');
-
 const handlebars = require('express-handlebars');
 const path = require('path');
 const pgp = require('pg-promise')();
@@ -39,21 +38,43 @@ const dbConfig = {
 const db = pgp(dbConfig);
 
 // test your database
-db.connect()
-  .then(obj => {
-    console.log('Database connection successful'); // you can view this message in the docker compose logs
-    obj.done(); // success, release the connection;
-  })
-  .catch(error => {
-    console.log('ERROR:', error.message || error);
-  });
+const maxRetries = 10;
+let retries = 0;
 
+const connectWithRetry = async () => {
+  try {
+    await db.connect();
+    console.log('Database connection successful');
+  } catch (err) {
+    retries++;
+    console.error(`Database connection failed (${retries}/${maxRetries}):`, err);
+    if (retries < maxRetries) {
+      setTimeout(connectWithRetry, 5000); // Retry after 5 seconds
+    } else {
+      console.error('Max retries reached. Exiting.');
+      process.exit(1);
+    }
+  }
+};
+
+connectWithRetry();
 /**************************************************** PAGES ****************************************************/
 
 //Render the homepage -- Julia
 app.get('/', (req, res) => {
-  res.render('pages/home')
+  res.render('pages/home');
 })
+
+app.get('/events', async (req, res) => {
+  var query = `SELECT * FROM users`;
+  try {
+    const response = await db.any(query);
+    console.log(response);
+  } catch (err) {
+    console.error('Error fetching data: ', err);
+    res.status(400).json({ error: err.message});
+  }
+});
 
 //The app simply closes if it isn't listening for anything so this is load bearing. -- Julia
 const port = 3000
