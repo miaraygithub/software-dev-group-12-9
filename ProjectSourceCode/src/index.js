@@ -37,10 +37,6 @@ const dbConfig = {
 
 const db = pgp(dbConfig);
 
-// test your database
-const maxRetries = 10;
-let retries = 0;
-
 db.connect()
   .then(obj => {
     console.log('Database connection successful'); // you can view this message in the docker compose logs
@@ -56,11 +52,13 @@ app.get('/', (req, res) => {
   res.render('pages/home');
 })
 
+//Render the Events page. 
 app.get('/events', async (req, res) => {
   var query = `SELECT * FROM events`;
   try {
     const response = await db.any(query);
-    console.log(response);
+    res.status(200).json(response);
+    res.render('pages/events');
   } catch (err) {
     console.error('Error fetching data: ', err);
     res.status(400).json({ error: err.message});
