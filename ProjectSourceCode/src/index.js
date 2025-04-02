@@ -58,6 +58,35 @@ app.get('/welcome', (req, res) => {
 
 module.exports = app.listen(3000);
 
+// Register routes from lab 8
+
+app.get('/register', (req, res) => {
+  res.render('pages/register');
+});
+
+app.post('/register', async (req, res) => {
+try {
+  const hash = await bcrypt.hash(req.body.password, 10); 
+
+  // check if username already exists in db
+  const existingUser = await db.oneOrNone('SELECT user_id FROM users WHERE username = $1;', [req.body.username]);
+  if (existingUser) {
+    throw new Error('Username already exists. Please choose another one.');
+  }
+
+  await db.none(`INSERT INTO users (username, password_hash) VALUES ($1, $2);`, [req.body.username, hash]);
+
+  res.render('pages/login', {
+    message: 'Sucessfully registered. Please login.'
+  })
+} catch (err) {
+  res.render('pages/register', {
+    error: true,
+    message: err.message
+  })
+}
+});
+
 // Render the homepage -- Julia
 app.get('/', (req, res) => {
   res.render('pages/home');

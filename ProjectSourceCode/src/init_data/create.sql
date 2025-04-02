@@ -1,50 +1,56 @@
-
-
+-- from lab 8
+DROP TABLE IF EXISTS users;
 CREATE TABLE users (
-    userID SERIAL NOT NULL,
-    userName VARCHAR(30) NOT NULL,
-    userPassword VARCHAR(30) NOT NULL,
-    userAdmin BOOL NOT NULL,
-    PRIMARY KEY (userID)
+  user_id SERIAL PRIMARY KEY,
+  username VARCHAR(100) UNIQUE NOT NULL,
+  password_hash VARCHAR(200) NOT NULL
 );
 
-CREATE TABLE clubs (
-    clubID serial NOT NULL,
-    clubName varchar(30) NOT NULL,
-    organizer int NOT NULL,
-    PRIMARY KEY (ClubID),
-    CONSTRAINT FK_OrganizerUserID FOREIGN KEY (organizer) REFERENCES users (userID)
-);
+-- CREATE TABLE users (
+--     userID SERIAL NOT NULL,
+--     userName VARCHAR(30) NOT NULL,
+--     userPassword VARCHAR(30) NOT NULL,
+--     userAdmin BOOL NOT NULL,
+--     PRIMARY KEY (userID)
+-- );
 
-CREATE TABLE locations (
-    locationID serial NOT NULL,
-    buildingName varchar(30) NOT NULL,
-    mapReference varchar(30) NOT NULL,
-    PRIMARY KEY (locationID)
-);
+-- CREATE TABLE clubs (
+--     clubID serial NOT NULL,
+--     clubName varchar(30) NOT NULL,
+--     organizer int NOT NULL,
+--     PRIMARY KEY (ClubID),
+--     CONSTRAINT FK_OrganizerUserID FOREIGN KEY (organizer) REFERENCES users (userID)
+-- );
 
-CREATE TABLE events (
-    eventID serial NOT NULL,
-    eventName varchar(30) NOT NULL,
-    building int NOT NULL,
-    eventDate date NOT NULL,
-    clubSponser int NOT NULL,
-    roomNumber varchar(10) NOT NULL,
-    eventDescription text NOT NULL,
-    startTime time NOT NULL,
-    endTime time NOT NULL,
-    PRIMARY KEY (eventID),
-    CONSTRAINT FK_BuildingLocationID FOREIGN KEY (building) REFERENCES locations (locationID),
-    CONSTRAINT FK_ClubSponserClubID FOREIGN KEY (clubSponser) REFERENCES clubs (clubID)
-);
+-- CREATE TABLE locations (
+--     locationID serial NOT NULL,
+--     buildingName varchar(30) NOT NULL,
+--     mapReference varchar(30) NOT NULL,
+--     PRIMARY KEY (locationID)
+-- );
 
-CREATE TABLE rsvp (
-    userID int NOT NULL,
-    eventID int NOT NULL,
-    PRIMARY KEY (userID, eventID),
-    CONSTRAINT FK_UserID FOREIGN KEY (userID) REFERENCES users (userID),
-    CONSTRAINT FK_EventID FOREIGN KEY (eventID) REFERENCES events (eventID)
-);
+-- CREATE TABLE events (
+--     eventID serial NOT NULL,
+--     eventName varchar(30) NOT NULL,
+--     building int NOT NULL,
+--     eventDate date NOT NULL,
+--     clubSponser int NOT NULL,
+--     roomNumber varchar(10) NOT NULL,
+--     eventDescription text NOT NULL,
+--     startTime time NOT NULL,
+--     endTime time NOT NULL,
+--     PRIMARY KEY (eventID),
+--     CONSTRAINT FK_BuildingLocationID FOREIGN KEY (building) REFERENCES locations (locationID),
+--     CONSTRAINT FK_ClubSponserClubID FOREIGN KEY (clubSponser) REFERENCES clubs (clubID)
+-- );
+
+-- CREATE TABLE rsvp (
+--     userID int NOT NULL,
+--     eventID int NOT NULL,
+--     PRIMARY KEY (userID, eventID),
+--     CONSTRAINT FK_UserID FOREIGN KEY (userID) REFERENCES users (userID),
+--     CONSTRAINT FK_EventID FOREIGN KEY (eventID) REFERENCES events (eventID)
+-- );
 /*
 INSERT INTO users (userName, userPassword, usertype)
 VALUES 
