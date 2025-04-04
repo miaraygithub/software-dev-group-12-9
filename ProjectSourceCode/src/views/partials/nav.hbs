@@ -1,45 +1,40 @@
 <header>
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <div class="container-fluid">
-      <a class="navbar-brand" href="/">Buff's Bulletin</a> <!-- eventually replace with logo/image? -->
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <a class="navbar-brand" href="/">Buff's Bulletin</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav me-auto">
-          <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="/">Home</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/events">Events</a>
-          </li>
-        </ul>
+
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <a class="nav-link" href="/events">Events</a>
 
         <!-- Search Bar -->
-        <form class="d-flex" action="/search" method="GET">
-          <div class="input-group">
-            <input class="form-control border-start-0" type="search" placeholder="Search by event, club, or user" aria-label="Search" name="keyword">
-            <button class="btn btn-outline-success" type="submit">
-              <i class="fas fa-search"></i>
-            </button>
-          </div>
+        <form class="d-flex mx-auto" action="/search" method="GET">
+          <input class="form-control me-2" type="search" style="width: 300px;" placeholder="Search by event, club, or user" aria-label="Search" name="keyword">
+          <button class="btn btn-outline-success my-2 my-sm-0" type="submit">
+            <i class="fas fa-search"></i>
+          </button>
         </form>
 
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item">
-            <a class="nav-link" href="/profile">Profile</a>
-          </li>
-          <!-- if statement to change the login/logout button depending on if the user is logged in. -->
-          {{#if login}}
-            <li class="nav-item">
-              <a class="nav-link" href="/logout">Logout</a>
-            </li>
-          {{else}}
-            <li class="nav-item">
-              <a class="nav-link" href="/login">Login</a>
-            </li>
-          {{/if}}
-        </ul>
+        <!-- If logged in, show profile options, otherwise show options to sign up or login -->
+        {{#if login}}
+          <!-- Profile Menu -->
+          <div class="dropdown">
+            <button class="btn btn-secondary dropdown-toggle" type="button" id="profileDropdown" data-toggle="dropdown" data-display="static" aria-haspopup="true" aria-expanded="false">
+              Profile
+            </button>
+            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="profileDropdown">
+              <a class="dropdown-item" href="/profile">My Profile</a>
+              <a class="dropdown-item" href="/myEvents">My Events</a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="/logout">Log Out</a>
+            </div>
+          </div>
+        {{else}}
+          <a class="btn btn-outline-primary" href="/register" role="button" style="margin-right: 10px;">Sign Up</a>
+          <a class="btn btn-primary" href="/login" role="button">Login</a>
+        {{/if}}
       </div>
     </div>
   </nav>
