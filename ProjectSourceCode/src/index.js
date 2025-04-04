@@ -21,6 +21,8 @@ const hbs = handlebars.create({
 app.engine('hbs', hbs.engine);
 app.set('view engine', 'hbs');
 app.set('views', path.join(__dirname, 'views'));
+app.use('/js', express.static(__dirname + '/src/resources/js'));
+app.use('/js', express.static(path.join(__dirname, 'resources', 'js')));
 app.use(bodyParser.json());
 // set Session
 app.use(
