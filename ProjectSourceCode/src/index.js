@@ -1,11 +1,12 @@
 // ----------------------------------   DEPENDENCIES  ----------------------------------------------
 const express = require('express');
-const app = express();
 const handlebars = require('express-handlebars');
 const path = require('path');
 const pgp = require('pg-promise')();
 const bodyParser = require('body-parser');
 const session = require('express-session');
+const app = express();
+app.use(bodyParser.json());
 
 // -------------------------------------  APP CONFIG   ----------------------------------------------
 
@@ -62,26 +63,57 @@ db.connect()
     console.log('ERROR', error.message || error);
   });
 
-
 // -------------------------------------  ROUTES  ---------------------------------------
 
 // =========== / Route ===========
 app.get('/', (req, res) => {
   res.render('pages/home')
+})
+
+// =========== /login Route ===========
+// Render the login page -- Jessie
+app.get('/login', (req, res) => {
+  res.render('pages/login');
+});
+
+// TODO: Finish POST login
+// app.post('login', async(req, res) => {
+//   try {
+
+//   } catch {
+
+//   }
+// })
+
+// =========== /logout Route ===========
+app.get('/logout', (req, res) => {
+  res.render('pages/logout');
+});
+
+// =========== /events Route ===========
+app.get('/events', async (req, res) => {
+  var query = `SELECT * FROM events`;
+  try {
+    const response = await db.any(query);
+    console.log(response);
+  } catch (err) {
+    console.error('Error fetching data: ', err);
+    res.status(400).json({ error: err.message});
+  }
 });
 
 // =========== /search Route ===========
 app.get("/search", async (req, res) => {
   try {
-    const results = await db.any(`SELECT * FROM Users
-      JOIN Clubs
-      JOIN Events 
-      WHERE Users.username = keyword
-      OR Users.firstname = keyword
-      OR Users.lastname = keyword
-      OR Users.fistname + ' ' + lastname = keyword
-      AND Clubs.clubname = keyword
-      AND Events.eventName = keyword;`, [req.body.keyword]);
+    // const results = await db.any(`SELECT * FROM Users
+    //   JOIN Clubs
+    //   JOIN Events 
+    //   WHERE Users.username = keyword
+    //   OR Users.firstname = keyword
+    //   OR Users.lastname = keyword
+    //   OR Users.fistname + ' ' + lastname = keyword
+    //   AND Clubs.clubname = keyword
+    //   AND Events.eventName = keyword;`, [req.body.keyword]);
 
     res.render('pages/search-results', {
       results: results
@@ -96,7 +128,8 @@ app.get("/search", async (req, res) => {
   }
 });
 
-// -------------------------------------  START THE SERVER   ----------------------------------------------
-
-app.listen(3000);
-console.log('Server is listening on port 3000');
+//The app simply closes if it isn't listening for anything so this is load bearing. -- Julia
+const port = 3000
+app.listen(port, () => {
+  console.log(`Buff's Bulletin listening on port ${port}`)
+})
