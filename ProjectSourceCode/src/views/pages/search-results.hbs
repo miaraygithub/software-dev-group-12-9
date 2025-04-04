@@ -1,0 +1,20 @@
+<main role="main" class="flex-grow-1 container my-5">
+  <!-- Page Heading -->
+  <div class="mb-4 text-center">
+    <h2 class="display-4">Search Results</h2>
+  </div>
+
+  <!-- Layout: Sidebar + Map -->
+  <div class="d-flex h-100">
+    <!-- Sidebar -->
+    <div id="sidebar" class="bg-light border-end p-3" style="width: 300px; transition: all 0.3s;">
+      <button class="btn btn-sm btn-outline-secondary mb-3" id="expandSidebarBtn">Expand</button>
+      {{> event_sidebar events=events }}
+    </div>
+
+    <!-- Map -->
+    <div id="map-container" class="flex-grow-1 position-relative">
+      <div id="map" style="height: 100%; width: 100%;"></div>
+    </div>
+  </div>
+</main>

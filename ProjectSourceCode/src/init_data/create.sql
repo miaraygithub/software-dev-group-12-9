@@ -1,5 +1,3 @@
-
-
 CREATE TABLE users (
     userID SERIAL NOT NULL,
     userName VARCHAR(30) NOT NULL,
