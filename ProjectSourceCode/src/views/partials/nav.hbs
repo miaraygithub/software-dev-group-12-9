@@ -21,15 +21,16 @@
         {{#if login}}
           <!-- Profile Menu -->
           <div class="dropdown">
-            <button class="btn btn-secondary dropdown-toggle" type="button" id="profileDropdown" data-toggle="dropdown" data-display="static" aria-haspopup="true" aria-expanded="false">
-              Profile
+            <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" data-display="static" aria-expanded="false">
+              <i class="fa-solid fa-user"></i>
+              My Account
             </button>
-            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="profileDropdown">
-              <a class="dropdown-item" href="/profile">My Profile</a>
-              <a class="dropdown-item" href="/myEvents">My Events</a>
-              <div class="dropdown-divider"></div>
-              <a class="dropdown-item" href="/logout">Log Out</a>
-            </div>
+            <ul class="dropdown-menu dropdown-menu-right">
+              <li><a class="dropdown-item" href="/profile">My Profile</a></li>
+              <li><a class="dropdown-item" href="/myEvents">My Events</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="/logout">Logout</a></li>
+            </ul>
           </div>
         {{else}}
           <a class="btn btn-outline-primary" href="/register" role="button" style="margin-right: 10px;">Sign Up</a>

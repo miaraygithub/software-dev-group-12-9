@@ -1,49 +1,3 @@
-<<<<<<< HEAD
-DROP TABLE IF EXISTS Users;
-CREATE TABLE Users (
-    userID int SERIAL PRIMARY KEY,
-    username varchar(30) NOT NULL,
-    userPassword varchar(30) NOT NULL,
-    usertype ENUM('organizer', 'participant') NOT NULL
-    firstname varchar(30) NOT NULL,
-    lastname varchar(30) NOT NULL
-);
-
-DROP TABLE IF EXISTS Clubs;
-CREATE TABLE Clubs (
-    clubID int SERIAL PRIMARY KEY,
-    clubName varchar(30) NOT NULL,
-    organizer int FOREIGN KEY NOT NULL
-);
-
-DROP TABLE IF EXISTS RSVP;
-CREATE TABLE RSVP (
-    userID int,
-    eventID int
-);
-
-DROP TABLE IF EXISTS Locations;
-CREATE TABLE Locations (
-    locationID int SERIAL PRIMARY KEY,
-    buildingName varchar(30) NOT NULL,
-    mapReference varchar(30) NOT NULL
-);
-
-DROP TABLE IF EXISTS Events;
-CREATE TABLE Events (
-    eventID int SERIAL PRIMARY KEY,
-    eventName varchar(30) NOT NULL,
-    location int FOREIGN KEY NOT NULL,
-    eventDate date NOT NULL,
-    club int FOREIGN KEY NOT NULL,
-    roomNumber varchar(10) NOT NULL,
-    eventDescription MEDIUMTEXT NOT NULL,
-    startTime time NOT NULL,
-    endTime time NOT NULL
-);
-=======
-
-
 CREATE TABLE users (
     userID SERIAL NOT NULL,
     userName VARCHAR(30) NOT NULL,
@@ -114,4 +68,3 @@ VALUES
 ('Event2', 2, '2025-05-01', 1, 'A100', 'Sample Event 2', '12:30:00', '13:00:00'),
 ('Event3', 1, '2925-05-02', 2, 'A100', 'Sample Event 3', '15:00:00', '17:00:00');
 */
->>>>>>> 2f2d93544b186db604880b1f081225e9745e3572
