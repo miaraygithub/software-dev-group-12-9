@@ -1,80 +1,138 @@
-/**************************************************** DEPENDENCIES ****************************************************/
+
+// ----------------------------------   DEPENDENCIES  ----------------------------------------------
 const express = require('express');
 const handlebars = require('express-handlebars');
 const path = require('path');
 const pgp = require('pg-promise')();
 const bodyParser = require('body-parser');
-
+const session = require('express-session');
 const app = express();
 app.use(bodyParser.json());
 
+// -------------------------------------  APP CONFIG   ----------------------------------------------
 
-/**************************************************** HANDLEBARS CONFIG ****************************************************/
-//configuration borrowed from previous lab and altered by Julia
-
-//configure handlebars partials
+// create `ExpressHandlebars` instance and configure the layouts and partials dir.
 const hbs = handlebars.create({
   extname: 'hbs',
   layoutsDir: __dirname + '/views/layouts',
   partialsDir: __dirname + '/views/partials',
 });
 
-// Register hbs view engine
+// Register `hbs` as our view engine using its bound `engine()` function.
 app.engine('hbs', hbs.engine);
 app.set('view engine', 'hbs');
 app.set('views', path.join(__dirname, 'views'));
-app.use(express.static(path.join(__dirname, 'resources')));
+app.use('/js', express.static(__dirname + '/src/resources/js'));
+app.use('/js', express.static(path.join(__dirname, 'resources', 'js')));
+app.use(bodyParser.json());
+// set Session
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    saveUninitialized: true,
+    resave: true,
+  })
+);
 
-/**************************************************** DATABASE CONFIG ****************************************************/
+app.use((req, res, next) => {
+  res.locals.user = req.session.user;
+  next();
+});
 
+app.use(
+  bodyParser.urlencoded({
+    extended: true,
+  })
+);
+
+// -------------------------------------  DB CONFIG AND CONNECT   ---------------------------------------
 const dbConfig = {
-  host: 'db', // the database server
-  port: 5432, // the database port
-  database: process.env.POSTGRES_DB, // the database name
-  user: process.env.POSTGRES_USER, // the user account to connect with
-  password: process.env.POSTGRES_PASSWORD, // the password of the user account
+  host: 'db',
+  port: 5432,
+  database: process.env.POSTGRES_DB,
+  user: process.env.POSTGRES_USER,
+  password: process.env.POSTGRES_PASSWORD,
 };
-
 const db = pgp(dbConfig);
 
+// db test
 db.connect()
   .then(obj => {
-    console.log('Database connection successful'); // you can view this message in the docker compose logs
+    // Can check the server version here (pg-promise v10.1.0+):
+    console.log('Database connection successful');
     obj.done(); // success, release the connection;
   })
   .catch(error => {
-    console.log('ERROR:', error.message || error);
+    console.log('ERROR', error.message || error);
   });
-/**************************************************** PAGES ****************************************************/
 
-// Testing
-app.get('/welcome', (req, res) => {
-  res.json({status: 'success', message: 'Welcome!'});
-});
+// -------------------------------------  ROUTES  ---------------------------------------
 
-module.exports = app.listen(3000);
-
-// Render the homepage -- Julia
+// =========== / Route ===========
 app.get('/', (req, res) => {
-  res.render('pages/home');
+  res.render('pages/home')
 })
 
-//Render the Events page. 
+// =========== /login Route ===========
+// Render the login page -- Jessie
+app.get('/login', (req, res) => {
+  res.render('pages/login');
+});
+
+// TODO: Finish POST login
+// app.post('login', async(req, res) => {
+//   try {
+
+//   } catch {
+
+//   }
+// })
+
+// =========== /logout Route ===========
+app.get('/logout', (req, res) => {
+  res.render('pages/logout');
+});
+
+// =========== /events Route ===========
 app.get('/events', async (req, res) => {
   var query = `SELECT * FROM events`;
   try {
     const response = await db.any(query);
-    res.status(200).json(response);
-    res.render('pages/events');
+    console.log(response);
   } catch (err) {
     console.error('Error fetching data: ', err);
     res.status(400).json({ error: err.message});
   }
 });
 
-// The app simply closes if it isn't listening for anything so this is load bearing. -- Julia
+// =========== /search Route ===========
+app.get("/search", async (req, res) => {
+  try {
+    // const results = await db.any(`SELECT * FROM Users
+    //   JOIN Clubs
+    //   JOIN Events 
+    //   WHERE Users.username = keyword
+    //   OR Users.firstname = keyword
+    //   OR Users.lastname = keyword
+    //   OR Users.fistname + ' ' + lastname = keyword
+    //   AND Clubs.clubname = keyword
+    //   AND Events.eventName = keyword;`, [req.body.keyword]);
+
+    res.render('pages/search-results', {
+      results: results
+    });
+  }
+  catch (err) {
+    res.render('pages/search-results', {
+      results: [],
+      error: true,
+      message: err.message
+    });
+  }
+});
+
+//The app simply closes if it isn't listening for anything so this is load bearing. -- Julia
 const port = 3000
 app.listen(port, () => {
   console.log(`Buff's Bulletin listening on port ${port}`)
-})
-
+});
