@@ -72,6 +72,7 @@ app.get('/events', async (req, res) => {
   }
 });
 
+
 // The app simply closes if it isn't listening for anything so this is load bearing. -- Julia
 const port = 3000
 app.listen(port, () => {
