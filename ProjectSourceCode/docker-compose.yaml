@@ -10,7 +10,8 @@ services:
       - ./src/init_data:/data
   web:
     image: node:lts
-    working_dir: /directory
+    user: 'node'
+    working_dir: /home/node/app
     env_file: .env
     environment:
       - NODE_ENV=development
@@ -19,7 +20,7 @@ services:
     ports:
       - '3000:3000'
     volumes:
-      - ./:/directory
-    command: 'npm run testandrun' # 'npm start'
+      - ./:/home/node/app
+    command: 'npm start'
 volumes:
   group-project:
