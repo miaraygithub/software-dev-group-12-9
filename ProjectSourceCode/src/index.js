@@ -1,3 +1,4 @@
+
 // ----------------------------------   DEPENDENCIES  ----------------------------------------------
 const express = require('express');
 const handlebars = require('express-handlebars');
@@ -134,4 +135,4 @@ app.get("/search", async (req, res) => {
 const port = 3000
 app.listen(port, () => {
   console.log(`Buff's Bulletin listening on port ${port}`)
-})
+});
