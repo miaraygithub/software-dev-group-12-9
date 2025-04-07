@@ -1,4 +1,3 @@
-
 // ----------------------------------   DEPENDENCIES  ----------------------------------------------
 const express = require('express');
 const handlebars = require('express-handlebars');
@@ -6,6 +5,7 @@ const path = require('path');
 const pgp = require('pg-promise')();
 const bodyParser = require('body-parser');
 const session = require('express-session');
+const bcrypt = require('bcryptjs'); //  To hash passwords
 const app = express();
 app.use(bodyParser.json());
 const { format } = require('date-fns'); //needed to format the event dates in a user friendly way
@@ -103,13 +103,55 @@ app.get('/login', (req, res) => {
 });
 
 // TODO: Finish POST login
-// app.post('login', async(req, res) => {
-//   try {
+app.post('/login', async(req, res) => {
+  try {
+    const username = req.body.username;
+    const password = req.body.password;
+    const query = 'SELECT * FROM users WHERE users.userName = ($1) LIMIT 1';
+    const values = [username];
+  
+    const user = await db.oneOrNone(query, values);
+    console.log(user);
+    
+    if (!user) {
+      return res.redirect('/register');
+    }
 
-//   } catch {
+    // check if password from request matches with password in DB
+    const match = await bcrypt.compare(password, user.userpassword);
+    if (!match) {
+      console.log('Password does not match.');
+      return res.render('pages/login', {message: 'Incorrect username or password'});
+    }
 
-//   }
-// })
+    req.session.user = user;
+    req.session.save();
+    res.redirect('/');
+  } catch (err) {
+    console.log('Login failed.');
+    // res.status(400).json({ error: err.message});
+    res.render('pages/login', {message: 'Login failed.'});
+  }
+})
+
+app.get('/register', (req, res) => {
+  res.render('pages/register');
+});
+
+// TODO: test and debug POST /register
+app.post('/register', async(req,res) => {
+  try {
+    const hash = await bcrypt.hash(req.body.password, 10);
+
+    const query = 'INSERT INTO users(userName, userPassword, userAdmin) VALUES($1, $2, $3)';
+    await db.none(query, [req.body.username, hash, req.body.useradmin]);
+
+    res.redirect('/login');
+  } catch (error) {
+    console.error('Error during registration:', error);
+    res.redirect('/register');
+  }
+});
 
 // =========== /logout Route ===========
 app.get('/logout', (req, res) => {
@@ -118,7 +160,7 @@ app.get('/logout', (req, res) => {
 
 // =========== /events Route ===========
 app.get('/events', async (req, res) => {
-  var query = `SELECT * FROM events`;
+  var query = `SELECT * FROM users`;
   try {
     const response = await db.any(query);
     console.log(response);

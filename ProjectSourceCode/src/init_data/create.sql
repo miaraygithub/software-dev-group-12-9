@@ -1,7 +1,7 @@
 CREATE TABLE users (
     userID SERIAL NOT NULL,
     userName VARCHAR(30) NOT NULL,
-    userPassword VARCHAR(30) NOT NULL,
+    userPassword VARCHAR(60) NOT NULL,
     userAdmin BOOL NOT NULL,
     PRIMARY KEY (userID)
 );
