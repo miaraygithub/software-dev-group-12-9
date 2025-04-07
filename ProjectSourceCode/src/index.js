@@ -89,20 +89,21 @@ app.get('/', async (req, res) => {
       };
     });
     
-    res.render('pages/home', { events: formattedEvents });
+    res.render('pages/home', { 
+      login: !!req.session.user,
+      events: formattedEvents, 
+    });
   } catch (err) {
     console.error('Error fetching events:', err);
     res.status(500).send('Internal server error');
   }
 });
 
-// =========== /login Route ===========
-// Render the login page -- Jessie
+// =========== /login Routes ===========
 app.get('/login', (req, res) => {
   res.render('pages/login');
 });
 
-// TODO: Finish POST login
 app.post('/login', async(req, res) => {
   try {
     const username = req.body.username;
@@ -134,11 +135,12 @@ app.post('/login', async(req, res) => {
   }
 })
 
+// =========== /register Routes ===========
+
 app.get('/register', (req, res) => {
   res.render('pages/register');
 });
 
-// TODO: test and debug POST /register
 app.post('/register', async(req,res) => {
   try {
     const hash = await bcrypt.hash(req.body.password, 10);
