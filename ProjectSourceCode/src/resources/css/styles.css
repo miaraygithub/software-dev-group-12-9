@@ -1,0 +1,19 @@
+/* Hide extra details by default */
+.sidebar-extra {
+    display: none;
+  }
+  
+  /* Show extra details when sidebar is expanded */
+  #sidebar.expanded .sidebar-extra {
+    display: block;
+  }
+  
+  /* Optional: smooth fade-in */
+  .sidebar-extra {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  #sidebar.expanded .sidebar-extra {
+    opacity: 1;
+  }
+  
