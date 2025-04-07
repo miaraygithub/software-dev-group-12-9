@@ -157,7 +157,10 @@ app.post('/register', async(req,res) => {
 
 // =========== /logout Route ===========
 app.get('/logout', (req, res) => {
-  res.render('pages/logout');
+  req.session.destroy(function(err) {
+    res.render('pages/logout', { message: 'Logged out successfully!'});
+  });
+  // res.render('pages/logout');
 });
 
 // =========== /events Route ===========
