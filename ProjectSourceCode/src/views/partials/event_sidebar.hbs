@@ -1,11 +1,21 @@
+{{>new_event}}
 <ul class="list-group">
-  <!-- Listing all events in sidebar -->
-  <!-- TODO: get list of events from db -->
   {{#each events}}
-    <!-- class will change. I can't see what it will look like yet, and still need to alter for images -->
-    <li class="list-group-item d-flex justify-content-between align-items-center">
-      <a href="/events/{{this.id}}">{{this.name}}</a>
-      <span class="badge bg-primary rounded-pill">{{this.time}}</span>
+    <li class="list-group-item flex-column row">
+      <div class="w-100">
+        <strong>{{this.eventname}}</strong><br>
+        <small class:"text-muted">
+          {{eventdescription}}<br>
+        </small>
+                <div class="sidebar-extra mt-2">
+                  <p class="mb-0"><strong>Location:</strong> {{building}} Room {{roomnumber}}</p>
+                  <p class="mb-0"><strong>Hosted by:</strong> {{clubsponser}}</p>
+                  <p class="mb-0">{{eventDescription}}</p>
+                </div>
+        <small class="text-muted">
+          {{this.eventDateFormatted}} — {{this.startTimeFormatted}} to {{this.endTimeFormatted}}
+        </small>
+      </div>
     </li>
   {{/each}}
 </ul>
