@@ -10,7 +10,6 @@ services:
       - ./src/init_data:/data
   web:
     image: node:lts
-    user: 'node'
     working_dir: /home/node/app
     env_file: .env
     environment:
