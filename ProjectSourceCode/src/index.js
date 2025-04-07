@@ -107,7 +107,7 @@ app.post('/login', async(req, res) => {
   try {
     const username = req.body.username;
     const password = req.body.password;
-    const query = 'select * from users where users.userName = $1 LIMIT 1';
+    const query = 'SELECT * FROM users WHERE users.userName = ($1) LIMIT 1';
     const values = [username];
   
     const user = await db.oneOrNone(query, values);
@@ -118,17 +118,18 @@ app.post('/login', async(req, res) => {
     }
 
     // check if password from request matches with password in DB
-    const match = await bcrypt.compare(password, user.userPassword);
+    const match = await bcrypt.compare(password, user.userpassword);
     if (!match) {
+      console.log('Password does not match.');
       return res.render('pages/login', {message: 'Incorrect username or password'});
     }
 
     req.session.user = user;
     req.session.save();
-    res.redirect('/home');
+    res.redirect('/');
   } catch (err) {
     console.log('Login failed.');
-    res.status(400).json({ error: err.message});
+    // res.status(400).json({ error: err.message});
     res.render('pages/login', {message: 'Login failed.'});
   }
 })
@@ -142,8 +143,8 @@ app.post('/register', async(req,res) => {
   try {
     const hash = await bcrypt.hash(req.body.password, 10);
 
-    const query = 'INSERT INTO users(userName, userPassword) VALUES($1, $2)';
-    await db.none(query, [req.body.username, hash]);
+    const query = 'INSERT INTO users(userName, userPassword, userAdmin) VALUES($1, $2, $3)';
+    await db.none(query, [req.body.username, hash, req.body.useradmin]);
 
     res.redirect('/login');
   } catch (error) {
