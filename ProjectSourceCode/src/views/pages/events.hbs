@@ -1,3 +1,35 @@
 {{>message}}
+<title>{{event.eventname}}</title>
+<main role="main" class="flex-grow-1 container my-5">
 
+  <main role ="main "class="flex-grow-1 container my-5">
+  <section class="card shadow p-4">
+    <h1 class="card-title mb-4 text-center">{{event.eventname}}</h1>
+    
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <p><strong>Building:</strong> {{event.building}}</p>
+        <p><strong>Room Number:</strong> {{event.roomnumber}}</p>
+        <p><strong>Brought to You By:</strong> {{event.clubsponser}}</p>
+      </div>
+      <div class="col-md-6">
+        <p><strong>Date:</strong> {{event.eventDateFormatted}}</p>
+        <p><strong>Start Time:</strong> {{event.startTimeFormatted}}</p>
+        <p><strong>End Time:</strong> {{event.endTimeFormatted}}</p>
+      </div>
+    </div>
+
+    <div>
+      <h5 class="mb-2">Description</h5>
+      <p class="card-text">
+        {{event.eventdescription}}  
+      </p>
+    </div>
+  </section>
+</main>
+  
+  
+
+
+</main>
 <!-- TODO: fill out this page and populate with elected event -->
