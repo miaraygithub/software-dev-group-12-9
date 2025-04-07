@@ -128,6 +128,42 @@ app.get('/events', async (req, res) => {
   }
 });
 
+//=========== /saveEvent Route ===========
+app.post("/save-event", async (req, res) => {
+  console.log('Save Event')
+  try {
+    const eventName = req.body.event_name
+    const eventBuilding = req.body.event_building
+    const eventRoomNumber = req.body.event_room_number
+    const eventDate = req.body.event_date
+    const eventStartTime = req.body.event_start_time
+    const eventEndTime = req.body.event_end_time
+    const eventClub = 1 // NEEDS TO BE CONNECTED TO USER 
+    const eventDescription = req.body.event_description
+
+    //QUERIES
+    const buildingQuery = `SELECT locationID from locations where buildingName = ($1)`
+    const saveQuery = `INSERT INTO events (eventName, building, eventDate, clubSponser, roomNumber, eventDescription, startTime, endTime)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
+
+    //Get Building ID from Building Name
+    buildingId = await db.one(buildingQuery, [eventBuilding])
+    buildingId = buildingId['locationid']
+    console.log(buildingId, eventBuilding)
+
+    //Data to send to query
+    const eventSave = [eventName, buildingId, eventDate, eventClub, eventRoomNumber, eventDescription, eventStartTime+':00', eventEndTime+':00']
+
+    //insert event into database
+    console.log(eventSave)
+    insertEvent = await db.none(saveQuery, eventSave)
+    res.redirect('/')
+  } catch (err) {
+    console.error('Error saving event: ', err);
+    res.status(400).json({ error: err.message});
+  }
+})
+
 // =========== /search Route ===========
 app.get("/search", async (req, res) => {
   try {
