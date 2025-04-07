@@ -107,18 +107,21 @@ app.get('/events', async (req, res) => {
 // =========== /search Route ===========
 app.get("/search", async (req, res) => {
   try {
-    // const results = await db.any(`SELECT * FROM Users
-    //   JOIN Clubs
-    //   JOIN Events 
-    //   WHERE Users.username = keyword
-    //   OR Users.firstname = keyword
-    //   OR Users.lastname = keyword
-    //   OR Users.fistname + ' ' + lastname = keyword
-    //   AND Clubs.clubname = keyword
-    //   AND Events.eventName = keyword;`, [req.body.keyword]);
+    const keyword = req.query.keyword;
+    if (!keyword) { throw new Error('No keyword entered. Cannot query.') };
+    const users_results = await db.any(`SELECT username, firstname, lastname FROM users 
+      WHERE username = $1 OR firstname LIKE $1 OR lastname LIKE $1 OR (fistname || ' ' || lastname) LIKE $1;`, [req.query.keyword]);
+    const clubs_results = await db.any(`SELECT clubName FROM clubs WHERE clubName = $1;`, [req.query.keyword]);
+    const events_results = await db.any(`SELECT e.eventName, l.buildingName,  e.roomNumber, e.eventDescription, e.eventDate, e.startTime, e.endTime
+      FROM events e
+      LEFT JOIN locations l ON e.building = l.locationID
+      WHERE eventName = $1%;`, [req.query.keyword]);
 
     res.render('pages/search-results', {
-      results: results
+      keyword: req.query.keyword,
+      users: users_results,
+      clubs: clubs_results,
+      events: events_results
     });
   }
   catch (err) {

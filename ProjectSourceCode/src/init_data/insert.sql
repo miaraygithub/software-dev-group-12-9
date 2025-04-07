@@ -1,15 +1,15 @@
 INSERT INTO users (userName, userPassword, userAdmin)
 VALUES 
-('DevOrg1', '123', True),
-('DevOrg2', '123', True),
-('DevUser1', '123', False),
-('DevUser2', '123', False),
-('DevUser3', '123', False);
+('DevOrg1', 'Dev', 'Org', '123', True),
+('DevOrg2', 'Dev', 'Org2','123', True),
+('DevUser1', 'Dev', 'User2','123', False),
+('DevUser2', 'Dev', 'User2','123', False),
+('DevUser3', 'Dev', 'User3','123', False);
 
 INSERT INTO clubs (clubName, organizer)
 VALUES 
-('Club1', 1),
-('Club2', 2);
+('Club1', 'This is sample club 1.', 1),
+('Club2', 'This is sample club 2.', 2);
 
 INSERT INTO locations (buildingName, mapReference)
 VALUES

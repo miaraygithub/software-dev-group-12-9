@@ -2,6 +2,8 @@ CREATE TABLE users (
     userID SERIAL NOT NULL,
     userName VARCHAR(30) NOT NULL,
     userPassword VARCHAR(30) NOT NULL,
+    firstname VARCHAR(30) NOT NULL,
+    lastname VARCHAR(30) NOT NULL,
     userAdmin BOOL NOT NULL,
     PRIMARY KEY (userID)
 );
@@ -9,6 +11,7 @@ CREATE TABLE users (
 CREATE TABLE clubs (
     clubID serial NOT NULL,
     clubName varchar(30) NOT NULL,
+    clubDescription VARCHAR(200) NOT NULL,
     organizer int NOT NULL,
     PRIMARY KEY (ClubID),
     CONSTRAINT FK_OrganizerUserID FOREIGN KEY (organizer) REFERENCES users (userID)
