@@ -7,6 +7,7 @@ const bodyParser = require('body-parser');
 const session = require('express-session');
 const app = express();
 app.use(bodyParser.json());
+const { format } = require('date-fns'); //needed to format the event dates in a user friendly way
 
 // -------------------------------------  APP CONFIG   ----------------------------------------------
 
@@ -23,7 +24,9 @@ app.set('view engine', 'hbs');
 app.set('views', path.join(__dirname, 'views'));
 app.use('/js', express.static(__dirname + '/src/resources/js'));
 app.use('/js', express.static(path.join(__dirname, 'resources', 'js')));
+app.use('/css', express.static(path.join(__dirname, 'resources', 'css')));
 app.use(bodyParser.json());
+
 // set Session
 app.use(
   session({
@@ -68,9 +71,29 @@ db.connect()
 // -------------------------------------  ROUTES  ---------------------------------------
 
 // =========== / Route ===========
-app.get('/', (req, res) => {
-  res.render('pages/home')
-})
+app.get('/', async (req, res) => {
+  try {
+    const events = await db.any(`
+      SELECT *
+      FROM events
+      ORDER BY "eventdate" ASC, "starttime" ASC;
+    `);
+
+    const formattedEvents = events.map(events => {
+      return {
+        ...events,
+        eventDateFormatted: format(new Date(events.eventdate), 'MMM d, yyyy'),
+        startTimeFormatted: format(new Date(`1970-01-01T${events.starttime}`), 'h:mm a'),
+        endTimeFormatted: format(new Date(`1970-01-01T${events.endtime}`), 'h:mm a'),
+      };
+    });
+
+    res.render('pages/home', { events: formattedEvents });
+  } catch (err) {
+    console.error('Error fetching events:', err);
+    res.status(500).send('Internal server error');
+  }
+});
 
 // =========== /login Route ===========
 // Render the login page -- Jessie
