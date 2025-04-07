@@ -88,7 +88,7 @@ app.get('/', async (req, res) => {
         endTimeFormatted: format(new Date(`1970-01-01T${events.endtime}`), 'h:mm a'),
       };
     });
-
+    
     res.render('pages/home', { events: formattedEvents });
   } catch (err) {
     console.error('Error fetching events:', err);
@@ -141,6 +141,7 @@ app.post("/save-event", async (req, res) => {
     const eventClub = 1 // NEEDS TO BE CONNECTED TO USER 
     const eventDescription = req.body.event_description
 
+    
     //QUERIES
     const buildingQuery = `SELECT locationID from locations where buildingName = ($1)`
     const saveQuery = `INSERT INTO events (eventName, building, eventDate, clubSponser, roomNumber, eventDescription, startTime, endTime)
@@ -151,7 +152,7 @@ app.post("/save-event", async (req, res) => {
     buildingId = buildingId['locationid']
     console.log(buildingId, eventBuilding)
 
-    //Data to send to query
+    //Data to send to query 
     const eventSave = [eventName, buildingId, eventDate, eventClub, eventRoomNumber, eventDescription, eventStartTime+':00', eventEndTime+':00']
 
     //insert event into database
@@ -162,6 +163,28 @@ app.post("/save-event", async (req, res) => {
     console.error('Error saving event: ', err);
     res.status(400).json({ error: err.message});
   }
+})
+
+// =========== /eventDetails Route ===========
+app.post('/new-page', async (req, res) => {
+  const eventid = req.body.data;
+
+  const events = await db.any(`
+    SELECT *
+    FROM events
+    WHERE eventid = $1;
+  `, [eventid]);
+
+  const formattedEvents = events.map(events => {
+    return {
+      ...events,
+      eventDateFormatted: format(new Date(events.eventdate), 'MMM d, yyyy'),
+      startTimeFormatted: format(new Date(`1970-01-01T${events.starttime}`), 'h:mm a'),
+      endTimeFormatted: format(new Date(`1970-01-01T${events.endtime}`), 'h:mm a'),
+    };
+  });
+
+  res.render('pages/events', { event: formattedEvents[0] })
 })
 
 // =========== /search Route ===========
