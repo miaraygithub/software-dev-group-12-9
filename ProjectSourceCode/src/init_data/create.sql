@@ -17,7 +17,8 @@ CREATE TABLE clubs (
 CREATE TABLE locations (
     locationID serial NOT NULL,
     buildingName varchar(30) NOT NULL,
-    mapReference varchar(30) NOT NULL,
+    latitude FLOAT NOT NULL, 
+    longitude FLOAT NOT NULL,
     PRIMARY KEY (locationID)
 );
 
