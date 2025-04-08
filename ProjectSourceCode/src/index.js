@@ -88,10 +88,37 @@ app.get('/', async (req, res) => {
         endTimeFormatted: format(new Date(`1970-01-01T${events.endtime}`), 'h:mm a'),
       };
     });
-    
+
+    // generate geojson formatted event list to show pins
+    const geojson = await db.any(`
+      SELECT jsonb_build_object(
+          'type', 'FeatureCollection',
+
+          'features', jsonb_agg(
+            jsonb_build_object(
+              'type', 'Feature',
+              'geometry', jsonb_build_object(
+                  'type', 'Point',
+                  'coordinates', jsonb_build_array(locations.longitude, locations.latitude)
+              ),
+              'properties', jsonb_build_object(
+                  'eventID', events.eventID,
+                  'buildingName', locations.buildingName,
+                  'roomNumber', events.roomNumber
+              )
+            )
+          )
+      ) AS geojson
+      FROM events
+      INNER JOIN locations ON events.building = locations.locationID;`);
+
+      const geoEvents = geojson[0].geojson;
+    // console.log(JSON.stringify(geoEvents, null, 2)); // see if geoEvents is formatted correctly
+
     res.render('pages/home', { 
       login: !!req.session.user,
       events: formattedEvents, 
+      geoEvents: JSON.stringify(geoEvents)
     });
   } catch (err) {
     console.error('Error fetching events:', err);

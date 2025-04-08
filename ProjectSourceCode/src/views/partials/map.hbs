@@ -16,5 +16,55 @@
             center: [-105.26598, 40.00777], // starting [lng, lat] of CU Boulder
             zoom: 14.3 // starting zoom
         });
+
+        const geoEvents = JSON.parse('{{{geoEvents}}}'); 
+        // console.log(JSON.stringify(geoEvents, null, 2)); // check if geoEvents has been properly converted back to JSON format
+
+        map.on('load', () => {
+            map.addSource('places', {
+                'type': 'geojson',
+                'data': geoEvents
+            });
+            addMarkers();
+        });
+
+        function addMarkers() {
+            /* For each feature in the GeoJSON object above: */
+            for (const marker of geoEvents.features) {
+                /* Create a div element for the marker. */
+                const el = document.createElement('div');
+                /* Assign a unique `id` to the marker. */
+                el.id = `marker-${marker.properties.id}`;
+                /* Assign the `marker` class to each marker for styling. */
+                el.className = 'marker';
+                el.innerHTML = '<i class="fa-solid fa-location-dot"></i>'
+
+                /**
+                * Create a marker using the div element
+                * defined above and add it to the map.
+                **/
+                new mapboxgl.Marker(el, { offset: [0, -23] })
+                .setLngLat(marker.geometry.coordinates)
+                .addTo(map);
+            }
+        }
+
+        // need to finish implementing flyToStore and createPopUp
+        function flyToStore(currentFeature) {
+            map.flyTo({
+                center: currentFeature.geometry.coordinates,
+                zoom: 15
+            });
+        }
+
+        function createPopUp(currentFeature) {
+            const popUps = document.getElementsByClassName('mapboxgl-popup');
+            if (popUps[0]) popUps[0].remove();
+
+            const popup = new mapboxgl.Popup({ closeOnClick: false })
+                .setLngLat(currentFeature.geometry.coordinates)
+                .setHTML(`<h3>${currentFeature.properties.eventName}</h3><h4>${currentFeature.properties.building} - ${currentFeature.properties.room}</h4>`)
+                .addTo(map);
+        }
     </script>
 </body>
