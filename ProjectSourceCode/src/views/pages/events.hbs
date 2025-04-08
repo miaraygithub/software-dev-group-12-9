@@ -26,10 +26,36 @@
       </p>
     </div>
   </section>
-</main>
   
-  
+<!--Leave Comment Box-->
+<hr>
+<section class="mt-4">
+  <h4>Leave a Comment</h4>
+  <form method="POST" action="/comment">
+  <input type="hidden" name="eventid" value="{{event.eventid}}">
+  <div class="mb-3">
+    <textarea name="comment_text" class="form-control" rows="3" placeholder="Your comment here..." required></textarea>
+  </div>
+  <button type="submit" class="btn btn-primary">Post Comment</button>
+</form>
 
+</section>
+
+<!--Displayed Comments-->
+<section class="mt-5">
+  <h4>Comments</h4>
+  {{#if comments.length}}
+    <ul class="list-group">
+      {{#each comments}}
+        <li class="list-group-item">
+          <strong>{{this.username}}</strong>: {{this.comment_text}}
+        </li>
+      {{/each}}
+    </ul>
+  {{else}}
+    <p>No comments yet — be the first!</p>
+  {{/if}}
+</section>
 
 </main>
 <!-- TODO: fill out this page and populate with elected event -->

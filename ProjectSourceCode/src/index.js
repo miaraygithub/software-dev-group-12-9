@@ -231,8 +231,37 @@ app.post('/new-page', async (req, res) => {
     };
   });
 
-  res.render('pages/events', { event: formattedEvents[0] })
+  // ===Fetch Comments===
+  const comments = await db.any(`
+    SELECT * FROM comments
+    WHERE eventid = $1
+    ORDER BY created_at DESC;
+  `, [eventid]);
+
+  res.render('pages/events', { event: formattedEvents[0],
+    comments
+   })
 })
+
+app.post('/comment', async (req, res) => {
+  const eventId = req.body.eventid;
+  const commentText = req.body.comment_text;
+  const username = req.session.username || 'Anonymous'; //Change if we will not allow anonymous commentors
+
+  try {
+    //Insert the new comment into the database
+    await db.none(`
+      INSERT INTO comments (eventid, comment_text, username)
+      VALUES ($1, $2, $3)
+    `, [eventId, commentText, username]);
+
+    //Redirect back to /new-page with the same event ID so it reloads
+    res.redirect(307, '/new-page'); // 307 preserves the POST method
+  } catch (err) {
+    console.error('Error submitting comment:', err);
+    res.status(500).send('Failed to post comment.');
+  }
+});
 
 // =========== /search Route ===========
 app.get("/search", async (req, res) => {
@@ -259,6 +288,8 @@ app.get("/search", async (req, res) => {
     });
   }
 });
+
+// =========== Comments Route ===========
 
 //The app simply closes if it isn't listening for anything so this is load bearing. -- Julia
 const port = 3000
