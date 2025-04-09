@@ -266,8 +266,66 @@ app.post('/new-page', async (req, res) => {
     };
   });
 
-  res.render('pages/events', { event: formattedEvents[0] })
+  // Fetch Comments
+  const comments = await db.any(`
+    SELECT * FROM comments
+    WHERE eventid = $1
+    ORDER BY created_at DESC;
+  `, [eventid]);
+
+  res.render('pages/events', { event: formattedEvents[0],
+    comments
+   })
 })
+
+//For handling the redirect/reload once the user posts a comment
+app.get('/event/:id', async (req, res) => {
+  const eventid = req.params.id;
+
+  const events = await db.any(`
+    SELECT * FROM events
+    WHERE eventid = $1;
+  `, [eventid]);
+
+  const formattedEvents = events.map(event => {
+    return {
+      ...event,
+      eventDateFormatted: format(new Date(event.eventdate), 'MMM d, yyyy'),
+      startTimeFormatted: format(new Date(`1970-01-01T${event.starttime}`), 'h:mm a'),
+      endTimeFormatted: format(new Date(`1970-01-01T${event.endtime}`), 'h:mm a'),
+    };
+  });
+
+  const comments = await db.any(`
+    SELECT * FROM comments
+    WHERE eventid = $1
+    ORDER BY created_at DESC;
+  `, [eventid]);
+
+  res.render('pages/events', {
+    event: formattedEvents[0],
+    comments
+  });
+});
+
+app.post('/comment', async (req, res) => {
+  const eventId = req.body.eventid;
+  const commentText = req.body.comment_text;
+  const username = req.session.username || 'Anonymous';
+
+  try {
+    await db.none(`
+      INSERT INTO comments (eventid, comment_text, username)
+      VALUES ($1, $2, $3)
+    `, [eventId, commentText, username]);
+
+    //Redirect to the GET route after comment submission
+    res.redirect(`/event/${eventId}`);
+  } catch (err) {
+    console.error('Error submitting comment:', err);
+    res.status(500).send('Failed to post comment.');
+  }
+});
 
 // =========== /search Route ===========
 app.get("/search", async (req, res) => {
@@ -294,6 +352,8 @@ app.get("/search", async (req, res) => {
     });
   }
 });
+
+// =========== Comments Route ===========
 
 //The app simply closes if it isn't listening for anything so this is load bearing. -- Julia
 const port = 3000
