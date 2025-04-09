@@ -247,8 +247,8 @@ app.post("/save-event", async (req, res) => {
 })
 
 // =========== /eventDetails Route ===========
-app.post('/new-page', async (req, res) => {
-  const eventid = req.body.data;
+app.get('/event-details', async (req, res) => {
+  const eventid = req.query.eventID;
 
   const events = await db.any(`
     SELECT *
