@@ -1,24 +1,35 @@
 <title>Buff's Bulletin</title>
-<main role="main" class="flex-grow-1 container my-5">
-  <!-- Page Heading -->
-  <div class="mb-4 text-center">
-    <h1 class="display-4">Welcome to Buff's Bulletin!</h1>
-    <p class="lead text-muted">See what's happening around campus</p>
+<main role="main" class="d-flex flex-column vh-100 px-4">
+  <!-- Page Heading (fixed height) -->
+  <div class="mb-1 text-center">
+    <h1 class="display-6">Welcome to Buff's Bulletin!</h1>
+    <p class="lead text-muted small">See what's happening around campus</p>
   </div>
 
-  <!-- Layout: Sidebar + Map -->
-  <div class="d-flex h-100">
+  <!-- Layout: Sidebar + Map (fills remaining height) -->
+  <div class="d-flex flex-grow-1 overflow-hidden">
     <!-- Sidebar -->
-    <div id="sidebar" class="bg-light border-end p-3" style="width: 300px; transition: all 0.3s;">
-      <h2>Events</h2>
-      <button class="btn btn-sm btn-outline-secondary mb-3" id="expandSidebarBtn">Expand</button>
-      {{> event_sidebar events=events }}
+  <div
+    id="sidebar"
+    class="bg-light border-end pt-1 pb-1 d-flex flex-column"
+    style="width: 300px; height: 100%; overflow-x: hidden; transition: all 0.3s;"
+  >
+
+      <div class="d-flex p-2 align-items-center mb-2">
+        <button class="btn btn-sm btn-outline-secondary me-2 text-center" id="expandSidebarBtn" style="width: 90px;">Expand</button>
+        <h2 class="mb-0 ms-4">Events</h2>
+      </div>
+
+      <!-- Scrollable Event List -->
+      <div class="flex-grow-1 overflow-auto" style="overflow-x: hidden;">
+        {{> event_sidebar events=events }}
+      </div>
     </div>
 
     <!-- Map -->
-    <div id="map-container" class="flex-grow-1 position-relative">
-        {{>map}}
-      </div>
+    <div id="map-container" class="flex-grow-1 position-relative" style="height: 100%;">
+      {{> map }}
     </div>
   </div>
 </main>
+
