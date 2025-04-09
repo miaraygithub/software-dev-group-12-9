@@ -230,14 +230,8 @@ app.post("/save-event", async (req, res) => {
 
     
     //QUERIES
-    // const buildingQuery = `SELECT locationID from locations where buildingName = ($1)`
     const saveQuery = `INSERT INTO events (eventName, building, eventDate, clubSponser, roomNumber, eventDescription, startTime, endTime)
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8);`
-
-    //Get Building ID from Building Name
-    // buildingId = await db.one(buildingQuery, [eventBuilding])
-    // buildingId = buildingId['locationid']
-    // console.log(buildingId, eventBuilding)
 
     //Data to send to query 
     const eventSave = [eventName, eventBuildingID, eventDate, eventClub, eventRoomNumber, eventDescription, eventStartTime+':00', eventEndTime+':00']
