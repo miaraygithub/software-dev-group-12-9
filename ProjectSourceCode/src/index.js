@@ -75,8 +75,10 @@ db.connect()
 app.get('/', async (req, res) => {
   try {
     const events = await db.any(`
-      SELECT *
+      SELECT events.eventID as eventid, events.eventName as eventname, locations.buildingName as building, events.eventDate as eventdate, clubs.clubName as clubsponser, events.roomNumber as roomnumber, events.eventDescription as eventdescription, events.startTime as starttime, events.endTime as endtime
       FROM events
+      INNER JOIN locations ON events.building = locations.locationID
+      INNER JOIN clubs ON events.clubSponser = clubs.clubID
       ORDER BY "eventdate" ASC, "starttime" ASC;
     `);
 
@@ -202,18 +204,6 @@ app.get('/logout', (req, res) => {
     res.render('pages/logout', { message: 'Logged out successfully!'});
   });
   // res.render('pages/logout');
-});
-
-// =========== /events Route ===========
-app.get('/events', async (req, res) => {
-  var query = `SELECT * FROM users`;
-  try {
-    const response = await db.any(query);
-    console.log(response);
-  } catch (err) {
-    console.error('Error fetching data: ', err);
-    res.status(400).json({ error: err.message});
-  }
 });
 
 //=========== /saveEvent Route ===========
