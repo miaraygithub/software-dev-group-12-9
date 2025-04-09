@@ -5,8 +5,10 @@ const path = require('path');
 const pgp = require('pg-promise')();
 const bodyParser = require('body-parser');
 const session = require('express-session');
+const bcrypt = require('bcryptjs'); //  To hash passwords
 const app = express();
 app.use(bodyParser.json());
+const { format } = require('date-fns'); //needed to format the event dates in a user friendly way
 
 // -------------------------------------  APP CONFIG   ----------------------------------------------
 
@@ -23,7 +25,9 @@ app.set('view engine', 'hbs');
 app.set('views', path.join(__dirname, 'views'));
 app.use('/js', express.static(__dirname + '/src/resources/js'));
 app.use('/js', express.static(path.join(__dirname, 'resources', 'js')));
+app.use('/css', express.static(path.join(__dirname, 'resources', 'css')));
 app.use(bodyParser.json());
+
 // set Session
 app.use(
   session({
@@ -68,33 +72,140 @@ db.connect()
 // -------------------------------------  ROUTES  ---------------------------------------
 
 // =========== / Route ===========
-app.get('/', (req, res) => {
-  res.render('pages/home')
-})
+app.get('/', async (req, res) => {
+  try {
+    const events = await db.any(`
+      SELECT *
+      FROM events
+      ORDER BY "eventdate" ASC, "starttime" ASC;
+    `);
 
-// =========== /login Route ===========
-// Render the login page -- Jessie
+    const formattedEvents = events.map(events => {
+      return {
+        ...events,
+        eventDateFormatted: format(new Date(events.eventdate), 'MMM d, yyyy'),
+        startTimeFormatted: format(new Date(`1970-01-01T${events.starttime}`), 'h:mm a'),
+        endTimeFormatted: format(new Date(`1970-01-01T${events.endtime}`), 'h:mm a'),
+      };
+    });
+
+    // generate geojson formatted event list to show pins
+    const geojson = await db.any(`
+      SELECT jsonb_build_object(
+          'type', 'FeatureCollection',
+
+          'features', jsonb_agg(
+            jsonb_build_object(
+              'type', 'Feature',
+              'geometry', jsonb_build_object(
+                  'type', 'Point',
+                  'coordinates', jsonb_build_array(locations.longitude, locations.latitude)
+              ),
+              'properties', jsonb_build_object(
+                  'eventID', events.eventID,
+                  'buildingName', locations.buildingName,
+                  'roomNumber', events.roomNumber
+              )
+            )
+          )
+      ) AS geojson
+      FROM events
+      INNER JOIN locations ON events.building = locations.locationID;`);
+
+    const geoEvents = geojson[0].geojson;
+    // console.log(JSON.stringify(geoEvents, null, 2)); // see if geoEvents is formatted correctly
+
+    const buildings = await db.any(`SELECT locationID, buildingName FROM locations;`)
+    console.log(buildings);
+
+    res.render('pages/home', { 
+      login: !!req.session.user,
+      events: formattedEvents, 
+      geoEvents: JSON.stringify(geoEvents),
+      buildings: buildings
+    });
+  } catch (err) {
+    console.error('Error fetching events:', err);
+    res.status(500).send('Internal server error');
+  }
+});
+
+// =========== /profile Route ===========
+app.get('/profile', async(req, res) => {
+  if (!req.session.user) {
+    return res.redirect('/login');
+  }
+  
+  res.render('pages/profile');
+}) 
+
+// =========== /login Routes ===========
 app.get('/login', (req, res) => {
   res.render('pages/login');
 });
 
-// TODO: Finish POST login
-// app.post('login', async(req, res) => {
-//   try {
+app.post('/login', async(req, res) => {
+  try {
+    const username = req.body.username;
+    const password = req.body.password;
+    const query = 'SELECT * FROM users WHERE users.userName = ($1) LIMIT 1';
+    const values = [username];
+  
+    const user = await db.oneOrNone(query, values);
+    console.log(user);
+    
+    if (!user) {
+      return res.redirect('/register');
+    }
 
-//   } catch {
+    // check if password from request matches with password in DB
+    const match = await bcrypt.compare(password, user.userpassword);
+    if (!match) {
+      console.log('Password does not match.');
+      return res.render('pages/login', {message: 'Incorrect username or password'});
+    }
 
-//   }
-// })
+    req.session.user = user;
+    req.session.save();
+    res.redirect('/');
+  } catch (err) {
+    console.log('Login failed.');
+    // res.status(400).json({ error: err.message});
+    res.render('pages/login', {message: 'Login failed.'});
+  }
+})
+
+// =========== /register Routes ===========
+
+app.get('/register', (req, res) => {
+  res.render('pages/register');
+});
+
+app.post('/register', async(req,res) => {
+  try {
+    const hash = await bcrypt.hash(req.body.password, 10);
+
+    const query = 'INSERT INTO users(userName, userPassword, userAdmin) VALUES($1, $2, $3)';
+    await db.none(query, [req.body.username, hash, req.body.useradmin]);
+
+    res.redirect('/login');
+  } catch (error) {
+    console.error('Error during registration:', error);
+    res.redirect('/register');
+  }
+});
 
 // =========== /logout Route ===========
 app.get('/logout', (req, res) => {
-  res.render('pages/logout');
+  req.session.destroy(function(err) {
+    res.render('pages/logout', { message: 'Logged out successfully!'});
+  });
+  // res.render('pages/logout');
 });
 
 // =========== /events Route ===========
 app.get('/events', async (req, res) => {
-  var query = `SELECT * FROM events`;
+  var query = `SELECT * FROM users`;
   try {
     const response = await db.any(query);
     console.log(response);
@@ -103,6 +214,59 @@ app.get('/events', async (req, res) => {
     res.status(400).json({ error: err.message});
   }
 });
+
+//=========== /saveEvent Route ===========
+app.post("/save-event", async (req, res) => {
+  console.log('Save Event')
+  try {
+    const eventName = req.body.event_name;
+    const eventBuildingID = req.body.event_building;
+    const eventRoomNumber = req.body.event_room_number;
+    const eventDate = req.body.event_date;
+    const eventStartTime = req.body.event_start_time;
+    const eventEndTime = req.body.event_end_time;
+    const eventClub = 1 // NEEDS TO BE CONNECTED TO USER 
+    const eventDescription = req.body.event_description;
+
+    
+    //QUERIES
+    const saveQuery = `INSERT INTO events (eventName, building, eventDate, clubSponser, roomNumber, eventDescription, startTime, endTime)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8);`
+
+    //Data to send to query 
+    const eventSave = [eventName, eventBuildingID, eventDate, eventClub, eventRoomNumber, eventDescription, eventStartTime+':00', eventEndTime+':00']
+
+    //insert event into database
+    console.log(eventSave)
+    insertEvent = await db.none(saveQuery, eventSave)
+    res.redirect('/')
+  } catch (err) {
+    console.error('Error saving event: ', err);
+    res.status(400).json({ error: err.message});
+  }
+})
+
+// =========== /eventDetails Route ===========
+app.post('/new-page', async (req, res) => {
+  const eventid = req.body.data;
+
+  const events = await db.any(`
+    SELECT *
+    FROM events
+    WHERE eventid = $1;
+  `, [eventid]);
+
+  const formattedEvents = events.map(events => {
+    return {
+      ...events,
+      eventDateFormatted: format(new Date(events.eventdate), 'MMM d, yyyy'),
+      startTimeFormatted: format(new Date(`1970-01-01T${events.starttime}`), 'h:mm a'),
+      endTimeFormatted: format(new Date(`1970-01-01T${events.endtime}`), 'h:mm a'),
+    };
+  });
+
+  res.render('pages/events', { event: formattedEvents[0] })
+})
 
 // =========== /search Route ===========
 app.get("/search", async (req, res) => {
@@ -137,4 +301,4 @@ app.get("/search", async (req, res) => {
 const port = 3000
 app.listen(port, () => {
   console.log(`Buff's Bulletin listening on port ${port}`)
-})
+});

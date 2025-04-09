@@ -1,0 +1,67 @@
+<div class="custom-container">
+    <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#event_modal">Create Event</button>
+</div>
+
+
+<div class="modal" tabindex="-1" id="event_modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Event</h5>
+            </div>
+            <div class="modal-body">
+                <form action="/save-event" method="POST">
+                    <h2>Event Details</h2>
+                    
+                    <div class="mb-3">
+                        <label for="event_name" class="form-label">Event Name:</label>
+                        <input type="text" class="form-control" id="event_name" name="event_name" placeholder="Enter event name" required>
+                    </div>
+
+                    <div class="mb-3"> <!-- building list must be static because of coordinates for map -->
+                        <label for="event_building" class="form-label">Event Building:</label>
+                        <select class="form-control" id="event_building" name="event_building" required>
+                            <option value="" disabled selected>Select a building</option>
+                            {{#each buildings}}
+                                <option value="{{this.locationid}}">{{this.buildingname}}</option> <!-- return locationID -->
+                            {{/each}}
+                        </select>
+                    </div>
+
+
+                    <div class="mb-3">
+                        <label for="event_room_number" class="form-label">Room Number:</label>
+                        <input type="text" class="form-control" id = "event_room_number" name="event_room_number" placeholder="Enter event room number" required>
+                    </div> 
+
+                    <div class="mb-3">
+                        <label for="event_date" class="form-label">Date:</label>
+                        <input type="date" class="form-control" id = "event_date" name="event_date" required >
+                    </div>                   
+
+                    <div class="mb-3">
+                        <label for="event_start_time" class="form-label">Start Time:</label>
+                        <input type="time" id="event_start_time" name="event_start_time" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="event_end_time" class="form-label">End Time:</label>
+                        <input type="time" id="event_end_time" name="event_end_time" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3" id="event_description">
+                        <label for="event_description" class="form-label">Event Descriptions:</label>
+                        <input type="text" class="form-control" id = "event_description" name = 'event_description' placeholder="Enter event description" required+>
+                    </div>     
+                    <button type="submit" class="btn btn-primary" >Create Event</button>
+                                   
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >Close</button>
+                
+            </div>
+        </div>
+    </div>
+</div>
