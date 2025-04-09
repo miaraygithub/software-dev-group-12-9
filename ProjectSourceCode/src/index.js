@@ -159,7 +159,8 @@ app.post('/login', async(req, res) => {
     }
 
     // check if password from request matches with password in DB
-    const match = await bcrypt.compare(password, user.userpassword);
+    const hash = await bcrypt.hash(user.userpassword, 10);
+    const match = await bcrypt.compare(password, hash);
     if (!match) {
       console.log('Password does not match.');
       return res.render('pages/login', {message: 'Incorrect username or password'});
