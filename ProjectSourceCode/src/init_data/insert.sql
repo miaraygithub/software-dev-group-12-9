@@ -6,10 +6,10 @@ VALUES
 ('DevUser2', '123', False),
 ('DevUser3', '123', False);
 
-INSERT INTO clubs (clubName, organizer)
+INSERT INTO clubs (clubName, clubDescription, organizer)
 VALUES 
-('Club1', 1),
-('Club2', 2);
+('Club1', 'This is sample club 1.', 1),
+('Club2', 'This is sample club 2.', 2);
 
 INSERT INTO locations (buildingName, latitude, longitude)
 VALUES
@@ -29,6 +29,6 @@ VALUES
 
 INSERT INTO events (eventName, building, eventDate, clubSponser, roomNumber, eventDescription, startTime, endTime)
 VALUES 
-('Event1', 1, '2025-05-01', 1, 'A100', 'Sample Event 1', '12:00:00', '12:30:00'),
+('Event1', 1, '2025-05-01', 1, 'A100', 'Lorem ipsum dolor sit amet consectetur adipiscing elit. Consectetur adipiscing elit quisque faucibus ex sapien vitae. Ex sapien vitae pellentesque sem placerat in id. Placerat in id cursus mi pretium tellus duis. Pretium tellus duis convallis tempus leo eu aenean.', '12:00:00', '12:30:00'),
 ('Event2', 2, '2025-05-01', 1, 'A100', 'Sample Event 2', '12:30:00', '13:00:00'),
 ('Event3', 3, '2925-05-02', 2, 'A100', 'Sample Event 3', '15:00:00', '17:00:00');

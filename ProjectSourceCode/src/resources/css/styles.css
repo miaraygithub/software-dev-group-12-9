@@ -1,22 +1,48 @@
-/* Hide extra details by default */
 .sidebar-extra {
-    display: none;
-  }
-  
-  /* Show extra details when sidebar is expanded */
-  #sidebar.expanded .sidebar-extra {
-    display: block;
-  }
-  
-  /* Optional: smooth fade-in */
-  .sidebar-extra {
     opacity: 0;
-    transition: opacity 0.3s ease;
+    max-height: 0;
+    overflow: hidden;
+    transition: opacity 0.3s ease, max-height 0.3s ease;
   }
+  
+  /* Show when sidebar is expanded */
   #sidebar.expanded .sidebar-extra {
     opacity: 1;
+    max-height: 500px; /* large enough to contain your tallest content */
+  }  
+
+  .event-item {
+    transition: background-color 0.3s ease;
+    cursor: default;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+  }  
+  
+  .event-item:hover {
+    background-color: #f0d482; /* or a slightly darker Bootstrap gray like #e9ecef */
+    cursor: pointer;
   }
 
+  #sidebar {
+    overflow-x: hidden;
+    height: 100%;
+    width: 300px;
+  }
+  
+  /* Ensure all child elements stay within sidebar width */
+  #sidebar * {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  
+  /* Make event list scrollable without overflowing */
+  #sidebar ul.list-group {
+    overflow-y: auto;
+    padding-right: 0.25rem;
+    margin-right: 0;
+  }
+  
   /* Marker tweaks */
 .mapboxgl-popup-close-button {
   display: none;
@@ -74,4 +100,11 @@
   font-size: 36px; /* Adjust size of the icon if you want to modify the icon size further */
 }
 
+.event-description {
+  display: -webkit-box;
+  -webkit-line-clamp: 3; /* Number of lines you want */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
   

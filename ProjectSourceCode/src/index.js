@@ -75,8 +75,10 @@ db.connect()
 app.get('/', async (req, res) => {
   try {
     const events = await db.any(`
-      SELECT *
+      SELECT events.eventID as eventid, events.eventName as eventname, locations.buildingName as building, events.eventDate as eventdate, clubs.clubName as clubsponser, events.roomNumber as roomnumber, events.eventDescription as eventdescription, events.startTime as starttime, events.endTime as endtime
       FROM events
+      INNER JOIN locations ON events.building = locations.locationID
+      INNER JOIN clubs ON events.clubSponser = clubs.clubID
       ORDER BY "eventdate" ASC, "starttime" ASC;
     `);
 
@@ -116,7 +118,6 @@ app.get('/', async (req, res) => {
     // console.log(JSON.stringify(geoEvents, null, 2)); // see if geoEvents is formatted correctly
 
     const buildings = await db.any(`SELECT locationID, buildingName FROM locations;`)
-    console.log(buildings);
 
     res.render('pages/home', { 
       login: !!req.session.user,
@@ -261,7 +262,7 @@ app.get('/logout', (req, res) => {
   // res.render('pages/logout');
 });
 
-// =========== /events Route ===========
+// =========== GET /events Route for sidebar ===========
 app.get('/events', async (req, res) => {
   var query = `SELECT * FROM users`;
   try {
@@ -305,8 +306,8 @@ app.post("/save-event", async (req, res) => {
 })
 
 // =========== /eventDetails Route ===========
-app.post('/new-page', async (req, res) => {
-  const eventid = req.body.data;
+app.get('/event-details', async (req, res) => {
+  const eventid = req.query.eventID;
 
   const events = await db.any(`
     SELECT *
@@ -323,24 +324,105 @@ app.post('/new-page', async (req, res) => {
     };
   });
 
-  res.render('pages/events', { event: formattedEvents[0] })
+  // Fetch Comments
+  const comments = await db.any(`
+    SELECT * FROM comments
+    WHERE eventid = $1
+    ORDER BY created_at DESC;
+  `, [eventid]);
+
+  res.render('pages/events', { event: formattedEvents[0],
+    comments
+   })
 })
+
+//For handling the redirect/reload once the user posts a comment
+app.get('/event/:id', async (req, res) => {
+  const eventid = req.params.id;
+
+  const events = await db.any(`
+    SELECT * FROM events
+    WHERE eventid = $1;
+  `, [eventid]);
+
+  const formattedEvents = events.map(event => {
+    return {
+      ...event,
+      eventDateFormatted: format(new Date(event.eventdate), 'MMM d, yyyy'),
+      startTimeFormatted: format(new Date(`1970-01-01T${event.starttime}`), 'h:mm a'),
+      endTimeFormatted: format(new Date(`1970-01-01T${event.endtime}`), 'h:mm a'),
+    };
+  });
+
+  const comments = await db.any(`
+    SELECT * FROM comments
+    WHERE eventid = $1
+    ORDER BY created_at DESC;
+  `, [eventid]);
+
+  res.render('pages/events', {
+    event: formattedEvents[0],
+    comments
+  });
+});
+
+app.post('/comment', async (req, res) => {
+  const eventId = req.body.eventid;
+  const commentText = req.body.comment_text;
+  const username = req.session.username || 'Anonymous';
+
+  try {
+    await db.none(`
+      INSERT INTO comments (eventid, comment_text, username)
+      VALUES ($1, $2, $3)
+    `, [eventId, commentText, username]);
+
+    //Redirect to the GET route after comment submission
+    res.redirect(`/event/${eventId}`);
+  } catch (err) {
+    console.error('Error submitting comment:', err);
+    res.status(500).send('Failed to post comment.');
+  }
+});
 
 // =========== /search Route ===========
 app.get("/search", async (req, res) => {
   try {
-    // const results = await db.any(`SELECT * FROM Users
-    //   JOIN Clubs
-    //   JOIN Events 
-    //   WHERE Users.username = keyword
-    //   OR Users.firstname = keyword
-    //   OR Users.lastname = keyword
-    //   OR Users.fistname + ' ' + lastname = keyword
-    //   AND Clubs.clubname = keyword
-    //   AND Events.eventName = keyword;`, [req.body.keyword]);
+    const keyword = req.query.keyword;
+    const keywordLower = keyword.toLowerCase();
+    if (!keyword) { throw new Error('No keyword entered. Cannot query.') };
+    
+    
+    // TODO: add search by user
+    // const users_results = await db.any(`SELECT username, firstname, lastname FROM users 
+    //   WHERE username = $1 OR firstname LIKE $1 OR lastname LIKE $1 OR (fistname || ' ' || lastname) LIKE $1;`, [req.query.keyword]);
+
+    // TODO: once club categories is implemented, also search by cateogry
+    const clubs_results = await db.any(`SELECT clubName FROM clubs WHERE LOWER(clubName) LIKE CONCAT('%', $1, '%');`, [keywordLower]);
+
+    const events_results = await db.any(`SELECT e.eventID, e.eventName, l.buildingName,  e.roomNumber, e.eventDescription, e.eventDate, e.startTime, e.endTime
+      FROM events e
+      LEFT JOIN locations l ON e.building = l.locationID
+      WHERE LOWER(e.eventName) LIKE CONCAT('%', $1, '%');`, [keywordLower]);
+    
+    const formattedEvents = events_results.map(events => {
+      return {
+        ...events,
+        eventDateFormatted: format(new Date(events.eventdate), 'MMM d, yyyy'),
+        startTimeFormatted: format(new Date(`1970-01-01T${events.starttime}`), 'h:mm a'),
+        endTimeFormatted: format(new Date(`1970-01-01T${events.endtime}`), 'h:mm a'),
+      };
+    });
+
+
+    const resultsBool = !!(clubs_results || events_results); // check if any results were output
 
     res.render('pages/search-results', {
-      results: results
+      keyword: keyword,
+      resultsBool: resultsBool,
+      // users: users_results,
+      clubs: clubs_results,
+      events: formattedEvents
     });
   }
   catch (err) {
@@ -351,6 +433,8 @@ app.get("/search", async (req, res) => {
     });
   }
 });
+
+// =========== Comments Route ===========
 
 //The app simply closes if it isn't listening for anything so this is load bearing. -- Julia
 const port = 3000

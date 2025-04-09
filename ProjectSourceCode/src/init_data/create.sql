@@ -9,6 +9,7 @@ CREATE TABLE users (
 CREATE TABLE clubs (
     clubID serial NOT NULL,
     clubName varchar(30) NOT NULL,
+    clubDescription VARCHAR(200) NOT NULL,
     organizer int NOT NULL,
     PRIMARY KEY (ClubID),
     CONSTRAINT FK_OrganizerUserID FOREIGN KEY (organizer) REFERENCES users (userID)
@@ -35,6 +36,14 @@ CREATE TABLE events (
     PRIMARY KEY (eventID),
     CONSTRAINT FK_BuildingLocationID FOREIGN KEY (building) REFERENCES locations (locationID),
     CONSTRAINT FK_ClubSponserClubID FOREIGN KEY (clubSponser) REFERENCES clubs (clubID)
+);
+
+CREATE TABLE comments (
+  commentid SERIAL PRIMARY KEY,
+  eventid INT REFERENCES events(eventid),
+  username TEXT,
+  comment_text TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE rsvp (

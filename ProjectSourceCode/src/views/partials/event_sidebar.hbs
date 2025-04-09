@@ -1,30 +1,46 @@
 {{>new_event}}
+
 <ul class="list-group">
   {{#each events}}
-    <li class="list-group-item flex-column row">
+    <li
+      class="list-group-item flex-column row event-item"
+      data-eventid="{{this.eventid}}"
+      onclick="submitFromElement(this)"
+      onkeydown="if(event.key === 'Enter') submitFromElement(this)"
+      role="button"
+      tabindex="0"
+    >
       <div class="w-100">
-        <strong onclick="submitForm()">{{this.eventname}}</strong><br>
-        <small class="text-muted" >
-          {{eventdescription}} <br>
-        </small>
-        <form id="newTabForm" action="/new-page" method="POST" target="_blank" style="display: none;">
-          <input type="hidden" name="data" id="data" value={{this.eventid}}>
+        <strong class="fs-5">{{this.eventname}}</strong><br>
+          <p class="mb-0"><strong>Location:</strong> {{building}} Room {{roomnumber}}</p>
+          <p class="mb-0"><strong>Hosted by:</strong> {{clubsponser}}</p>
+
+        <!-- Individual form per event -->
+        <form id="eventForm-{{this.eventid}}" action="/event-details" method="GET" target="_blank" style="display: none;">
+          <input type="hidden" name="eventID" value="{{this.eventid}}">
         </form>
-                <div class="sidebar-extra mt-2">
-                  <p class="mb-0"><strong>Location:</strong> {{building}} Room {{roomnumber}}</p>
-                  <p class="mb-0"><strong>Hosted by:</strong> {{clubsponser}}</p>
-                  <p class="mb-0">{{eventDescription}}</p>
-                </div>
+
+        <div class="sidebar-extra mt-2">
+          <small class="text-muted">{{eventdescription}}</small>
+        </div>
+
         <small class="text-muted">
-          {{this.eventDateFormatted}} — {{this.startTimeFormatted}} to {{this.endTimeFormatted}}
-        </small>
+        {{this.eventDateFormatted}} — 
+        <span class="d-inline-block">{{this.startTimeFormatted}} to {{this.endTimeFormatted}}</span>
+      </small>
+
       </div>
     </li>
-  <script>
-    console.log()
-    function submitForm() {
-      document.getElementById('newTabForm').submit();
-    }
-  </script>
   {{/each}}
 </ul>
+
+<!-- script to bring user to an individual event's page on click -->
+<script>
+    function submitFromElement(el) {
+      const eventId = el.dataset.eventid;
+      const form = document.getElementById(`eventForm-${eventId}`);
+      if (form) {
+        form.submit();
+      }
+    }
+  </script>
