@@ -71,6 +71,12 @@ db.connect()
 
 // -------------------------------------  ROUTES  ---------------------------------------
 
+
+// =========== /welcome testing Route ===========
+app.get('/welcome', (req, res) => {
+  res.json({status: 'success', message: 'Welcome!'});
+});
+
 // =========== / Route ===========
 app.get('/', async (req, res) => {
   try {
@@ -288,7 +294,4 @@ app.get("/search", async (req, res) => {
 });
 
 //The app simply closes if it isn't listening for anything so this is load bearing. -- Julia
-const port = 3000
-app.listen(port, () => {
-  console.log(`Buff's Bulletin listening on port ${port}`)
-});
+module.exports = app.listen(3000);
