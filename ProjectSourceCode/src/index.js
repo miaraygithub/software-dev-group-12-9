@@ -75,8 +75,10 @@ db.connect()
 app.get('/', async (req, res) => {
   try {
     const events = await db.any(`
-      SELECT *
+      SELECT events.eventID as eventid, events.eventName as eventname, locations.buildingName as building, events.eventDate as eventdate, clubs.clubName as clubsponser, events.roomNumber as roomnumber, events.eventDescription as eventdescription, events.startTime as starttime, events.endTime as endtime
       FROM events
+      INNER JOIN locations ON events.building = locations.locationID
+      INNER JOIN clubs ON events.clubSponser = clubs.clubID
       ORDER BY "eventdate" ASC, "starttime" ASC;
     `);
 
@@ -159,7 +161,8 @@ app.post('/login', async(req, res) => {
     }
 
     // check if password from request matches with password in DB
-    const match = await bcrypt.compare(password, user.userpassword);
+    const hash = await bcrypt.hash(user.userpassword, 10);
+    const match = await bcrypt.compare(password, hash);
     if (!match) {
       console.log('Password does not match.');
       return res.render('pages/login', {message: 'Incorrect username or password'});
@@ -201,18 +204,6 @@ app.get('/logout', (req, res) => {
     res.render('pages/logout', { message: 'Logged out successfully!'});
   });
   // res.render('pages/logout');
-});
-
-// =========== /events Route ===========
-app.get('/events', async (req, res) => {
-  var query = `SELECT * FROM users`;
-  try {
-    const response = await db.any(query);
-    console.log(response);
-  } catch (err) {
-    console.error('Error fetching data: ', err);
-    res.status(400).json({ error: err.message});
-  }
 });
 
 //=========== /saveEvent Route ===========
@@ -265,8 +256,66 @@ app.get('/event-details', async (req, res) => {
     };
   });
 
-  res.render('pages/events', { event: formattedEvents[0] })
+  // Fetch Comments
+  const comments = await db.any(`
+    SELECT * FROM comments
+    WHERE eventid = $1
+    ORDER BY created_at DESC;
+  `, [eventid]);
+
+  res.render('pages/events', { event: formattedEvents[0],
+    comments
+   })
 })
+
+//For handling the redirect/reload once the user posts a comment
+app.get('/event/:id', async (req, res) => {
+  const eventid = req.params.id;
+
+  const events = await db.any(`
+    SELECT * FROM events
+    WHERE eventid = $1;
+  `, [eventid]);
+
+  const formattedEvents = events.map(event => {
+    return {
+      ...event,
+      eventDateFormatted: format(new Date(event.eventdate), 'MMM d, yyyy'),
+      startTimeFormatted: format(new Date(`1970-01-01T${event.starttime}`), 'h:mm a'),
+      endTimeFormatted: format(new Date(`1970-01-01T${event.endtime}`), 'h:mm a'),
+    };
+  });
+
+  const comments = await db.any(`
+    SELECT * FROM comments
+    WHERE eventid = $1
+    ORDER BY created_at DESC;
+  `, [eventid]);
+
+  res.render('pages/events', {
+    event: formattedEvents[0],
+    comments
+  });
+});
+
+app.post('/comment', async (req, res) => {
+  const eventId = req.body.eventid;
+  const commentText = req.body.comment_text;
+  const username = req.session.username || 'Anonymous';
+
+  try {
+    await db.none(`
+      INSERT INTO comments (eventid, comment_text, username)
+      VALUES ($1, $2, $3)
+    `, [eventId, commentText, username]);
+
+    //Redirect to the GET route after comment submission
+    res.redirect(`/event/${eventId}`);
+  } catch (err) {
+    console.error('Error submitting comment:', err);
+    res.status(500).send('Failed to post comment.');
+  }
+});
 
 // =========== /search Route ===========
 app.get("/search", async (req, res) => {
@@ -293,6 +342,8 @@ app.get("/search", async (req, res) => {
     });
   }
 });
+
+// =========== Comments Route ===========
 
 //The app simply closes if it isn't listening for anything so this is load bearing. -- Julia
 const port = 3000

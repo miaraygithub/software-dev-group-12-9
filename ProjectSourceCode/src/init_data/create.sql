@@ -37,6 +37,14 @@ CREATE TABLE events (
     CONSTRAINT FK_ClubSponserClubID FOREIGN KEY (clubSponser) REFERENCES clubs (clubID)
 );
 
+CREATE TABLE comments (
+  commentid SERIAL PRIMARY KEY,
+  eventid INT REFERENCES events(eventid),
+  username TEXT,
+  comment_text TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE rsvp (
     userID int NOT NULL,
     eventID int NOT NULL,

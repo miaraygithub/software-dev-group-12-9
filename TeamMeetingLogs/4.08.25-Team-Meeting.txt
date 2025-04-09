@@ -1,0 +1,17 @@
+The Takeaway from this meeting is that we have achieved good progress on the project so far, and the main functionality is close to completion. We are beginning to think that soon we will start working on making the UI resemble and take inspiration from CU’s color scheme. Lastly, time was also allocated to work on the pos/neg test cases.
+
+What we did this week:
+    Julia: Created functionality for events to appear in event sidebar
+    Mia: Implemented save event functionality and Implemented functionality for new page to open when clicking on an event
+    Jessie: Tested, debugged, and fixed all /register and /login API routes and 			 added edit profile page UI
+    Makaela: Added nav bar and reorganized search bar along with adding pins to the map, Added general UI for users and clubs cards, and adjusted the database.
+    Jules: Created commenting feature UI and API route to post comment debugged and fixed load event page error
+
+
+
+What we will work on next week:
+    Julia: Changhe the look of pins look and retouch website to make it cohesive with the CU aesthetic
+    Mia: Fix the database IDs to get club names easily and universally, along with working on RSVP and getting names from databases instead of numbers
+    Jessie: make a log in interface and logout interface, further work on the specifics for the profile page (profile picture, edit profile etc…), 
+    Makaela: Implement club page and events associated with the clubs
+	Jules: Work on my events page and club categories
