@@ -29,4 +29,43 @@ describe('Server!', () => {
 
 // *********************** TODO: WRITE 2 UNIT TESTCASES **************************
 
+//=== Positive and Negative test cases for register ===
+
+describe('Testing User Registration', () => {
+  it('positive : /register creates new user', done => {
+    chai
+      .request(server)
+      .post('/register')
+      .type('form')
+      .send({
+        username: 'test_user',
+        password: 'securePass123!',
+        useradmin: false
+      })
+      .end((err, res) => {
+        expect(res).to.redirect;
+        expect(res).to.have.status(200); // Or 302 depending on redirect
+        done();
+      });
+  });
+
+  it('negative : /register with numeric username should return 400', done => {
+    chai
+      .request(server)
+      .post('/register')
+      .type('form')
+      .send({
+        username: 12345, // Invalid input: number instead of string
+        password: 'password123',
+        useradmin: false
+      })
+      .end((err, res) => {
+        expect(res).to.have.status(400);
+        expect(res.body.message).to.equal('Invalid input');
+        done();
+      });
+  });
+});
+
+
 // ********************************************************************************

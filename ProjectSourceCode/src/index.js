@@ -176,6 +176,15 @@ app.get('/register', (req, res) => {
 
 app.post('/register', async(req,res) => {
   try {
+
+    //=== Implemented for Lab 11 to check that input is not an integer
+    const { username, password, useradmin } = req.body;
+
+    if (typeof username !== 'string' || !isNaN(username)) {
+      return res.status(400).json({ message: 'Invalid input' });
+    }
+    //====
+
     const hash = await bcrypt.hash(req.body.password, 10);
 
     const query = 'INSERT INTO users(userName, userPassword, userAdmin) VALUES($1, $2, $3)';
