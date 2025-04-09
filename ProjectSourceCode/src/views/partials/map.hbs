@@ -29,13 +29,24 @@
         });
 
         function addMarkers() {
+            const usedCoords = new Set()
             /* For each feature in the GeoJSON object above: */
             for (const marker of geoEvents.features) {
-                /* Create a div element for the marker. */
+                let [lng, lat] = marker.geometry.coordinates;
+                let coordKey = `${lng},${lat}`;
+                
+                let attempts = 0;
+                while (usedCoords.has(coordKey) && attempts < 10){
+                    const offset = 0.0007;
+                    lng += (Math.random() - 0.5) * offset;
+                    lat += (Math.random() - 0.5) * offset;
+                    coordKey = `${lng},${lat}`;
+                    attempts++;
+                }
+                usedCoords.add(coordKey);
+
                 const el = document.createElement('div');
-                /* Assign a unique `id` to the marker. */
                 el.id = `marker-${marker.properties.id}`;
-                /* Assign the `marker` class to each marker for styling. */
                 el.className = 'marker';
                 el.innerHTML = '<i class="fa-solid fa-location-dot"></i>'
 
@@ -44,7 +55,7 @@
                 * defined above and add it to the map.
                 **/
                 new mapboxgl.Marker(el, { offset: [0, -23] })
-                .setLngLat(marker.geometry.coordinates)
+                .setLngLat([lng, lat])
                 .addTo(map);
             }
         }
