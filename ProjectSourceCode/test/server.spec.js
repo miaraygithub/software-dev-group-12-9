@@ -28,5 +28,22 @@ describe('Server!', () => {
 });
 
 // *********************** TODO: WRITE 2 UNIT TESTCASES **************************
-
+// API: /add_user
+// Expect: res.status == 200 and res.body.message == 'Success'
+// Result: This test case should pass and return a status 200 along with a "Success" message.
+// Explanation: The testcase will call the /login API with the following input
+// and expects the API to return a status of 200 along with the "Success" message.
+describe('Testing Login API', () => {
+  it('positive : /login', done => {
+    chai
+      .request(server)
+      .post('/login')
+      .send({username: 'DevOrg1', password: '123'})
+      .end((err, res) => {
+        expect(res).to.have.status(200);
+        expect(res.body.message).to.equals('Success');
+        done();
+      });
+  });
+});
 // ********************************************************************************

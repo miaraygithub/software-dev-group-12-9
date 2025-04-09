@@ -158,15 +158,12 @@ app.post('/login', async(req, res) => {
       return res.render('pages/login', {message: 'Incorrect username or password'});
     }
 
-    req.session.user = user;
-    req.session.save();
-    res.redirect('/');
+    res.status(200).json({ message: 'Success'});
   } catch (err) {
-    console.log('Login failed.');
-    // res.status(400).json({ error: err.message});
-    res.render('pages/login', {message: 'Login failed.'});
+    console.log('Login failed:', err);
+    res.status(500).json({ message: 'Login failed'});
   }
-})
+});
 
 // =========== /register Routes ===========
 
