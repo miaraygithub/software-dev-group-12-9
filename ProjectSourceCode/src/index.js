@@ -137,7 +137,8 @@ app.get('/login', (req, res) => {
 
 app.post('/login', async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const username = req.body.username;
+    const password = req.body.password;
     const user = await db.oneOrNone(
       'SELECT * FROM users WHERE users.userName = $1 LIMIT 1',
       [username]
@@ -147,8 +148,8 @@ app.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'User not found', err: true });
     }
 
-    const match = await bcrypt.compare(password, user.userpassword);
-    if (!match) {
+    // const match = await bcrypt.compare(password, user.userpassword);
+    if (password != user.userpassword) {
       return res.status(400).json({ message: 'Incorrect username or password', err: true });
     }
 
