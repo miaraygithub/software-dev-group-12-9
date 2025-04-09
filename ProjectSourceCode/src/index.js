@@ -131,13 +131,40 @@ app.get('/', async (req, res) => {
 });
 
 // =========== /profile Route ===========
-app.get('/profile', async(req, res) => {
+app.get('/profile', (req, res) => {
   if (!req.session.user) {
     return res.redirect('/login');
   }
   
   res.render('pages/profile');
-}) 
+}); 
+
+app.post('/profile', async(req, res) => {
+  if (!req.session.user) {
+    return res.redirect('/login');
+  }
+
+  try {
+    if (req.body.newUsername) {
+      const usernameQuery = 'UPDATE users SET userName = ($1) WHERE users.userName = ($2)';
+      await db.none(usernameQuery, [req.body.newUsername, req.session.user.username]);
+    }
+    if (req.body.newPassword) {
+      const passwordQuery = 'UPDATE users SET users.userPassword = ($1) WHERE users.userPassword = ($2)';
+      await db.none(passwordQuery, [req.body.newPassword, req.session.user.userpassword]);
+    }
+
+    if (!(req.body.newUsername || req.body.newPassword)) {
+      return res.render('pages/profile', {message: 'Please make changes before submitting'});
+    }
+
+    res.render('pages/profile', {message: 'Profile successfully edited!'});
+  } catch (err) {
+    console.error('Error sending updated profile data', err);
+    // res.status(400).json({ error: err.message});
+    res.render('pages/profile', {message: 'Failed to update.'});
+  }
+});
 
 // =========== /login Routes ===========
 app.get('/login', (req, res) => {
@@ -146,25 +173,12 @@ app.get('/login', (req, res) => {
 
 app.post('/login', async(req, res) => {
   try {
-    const username = req.body.username;
-    const password = req.body.password;
-    const query = 'SELECT * FROM users WHERE users.userName = ($1) LIMIT 1';
-    const values = [username];
-  
-    const user = await db.oneOrNone(query, values);
-    console.log(user);
+    const user = await db.oneOrNone('SELECT DISTINCT * FROM users WHERE users.userName = $1;', [req.body.username])
+    if (!user) { return res.redirect('/register'); }
     
-    if (!user) {
-      return res.redirect('/register');
-    }
-
     // check if password from request matches with password in DB
-    const hash = await bcrypt.hash(user.userpassword, 10);
-    const match = await bcrypt.compare(password, hash);
-    if (!match) {
-      console.log('Password does not match.');
-      return res.render('pages/login', {message: 'Incorrect username or password'});
-    }
+    const match = await bcrypt.compare(req.body.password, user.userpassword);
+    if (!match) { throw new Error('Invalid username or password.'); }
 
     req.session.user = user;
     req.session.save();
@@ -172,9 +186,47 @@ app.post('/login', async(req, res) => {
   } catch (err) {
     console.log('Login failed.');
     // res.status(400).json({ error: err.message});
-    res.render('pages/login', {message: 'Login failed.'});
+    res.render('pages/login', {
+      error: true,
+      message: err
+    });
   }
 })
+
+// app.post('/login', async(req, res) => {
+//   try {
+//     const username = req.body.username;
+//     const password = req.body.password;
+//     const query = 'SELECT * FROM users WHERE users.userName = ($1) LIMIT 1';
+//     const values = [username];
+  
+//     const user = await db.oneOrNone(query, values);
+//     console.log(user);
+//     console.log()
+    
+//     if (!user) {
+//       return res.redirect('/register');
+//     }
+
+//     // check if password from request matches with password in DB
+//     const hash = await bcrypt.hash(password, 10);
+//     console.log(hash);
+//     console.log(user.userpassword);
+//     const match = await bcrypt.compare(hash, user.userpassword);
+//     if (!match) {
+//       console.log('Password does not match.');
+//       return res.render('pages/login', {message: 'Incorrect username or password'});
+//     }
+
+//     req.session.user = user;
+//     req.session.save();
+//     res.redirect('/');
+//   } catch (err) {
+//     console.log('Login failed.');
+//     // res.status(400).json({ error: err.message});
+//     res.render('pages/login', {message: 'Login failed.'});
+//   }
+// })
 
 // =========== /register Routes ===========
 
@@ -185,9 +237,14 @@ app.get('/register', (req, res) => {
 app.post('/register', async(req,res) => {
   try {
     const hash = await bcrypt.hash(req.body.password, 10);
+    var userAdmin = true;
+
+    if (!req.body.userAdmin) {
+      userAdmin = false;
+    }
 
     const query = 'INSERT INTO users(userName, userPassword, userAdmin) VALUES($1, $2, $3)';
-    await db.none(query, [req.body.username, hash, req.body.useradmin]);
+    await db.none(query, [req.body.username, hash, userAdmin]);
 
     res.redirect('/login');
   } catch (error) {
