@@ -3,13 +3,12 @@
   {{#each events}}
     <li class="list-group-item flex-column row">
       <div class="w-100">
-        <strong onclick="submitForm()">{{this.eventname}}</strong><br>
+        <a href="/event-details?eventID={{this.eventid}}" target="_blank" style="color:black">
+            <strong>{{this.eventname}}</strong>
+        </a><br>
         <small class="text-muted" >
           {{eventdescription}} <br>
         </small>
-        <form id="newTabForm" action="/new-page" method="POST" target="_blank" style="display: none;">
-          <input type="hidden" name="data" id="data" value={{this.eventid}}>
-        </form>
                 <div class="sidebar-extra mt-2">
                   <p class="mb-0"><strong>Location:</strong> {{building}} Room {{roomnumber}}</p>
                   <p class="mb-0"><strong>Hosted by:</strong> {{clubsponser}}</p>
@@ -20,11 +19,5 @@
         </small>
       </div>
     </li>
-  <script>
-    console.log()
-    function submitForm() {
-      document.getElementById('newTabForm').submit();
-    }
-  </script>
   {{/each}}
 </ul>

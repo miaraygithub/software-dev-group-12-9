@@ -74,4 +74,11 @@
   font-size: 36px; /* Adjust size of the icon if you want to modify the icon size further */
 }
 
+.event-description {
+  display: -webkit-box;
+  -webkit-line-clamp: 3; /* Number of lines you want */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
   

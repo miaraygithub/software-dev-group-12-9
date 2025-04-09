@@ -116,7 +116,6 @@ app.get('/', async (req, res) => {
     // console.log(JSON.stringify(geoEvents, null, 2)); // see if geoEvents is formatted correctly
 
     const buildings = await db.any(`SELECT locationID, buildingName FROM locations;`)
-    console.log(buildings);
 
     res.render('pages/home', { 
       login: !!req.session.user,
@@ -203,7 +202,7 @@ app.get('/logout', (req, res) => {
   // res.render('pages/logout');
 });
 
-// =========== /events Route ===========
+// =========== GET /events Route for sidebar ===========
 app.get('/events', async (req, res) => {
   var query = `SELECT * FROM users`;
   try {
@@ -247,8 +246,8 @@ app.post("/save-event", async (req, res) => {
 })
 
 // =========== /eventDetails Route ===========
-app.post('/new-page', async (req, res) => {
-  const eventid = req.body.data;
+app.get('/event-details', async (req, res) => {
+  const eventid = req.query.eventID;
 
   const events = await db.any(`
     SELECT *
@@ -272,20 +271,40 @@ app.post('/new-page', async (req, res) => {
 app.get("/search", async (req, res) => {
   try {
     const keyword = req.query.keyword;
+    const keywordLower = keyword.toLowerCase();
     if (!keyword) { throw new Error('No keyword entered. Cannot query.') };
-    const users_results = await db.any(`SELECT username, firstname, lastname FROM users 
-      WHERE username = $1 OR firstname LIKE $1 OR lastname LIKE $1 OR (fistname || ' ' || lastname) LIKE $1;`, [req.query.keyword]);
-    const clubs_results = await db.any(`SELECT clubName FROM clubs WHERE clubName = $1;`, [req.query.keyword]);
-    const events_results = await db.any(`SELECT e.eventName, l.buildingName,  e.roomNumber, e.eventDescription, e.eventDate, e.startTime, e.endTime
+    
+    
+    // TODO: add search by user
+    // const users_results = await db.any(`SELECT username, firstname, lastname FROM users 
+    //   WHERE username = $1 OR firstname LIKE $1 OR lastname LIKE $1 OR (fistname || ' ' || lastname) LIKE $1;`, [req.query.keyword]);
+
+    // TODO: once club categories is implemented, also search by cateogry
+    const clubs_results = await db.any(`SELECT clubName FROM clubs WHERE LOWER(clubName) LIKE CONCAT('%', $1, '%');`, [keywordLower]);
+
+    const events_results = await db.any(`SELECT e.eventID, e.eventName, l.buildingName,  e.roomNumber, e.eventDescription, e.eventDate, e.startTime, e.endTime
       FROM events e
       LEFT JOIN locations l ON e.building = l.locationID
-      WHERE eventName = $1%;`, [req.query.keyword]);
+      WHERE LOWER(e.eventName) LIKE CONCAT('%', $1, '%');`, [keywordLower]);
+    
+    const formattedEvents = events_results.map(events => {
+      return {
+        ...events,
+        eventDateFormatted: format(new Date(events.eventdate), 'MMM d, yyyy'),
+        startTimeFormatted: format(new Date(`1970-01-01T${events.starttime}`), 'h:mm a'),
+        endTimeFormatted: format(new Date(`1970-01-01T${events.endtime}`), 'h:mm a'),
+      };
+    });
+
+
+    const resultsBool = !!(clubs_results || events_results); // check if any results were output
 
     res.render('pages/search-results', {
-      keyword: req.query.keyword,
-      users: users_results,
+      keyword: keyword,
+      resultsBool: resultsBool,
+      // users: users_results,
       clubs: clubs_results,
-      events: events_results
+      events: formattedEvents
     });
   }
   catch (err) {
