@@ -10,24 +10,24 @@ chai.should();
 chai.use(chaiHttp);
 const {assert, expect} = chai;
 
-// ********************** DEFAULT WELCOME TESTCASE ****************************
 
-describe('Server!', () => {
-  // Sample test case given to test / endpoint.
-  it('Returns the default welcome message', done => {
+// *********************** TODO: WRITE 2 UNIT TESTCASES **************************
+
+//Negative test case for login route
+describe('Login negative test', () => {
+  it('Test for if POST request correctly fails when invalid login is entered or no user is found', done => {
     chai
       .request(server)
-      .get('/welcome')
+      .post('/login')
+      .set('Accept', 'application/json')
+      .send({ username: 'wrong', password: 'wrong' })
       .end((err, res) => {
-        expect(res).to.have.status(200);
-        expect(res.body.status).to.equals('success');
-        assert.strictEqual(res.body.message, 'Welcome!');
+        expect(res).to.have.status(400);
+        expect(res.body).to.have.property('message');
         done();
       });
   });
 });
-
-// *********************** TODO: WRITE 2 UNIT TESTCASES **************************
 
 //=== Positive and Negative test cases for register ===
 

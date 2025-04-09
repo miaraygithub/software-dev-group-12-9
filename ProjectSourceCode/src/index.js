@@ -71,8 +71,6 @@ db.connect()
 
 // -------------------------------------  ROUTES  ---------------------------------------
 
-
-// =========== /welcome testing Route ===========
 app.get('/welcome', (req, res) => {
   res.json({status: 'success', message: 'Welcome!'});
 });
@@ -137,31 +135,27 @@ app.get('/login', (req, res) => {
   res.render('pages/login');
 });
 
-app.post('/login', async(req, res) => {
+app.post('/login', async (req, res) => {
   try {
-    const username = req.body.username;
-    const password = req.body.password;
-    const query = 'SELECT * FROM users WHERE users.userName = ($1) LIMIT 1';
-    const values = [username];
-  
-    const user = await db.oneOrNone(query, values);
-    console.log(user);
-    
+    const { username, password } = req.body;
+    const user = await db.oneOrNone(
+      'SELECT * FROM users WHERE users.userName = $1 LIMIT 1',
+      [username]
+    );
+
     if (!user) {
-      return res.redirect('/register');
+      return res.status(400).json({ message: 'User not found', err: true });
     }
 
-    // check if password from request matches with password in DB
     const match = await bcrypt.compare(password, user.userpassword);
     if (!match) {
-      console.log('Password does not match.');
-      return res.render('pages/login', {message: 'Incorrect username or password'});
+      return res.status(400).json({ message: 'Incorrect username or password', err: true });
     }
 
-    res.status(200).json({ message: 'Success'});
+    res.status(200).json({ message: 'Success' });
   } catch (err) {
-    console.log('Login failed:', err);
-    res.status(500).json({ message: 'Login failed'});
+    console.error('Login failed:', err);
+    res.status(500).json({ message: 'Login failed', err: true });
   }
 });
 
@@ -299,5 +293,9 @@ app.get("/search", async (req, res) => {
   }
 });
 
-//The app simply closes if it isn't listening for anything so this is load bearing. -- Julia
 module.exports = app.listen(3000);
+//The app simply closes if it isn't listening for anything so this is load bearing. -- Julia
+// const port = 3000
+// app.listen(port, () => {
+//   console.log(`Buff's Bulletin listening on port ${port}`)
+// });
