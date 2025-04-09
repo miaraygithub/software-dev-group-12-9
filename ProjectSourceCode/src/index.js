@@ -147,25 +147,12 @@ app.get('/login', (req, res) => {
 
 app.post('/login', async(req, res) => {
   try {
-    const username = req.body.username;
-    const password = req.body.password;
-    const query = 'SELECT * FROM users WHERE users.userName = ($1) LIMIT 1';
-    const values = [username];
-  
-    const user = await db.oneOrNone(query, values);
-    console.log(user);
+    const user = await db.oneOrNone('SELECT DISTINCT * FROM users WHERE username = $1;', [req.body.username])
+    if (!user) { throw new Error('Invalid username or password.'); }
     
-    if (!user) {
-      return res.redirect('/register');
-    }
-
     // check if password from request matches with password in DB
-    const hash = await bcrypt.hash(user.userpassword, 10);
-    const match = await bcrypt.compare(password, hash);
-    if (!match) {
-      console.log('Password does not match.');
-      return res.render('pages/login', {message: 'Incorrect username or password'});
-    }
+    const match = await bcrypt.compare(req.body.password, user.userpassword);
+    if (!match) { throw new Error('Invalid username or password.'); }
 
     req.session.user = user;
     req.session.save();
@@ -173,7 +160,10 @@ app.post('/login', async(req, res) => {
   } catch (err) {
     console.log('Login failed.');
     // res.status(400).json({ error: err.message});
-    res.render('pages/login', {message: 'Login failed.'});
+    res.render('pages/login', {
+      error: true,
+      message: err
+    });
   }
 })
 
