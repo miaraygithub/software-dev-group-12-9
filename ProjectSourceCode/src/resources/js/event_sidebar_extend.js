@@ -16,5 +16,6 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.textContent = 'Collapse';
     }
     expanded = !expanded;
+    sidebar.classList.toggle('expanded', expanded);
   });
 });
