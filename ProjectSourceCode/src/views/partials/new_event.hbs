@@ -18,10 +18,16 @@
                         <input type="text" class="form-control" id="event_name" name="event_name" placeholder="Enter event name" required>
                     </div>
 
-                    <div class="mb-3">
+                    <div class="mb-3"> <!-- building list must be static because of coordinates for map -->
                         <label for="event_building" class="form-label">Event Building:</label>
-                        <input type="text" class="form-control" id="event_building" name = 'event_building'placeholder="Enter event building name" required>
+                        <select class="form-control" id="event_building" name="event_building" required>
+                            <option value="" disabled selected>Select a building</option>
+                            {{#each buildings}}
+                                <option value="{{this.locationid}}">{{this.buildingname}}</option> <!-- return locationID -->
+                            {{/each}}
+                        </select>
                     </div>
+
 
                     <div class="mb-3">
                         <label for="event_room_number" class="form-label">Room Number:</label>
