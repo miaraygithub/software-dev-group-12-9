@@ -126,6 +126,15 @@ app.get('/', async (req, res) => {
   }
 });
 
+// =========== /profile Route ===========
+app.get('/profile', async(req, res) => {
+  if (!req.session.user) {
+    return res.redirect('/login');
+  }
+  
+  res.render('pages/profile');
+}) 
+
 // =========== /login Routes ===========
 app.get('/login', (req, res) => {
   res.render('pages/login');
