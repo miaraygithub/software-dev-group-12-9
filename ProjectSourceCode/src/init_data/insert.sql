@@ -6,10 +6,27 @@ VALUES --DO NOT USE THESE TO LOG IN. PASSWORD IS NOT ENCODED--
 ('DevUser2', '123', False),
 ('DevUser3', '123', False);
 
-INSERT INTO clubs (clubName, clubDescription, organizer)
+INSERT INTO club_categories (categoryName)
+VALUES
+('Sports'),
+('Music'),
+('Art'),
+('Technology'),
+('Film'),
+('Community Service'),
+('Greek Life'),
+('Academic'),
+('Culture'),
+('LGBTQ+'),
+('Career Interest');
+
+INSERT INTO clubs (clubName, clubDescription, organizer, category)
 VALUES 
-('Club1', 'This is sample club 1.', 1),
-('Club2', 'This is sample club 2.', 2);
+('Club1', 'This is sample club 1.', 1, 1),
+('Club2', 'This is sample club 2.', 2, 2),
+('Club3', 'This is sample club 3.', 1, 3),
+('Club4', 'This is sample club 4.', 2, 4),
+('Club5', 'This is sample club 5,', 1, 2);
 
 INSERT INTO locations (buildingName, latitude, longitude)
 VALUES

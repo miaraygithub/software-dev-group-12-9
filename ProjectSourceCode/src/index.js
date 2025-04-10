@@ -369,6 +369,40 @@ app.get("/search", async (req, res) => {
 
 // =========== Comments Route ===========
 
+// =========== /clubs Route ===========
+app.get("/clubs", async(req, res) => {
+  try{
+    const categories = await db.any(`SELECT * FROM club_categories;`);
+
+    const clubsByCategory = [];
+
+    for (const category of categories) {
+      const clubs = await db.any(`SELECT clubs.clubID, clubs.clubName, clubs.clubDescription
+        FROM clubs 
+        INNER JOIN club_categories ON clubs.category = club_categories.categoryID
+         WHERE club_categories.categoryID = $1;`, [category.categoryid]);
+      
+        clubsByCategory.push({
+          categoryid: category.categoryid,
+          categoryname: category.categoryname,
+          clubs: clubs
+        });
+    }
+    console.log(clubsByCategory);
+
+    res.render('pages/clubs', {
+      clubs: clubsByCategory,
+    })
+  }
+  catch (err) {
+    res.render('pages/clubs', {
+      clubs: [],
+      error: true,
+      message: err.message
+    })
+  }
+});
+
 //The app simply closes if it isn't listening for anything so this is load bearing. -- Julia
 const port = 3000
 app.listen(port, () => {

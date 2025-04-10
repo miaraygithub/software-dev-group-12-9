@@ -1,0 +1,25 @@
+<title>Buff's Bulletin Clubs</title>
+<body>
+  {{message}}
+  <div class="container-fluid">
+    {{#each clubs.category}}
+    <h2>{{clubs.categoryname}}</h2>
+    <a class="text" href="/clubs-by-category?categoryID={{clubs.categoryid}}">View more</a>
+        <div class="row flex-row flex-nowrap">
+            {{#each clubs}}
+            <div class="col-3">
+              <div class="card h-100" style="width: 300px;">
+                  <div class="card-body d-flex flex-column">
+                    <h4 class="card-title">{{clubs.clubname}}</h4>
+                    <p class="event-description">{{clubs.clubdescription}}</p>
+                    <div class="mt-auto">
+                      <a class="btn btn-primary stretched-link" href="/club-details?club={{clubs.clubid}}" target="_blank">View Club</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {{/each}}
+        </div>
+    {{/each}}
+  </div>
+</body>
