@@ -9,6 +9,7 @@
             <div class="modal-header">
                 <h5 class="modal-title">Add Event</h5>
             </div>
+
             <div class="modal-body">
                 <form action="/save-event" method="POST">
                     <h2>Event Details</h2>
@@ -49,10 +50,16 @@
                         <input type="time" id="event_end_time" name="event_end_time" class="form-control" required>
                     </div>
 
-                    <div class="mb-3" id="event_description">
-                        <label for="event_description" class="form-label">Event Descriptions:</label>
-                        <input type="text" class="form-control" id = "event_description" name = 'event_description' placeholder="Enter event description" required+>
-                    </div>     
+                    <div class="mb-3">
+                        <label for="event_description" class="form-label">Event Description:</label>
+                        <textarea class="form-control" 
+                            id="event_description" 
+                            name="event_description" 
+                            rows="4" 
+                            placeholder="Enter event description"
+                            required
+                        ></textarea>
+                    </div>    
                     <button type="submit" class="btn btn-primary" >Create Event</button>
                                    
                 </form>

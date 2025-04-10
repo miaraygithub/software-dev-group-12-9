@@ -141,7 +141,7 @@ app.get('/profile', async(req, res) => {
 }) 
 
 // =========== /login Routes ===========
-app.get('/login', (req, res) => {
+app.get('/login', async (req, res) => {
   res.render('pages/login');
 });
 
