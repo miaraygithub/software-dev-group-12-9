@@ -331,7 +331,7 @@ app.get("/search", async (req, res) => {
     //   WHERE username = $1 OR firstname LIKE $1 OR lastname LIKE $1 OR (fistname || ' ' || lastname) LIKE $1;`, [req.query.keyword]);
 
     // TODO: once club categories is implemented, also search by cateogry
-    const clubs_results = await db.any(`SELECT clubName FROM clubs WHERE LOWER(clubName) LIKE CONCAT('%', $1, '%');`, [keywordLower]);
+    const clubs_results = await db.any(`SELECT * FROM clubs WHERE LOWER(clubName) LIKE CONCAT('%', $1, '%');`, [keywordLower]);
 
     const events_results = await db.any(`SELECT e.eventID, e.eventName, l.buildingName,  e.roomNumber, e.eventDescription, e.eventDate, e.startTime, e.endTime
       FROM events e

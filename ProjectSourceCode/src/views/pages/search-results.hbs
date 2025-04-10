@@ -4,34 +4,33 @@
     {{#if resultsBool}} <!-- if query produced results, show them -->
       <h1>Results for <em>{{keyword}}</em></h1>
       {{#if clubs}}
-        <div class="row">
-          <h2>Clubs</h2>
+      <h2>Clubs</h2>
+        <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-3 mt-0">
           {{#each clubs}}
-            <div class="card mb-3" style="max-width: 350px;">
-                <div class="row g-0">
-                  <!-- TODO: uncomment and fix if we add club images -->
-                  {{!-- <div class="col-md-4"> 
-                    <img src="..." class="img-fluid rounded-start" alt="...">
-                  </div> --}}
-                  <div class="col-md-8">
-                    <div class="card-body">
-                      <h5 class="card-title">{{this.clubname}}</h5>
-                      <p class="card-text">{{this.clubdescription}}</p>
-                      <a class="text" href="/club-events?clubName=<%= clubName %>">View club events</a> <!-- action will need to change -->
-                      <!-- add view user and add friend links if there's time later -->
+            <div class="col d-flex">
+              <div class="card h-100" style="width: 300px;">
+                  <div class="card-body d-flex flex-column">
+                    <h4 class="card-title">{{this.clubname}}</h4>
+                    <p class="event-description">{{this.clubdescription}}</p>
+                    <div class="mt-auto">
+                      <a class="btn btn-primary stretched-link" href="/club-details?club={{this.clubid}}" target="_blank">View Club</a>
                     </div>
                   </div>
                 </div>
               </div>
             {{/each}}
-        </div>
+          </div>
       {{/if}}
       {{#if events}}
-        <h2>Events</h2>
+        {{#if clubs}}
+          <h2 class="mt-4">Events</h2> <!-- if club cards exist, add a little more padding above header -->
+        {{else}}
+          <h2>Events</h2>
+        {{/if}}
         <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-3 mt-0">
           {{#each events}}
             <div class="col d-flex">
-              <div class="card h-100" style="width: 350px;">
+              <div class="card h-100 event-card" style="width: 350px;">
                   {{!-- <div class="card-header"></div> --}} <!-- add if we do event categories -->
                   <div class="card-body d-flex flex-column">
                     <h4 class="card-title">{{this.eventname}}</h4>
@@ -58,4 +57,24 @@
       <p>Want to add your own club or event?</p>
     {{/if}}
   </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const eventCards = document.querySelectorAll('.card');
+      eventCards.forEach(function (card) {
+        const description = card.querySelector('.event-description');
+
+        if (description.scrollHeight > description.clientHeight) { // check if description is truncated on card -> only show popover if truncated
+          const popoverTrigger = card.querySelector('.card-body');
+          popoverTrigger.setAttribute('data-bs-toggle', 'popover');
+          popoverTrigger.setAttribute('data-bs-trigger', 'hover focus');
+          popoverTrigger.setAttribute('data-bs-placement', 'top');
+          popoverTrigger.setAttribute('title', 'Event Description');
+          popoverTrigger.setAttribute('data-bs-content', description.textContent);
+
+          new bootstrap.Popover(popoverTrigger);
+        }
+      });
+    });
+  </script>
 </body>
