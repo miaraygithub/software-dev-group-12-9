@@ -15,12 +15,19 @@ CREATE TABLE club_categories (
 CREATE TABLE clubs (
     clubID serial NOT NULL,
     clubName varchar(30) UNIQUE NOT NULL,
-    clubDescription VARCHAR(200) NOT NULL,
+    clubDescription text NOT NULL,
     organizer int NOT NULL,
     category int NOT NULL,
     PRIMARY KEY (ClubID),
     CONSTRAINT FK_OrganizerUserID FOREIGN KEY (organizer) REFERENCES users (userID),
     CONSTRAINT FK_ClubCategoryID FOREIGN KEY (category) REFERENCES club_categories (categoryID)
+);
+
+CREATE TABLE users_to_clubs (
+    userID int NOT NULL,
+    clubID int NOT NULL,
+    CONSTRAINT FK_UserID FOREIGN KEY (userID) REFERENCES users (userID),
+    CONSTRAINT FK_clubID FOREIGN KEY (clubID) REFERENCES clubs (clubID)
 );
 
 CREATE TABLE locations (
@@ -36,14 +43,14 @@ CREATE TABLE events (
     eventName varchar(30) NOT NULL,
     building int NOT NULL,
     eventDate date NOT NULL,
-    clubSponser int NOT NULL,
+    clubSponsor int NOT NULL,
     roomNumber varchar(10) NOT NULL,
     eventDescription text NOT NULL,
     startTime time NOT NULL,
     endTime time NOT NULL,
     PRIMARY KEY (eventID),
     CONSTRAINT FK_BuildingLocationID FOREIGN KEY (building) REFERENCES locations (locationID),
-    CONSTRAINT FK_ClubSponserClubID FOREIGN KEY (clubSponser) REFERENCES clubs (clubID)
+    CONSTRAINT FK_ClubSponsorClubID FOREIGN KEY (clubSponsor) REFERENCES clubs (clubID)
 );
 
 CREATE TABLE comments (

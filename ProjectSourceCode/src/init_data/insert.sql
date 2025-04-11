@@ -20,20 +20,17 @@ VALUES
 ('Sports'),
 ('Technology');
 
-
-
-
-
-
-
-
 INSERT INTO clubs (clubName, clubDescription, organizer, category)
 VALUES 
 ('Club1', 'This is sample club 1.', 1, 1),
-('Club2', 'This is sample club 2.', 2, 2),
-('Club3', 'This is sample club 3.', 1, 3),
+('Musical Theater Club', 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate.', 2, 2),
+('Intramural Tennis', 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate.', 1, 10),
 ('Club4', 'This is sample club 4.', 2, 4),
 ('Club5', 'This is sample club 5,', 1, 2);
+
+INSERT INTO users_to_clubs (userID, clubID)
+VALUES
+(1, 1), (2, 2), (1, 3), (2, 4), (1, 5), (3, 5), (4, 4), (4, 1), (5, 2);
 
 INSERT INTO locations (buildingName, latitude, longitude)
 VALUES
@@ -51,7 +48,7 @@ VALUES
 ('CASE', 40.006414911245734, -105.2701860457083);
 
 
-INSERT INTO events (eventName, building, eventDate, clubSponser, roomNumber, eventDescription, startTime, endTime)
+INSERT INTO events (eventName, building, eventDate, clubSponsor, roomNumber, eventDescription, startTime, endTime)
 VALUES 
 ('Event1', 1, '2025-05-01', 1, 'A100', '10 Words: Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ', '12:00:00', '12:30:00'),
 ('Event2', 2, '2025-05-01', 1, 'A100', '50 Words: Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate ', '12:30:00', '13:00:00'),

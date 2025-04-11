@@ -1,0 +1,26 @@
+{{>message}}
+<title>Buff's Bulletin | {{club.clubname}}</title>
+<main role="main" class="flex-grow-1 container my-5">
+
+  <main role ="main "class="flex-grow-1 container my-5">
+  <section class="card shadow p-4">
+    <h1 class="card-title mb-4 text-center">{{club.clubname}}</h1>
+    
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <p><strong>Category:</strong> {{club.categoryName}}</p>
+        <p><strong>Number of members:</strong> {{memberCount}}</p>
+      </div>
+      <div class="col-md-6">
+        <p><strong>Date:</strong></p>
+      </div>
+    </div>
+
+    <div>
+      <h5 class="mb-2">Description</h5>
+      <p class="card-text">
+        {{club.clubdescription}}  
+      </p>
+    </div>
+  </section>
+</main>

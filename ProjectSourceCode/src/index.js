@@ -386,11 +386,11 @@ app.get("/clubs", async(req, res) => {
         INNER JOIN club_categories ON clubs.category = club_categories.categoryID
          WHERE club_categories.categoryID = $1;`, [category.categoryid]);
       
-        clubsByCategory.push({
-          categoryid: category.categoryid,
-          categoryname: category.categoryname,
-          clubs: clubs
-        });
+      clubsByCategory.push({
+        categoryid: category.categoryid,
+        categoryname: category.categoryname,
+        clubs: clubs
+      });
     }
     console.log(clubsByCategory);
 
@@ -401,6 +401,36 @@ app.get("/clubs", async(req, res) => {
   catch (err) {
     res.render('pages/clubs', {
       clubsByCategory: [],
+      error: true,
+      message: err.message
+    })
+  }
+});
+
+// =========== /club-details Route ===========
+app.get("/club-details", async(req, res) => {
+  try{
+    const club = await db.one(`SELECT clubs.*, club_categories.categoryName FROM clubs
+      INNER JOIN club_categories ON clubs.category = club_categories.categoryID
+      WHERE clubs.clubName = $1;`, [req.query.club]);
+  
+    const events = await db.any(`SELECT events.* FROM events 
+      INNER JOIN clubs ON events.clubSponsor = clubs.clubID
+      WHERE clubs.clubID = $1;`, [club.clubID]);
+
+    const memberCount = await db.one(`SELECT COUNT(userID) FROM users_to_clubs WHERE clubID = $1;`, [club.clubID]);
+
+    res.render('pages/club-details', {
+      club: club,
+      events: events,
+      memberCount: memberCount
+    })
+  }
+  catch (err) {
+    res.render('pages/club-details', {
+      club: [],
+      events: [],
+      memberCount: '',
       error: true,
       message: err.message
     })
