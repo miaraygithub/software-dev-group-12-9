@@ -9,8 +9,16 @@
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
 
         <!-- Search Bar -->
-        <form class="d-flex mx-auto" action="/search" method="GET">
-          <input class="form-control me-2" type="search" style="width: 300px;" placeholder="Search by event or club" aria-label="Search" name="keyword">
+        <form class="d-flex mx-auto needs-validation" action="/search" method="GET">
+          <input class="form-control me-2" 
+            type="search" 
+            style="width: 300px;" 
+            placeholder="Search by event or club" 
+            aria-label="Search" 
+            name="keyword"
+            required
+            oninvalid="this.setCustomValidity('Please enter a keyword to search.')"
+          >
           <button class="btn btn-outline-primary my-2 my-sm-0" type="submit">
             <i class="fas fa-search"></i>
           </button>
