@@ -5,9 +5,23 @@
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
-
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
-        <a class="nav-link" href="/clubs">Clubs</a>
+        <div class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="/clubs" id="clubsDropdown" role="button">Clubs</a>
+          <ul class="dropdown-menu" aria-labelledby="clubsDropdown">
+            <li><a class="dropdown-item" href="/clubs-by-category?category=Academic">Academic</a></li>
+            <li><a class="dropdown-item" href="/clubs-by-category?category=Art">Art</a></li>
+            <li><a class="dropdown-item" href="/clubs-by-category?category=Career">Career</a></li>
+            <li><a class="dropdown-item" href="/clubs-by-category?category=Community-Service">Community Service</a></li>
+            <li><a class="dropdown-item" href="/clubs-by-category?category=Culture">Culture</a></li>
+            <li><a class="dropdown-item" href="/clubs-by-category?category=Film">Film</a></li>
+            <li><a class="dropdown-item" href="/clubs-by-category?category=Greek-Life">Greek Life</a></li>
+            <li><a class="dropdown-item" href="/clubs-by-category?category=LGBTQ+">LGBTQ+</a></li>
+            <li><a class="dropdown-item" href="/clubs-by-category?category=Music">Music</a></li>
+            <li><a class="dropdown-item" href="/clubs-by-category?category=Sports">Sports</a></li>
+            <li><a class="dropdown-item" href="/clubs-by-category?category=Technology">Technology</a></li>
+          </ul>
+        </div>
 
         <!-- Search Bar -->
         <form class="d-flex mx-auto" action="/search" method="GET">

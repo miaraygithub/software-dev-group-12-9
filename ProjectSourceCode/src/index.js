@@ -17,6 +17,10 @@ const hbs = handlebars.create({
   extname: 'hbs',
   layoutsDir: __dirname + '/views/layouts',
   partialsDir: __dirname + '/views/partials',
+  helpers: { // for clubs page to only show 10 clubs on the horizontal scroll
+    slice: (arr, start, end) => arr.slice(start, end),
+    gt: (a, b) => a > b
+  }
 });
 
 // Register `hbs` as our view engine using its bound `engine()` function.
@@ -391,12 +395,12 @@ app.get("/clubs", async(req, res) => {
     console.log(clubsByCategory);
 
     res.render('pages/clubs', {
-      clubs: clubsByCategory,
+      clubsByCategory: clubsByCategory,
     })
   }
   catch (err) {
     res.render('pages/clubs', {
-      clubs: [],
+      clubsByCategory: [],
       error: true,
       message: err.message
     })

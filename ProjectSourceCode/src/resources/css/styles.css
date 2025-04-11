@@ -107,4 +107,10 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.nav-item.dropdown:hover .dropdown-menu {
+  display: block;
+  margin-top: 0; /* Optional: removes the small gap */
+}
+
   

@@ -8,17 +8,24 @@ VALUES --DO NOT USE THESE TO LOG IN. PASSWORD IS NOT ENCODED--
 
 INSERT INTO club_categories (categoryName)
 VALUES
-('Sports'),
-('Music'),
-('Art'),
-('Technology'),
-('Film'),
-('Community Service'),
-('Greek Life'),
 ('Academic'),
+('Art'),
+('Career'),
+('Community Service'),
 ('Culture'),
+('Film'),
+('Greek Life'),
 ('LGBTQ+'),
-('Career Interest');
+('Music'),
+('Sports'),
+('Technology');
+
+
+
+
+
+
+
 
 INSERT INTO clubs (clubName, clubDescription, organizer, category)
 VALUES 
