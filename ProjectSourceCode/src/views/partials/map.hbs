@@ -46,8 +46,9 @@
                 usedCoords.add(coordKey);
 
                 const el = document.createElement('div');
+                const category = marker.properties.category;
                 el.id = `marker-${marker.properties.id}`;
-                el.className = 'marker';
+                el.className = `marker category-${category}`;
                 el.innerHTML = '<i class="fa-solid fa-location-dot"></i>'
 
                 /**

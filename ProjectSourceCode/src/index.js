@@ -82,7 +82,7 @@ app.get('/', async (req, res) => {
       SELECT events.eventID as eventid, events.eventName as eventname, locations.buildingName as building, events.eventDate as eventdate, clubs.clubName as clubsponser, events.roomNumber as roomnumber, events.eventDescription as eventdescription, events.startTime as starttime, events.endTime as endtime
       FROM events
       INNER JOIN locations ON events.building = locations.locationID
-      INNER JOIN clubs ON events.clubSponser = clubs.clubID
+      INNER JOIN clubs ON events.clubSponsor = clubs.clubID
       ORDER BY "eventdate" ASC, "starttime" ASC;
     `);
 
@@ -110,13 +110,15 @@ app.get('/', async (req, res) => {
               'properties', jsonb_build_object(
                   'eventID', events.eventID,
                   'buildingName', locations.buildingName,
-                  'roomNumber', events.roomNumber
+                  'roomNumber', events.roomNumber,
+                  'category', clubs.category
               )
             )
           )
       ) AS geojson
       FROM events
-      INNER JOIN locations ON events.building = locations.locationID;`);
+      INNER JOIN locations ON events.building = locations.locationID
+      INNER JOIN clubs ON events.clubSponsor = clubs.clubID;`);
 
     const geoEvents = geojson[0].geojson;
     // console.log(JSON.stringify(geoEvents, null, 2)); // see if geoEvents is formatted correctly
@@ -261,6 +263,10 @@ app.get('/event-details', async (req, res) => {
     };
   });
 
+  const club = await db.one(`SELECT clubs.* FROM clubs 
+    INNER JOIN events ON clubs.clubID = events.clubSponsor
+    WHERE events.eventID = $1;`, [eventid]);
+
   // Fetch Comments
   const comments = await db.any(`
     SELECT * FROM comments
@@ -268,8 +274,10 @@ app.get('/event-details', async (req, res) => {
     ORDER BY created_at DESC;
   `, [eventid]);
 
-  res.render('pages/events', { event: formattedEvents[0],
-    comments
+  res.render('pages/events', { 
+    event: formattedEvents[0],
+    club: club,
+    comments: comments
    })
 })
 

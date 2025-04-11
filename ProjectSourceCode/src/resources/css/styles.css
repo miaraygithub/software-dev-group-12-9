@@ -91,14 +91,26 @@
   height: 56px;
   width: 56px;
   font-size: 36px; /* Adjust size of the icon */
-  color: #e4af2a; /* Adjust color of the icon */
   text-align: center;
   line-height: 56px; /* Center the icon vertically */
 }
 
 .marker i {
-  font-size: 36px; /* Adjust size of the icon if you want to modify the icon size further */
+  font-size: 36px; /* Adjust size of the icon */
 }
+
+/* adjust marker color based on event type */
+.category-1 i { color: #9e0142 !important; }       /* Academic */
+.category-2 i { color: #d53e4f !important; }     /* Art */
+.category-3 i { color: #f46d43 !important; }   /* Career */
+.category-4 i { color: #fdae61 !important; }       /* Community Service */
+.category-5 i { color: #fee08b !important; }     /* Culture */
+.category-6 i { color: #ffffbf !important; }   /* Film */
+.category-7 i { color: #e6f598 !important; }    /* Greek Life */
+.category-8 i { color: #abdda4 !important; }       /* LGBTQ+ */
+.category-9 i { color: #66c2a5 !important; }     /* Music */
+.category-10 i { color: #3288bd !important; }   /* Sports */
+.category-11 i { color: #5e4fa2 !important; }   /* Technology */
 
 .event-description {
   display: -webkit-box;
