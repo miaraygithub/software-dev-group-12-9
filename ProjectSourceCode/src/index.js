@@ -147,23 +147,36 @@ app.post('/profile', async(req, res) => {
 
   try {
     if (req.body.newUsername) {
+      // Validation that username does not already exist in db
+      const searchQuery = 'SELECT DISTINCT * FROM users WHERE users.userName = ($1)';
+      const existingUser = await db.oneOrNone(searchQuery, [req.body.newUsername]);
+  
+      if (!!existingUser) {
+        console.log('User already exists in database.');
+        throw new Error('Username taken. Please choose a different one.');
+      }
+
       const usernameQuery = 'UPDATE users SET userName = ($1) WHERE users.userName = ($2)';
       await db.none(usernameQuery, [req.body.newUsername, req.session.user.username]);
+      // const updatedUser = await db.oneOrNone('SELECT DISTINCT * FROM users WHERE users.userName = ($1) LIMIT 1;', [req.body.newUsername])
+      // console.log(updatedUser);
     }
     if (req.body.newPassword) {
-      const passwordQuery = 'UPDATE users SET users.userPassword = ($1) WHERE users.userPassword = ($2)';
+      const passwordQuery = 'UPDATE users SET userPassword = ($1) WHERE users.userPassword = ($2)';
       await db.none(passwordQuery, [req.body.newPassword, req.session.user.userpassword]);
+      // const updatedPass = await db.oneOrNone('SELECT DISTINCT * FROM users WHERE users.userPassword = ($1) LIMIT 1;', [req.body.newPassword])
+      // console.log(updatedPass);
     }
 
     if (!(req.body.newUsername || req.body.newPassword)) {
-      return res.render('pages/profile', {message: 'Please make changes before submitting'});
-    }
+      throw new Error('Please make changes before submitting.')
+    } 
 
     res.render('pages/profile', {message: 'Profile successfully edited!'});
   } catch (err) {
     console.error('Error sending updated profile data', err);
     // res.status(400).json({ error: err.message});
-    res.render('pages/profile', {message: 'Failed to update.'});
+    res.render('pages/profile', {error: true, message: err});
   }
 });
 
@@ -174,18 +187,25 @@ app.get('/login', (req, res) => {
 
 app.post('/login', async(req, res) => {
   try {
-    const user = await db.oneOrNone('SELECT DISTINCT * FROM users WHERE users.userName = $1;', [req.body.username])
+    const password = req.body.password;
+   
+    const user = await db.oneOrNone('SELECT DISTINCT * FROM users WHERE users.userName = ($1) LIMIT 1;', [req.body.username])
     if (!user) { return res.redirect('/register'); }
     
     // check if password from request matches with password in DB
-    const match = await bcrypt.compare(req.body.password, user.userpassword);
-    if (!match) { throw new Error('Invalid username or password.'); }
+    const hash = await bcrypt.hash(user.userpassword, 10);
+    const match = await bcrypt.compare(password, hash);
+
+    if (!match) { 
+      console.log('Passwords do not match.');
+      throw new Error('Invalid username or password.'); 
+    }
 
     req.session.user = user;
     req.session.save();
     res.redirect('/');
   } catch (err) {
-    console.log('Login failed.');
+    console.error('Login failed:', err);
     // res.status(400).json({ error: err.message});
     res.render('pages/login', {
       error: true,
@@ -193,41 +213,6 @@ app.post('/login', async(req, res) => {
     });
   }
 })
-
-// app.post('/login', async(req, res) => {
-//   try {
-//     const username = req.body.username;
-//     const password = req.body.password;
-//     const query = 'SELECT * FROM users WHERE users.userName = ($1) LIMIT 1';
-//     const values = [username];
-  
-//     const user = await db.oneOrNone(query, values);
-//     console.log(user);
-//     console.log()
-    
-//     if (!user) {
-//       return res.redirect('/register');
-//     }
-
-//     // check if password from request matches with password in DB
-//     const hash = await bcrypt.hash(password, 10);
-//     console.log(hash);
-//     console.log(user.userpassword);
-//     const match = await bcrypt.compare(hash, user.userpassword);
-//     if (!match) {
-//       console.log('Password does not match.');
-//       return res.render('pages/login', {message: 'Incorrect username or password'});
-//     }
-
-//     req.session.user = user;
-//     req.session.save();
-//     res.redirect('/');
-//   } catch (err) {
-//     console.log('Login failed.');
-//     // res.status(400).json({ error: err.message});
-//     res.render('pages/login', {message: 'Login failed.'});
-//   }
-// })
 
 // =========== /register Routes ===========
 
@@ -237,20 +222,32 @@ app.get('/register', (req, res) => {
 
 app.post('/register', async(req,res) => {
   try {
-    const hash = await bcrypt.hash(req.body.password, 10);
+    // const hash = await bcrypt.hash(req.body.password, 10);
     var userAdmin = true;
 
     if (!req.body.userAdmin) {
       userAdmin = false;
     }
 
-    const query = 'INSERT INTO users(userName, userPassword, userAdmin) VALUES($1, $2, $3)';
-    await db.none(query, [req.body.username, hash, userAdmin]);
+    // Validation that user doesn't already exist in db
+    const searchQuery = 'SELECT DISTINCT * FROM users WHERE users.userName = ($1)';
+    const existingUser = await db.oneOrNone(searchQuery, [req.body.username]);
+
+    if (!!existingUser) {
+      console.log('User already exists in database.');
+      throw new Error('Username taken. Please choose a different one.');
+    }
+
+    const insertQuery = 'INSERT INTO users(userName, userPassword, userAdmin) VALUES($1, $2, $3)';
+    await db.none(insertQuery, [req.body.username, req.body.password, userAdmin]);
 
     res.redirect('/login');
-  } catch (error) {
-    console.error('Error during registration:', error);
-    res.redirect('/register');
+  } catch (err) {
+    console.error('Error during registration:', err);
+    res.render('pages/register', {
+      error: true,
+      message: err
+    });
   }
 });
 
