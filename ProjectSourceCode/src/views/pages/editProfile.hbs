@@ -4,17 +4,12 @@
         <div class="col-md-8">
             <div class="card shadow-lg">
                 <div class="card-header text-center">
-                    <h4>Your Profile</h4>
+                    <h4>Edit Profile</h4>
                 </div>
                 <div class="card-body">
-                    <form method="GET" action = "/profile">
+                    <form method="POST" action = "/editProfile">
                         <div class="mb-3">
-                            <label for="profilePic" class="form-label">Profile Picture</label>
-                            <input class="form-control" type="file" id="profilePic" name="profilePic" />
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="username" class="form-label">Username</label>
+                            <label for="newUsername" class="form-label">Username</label>
                             <input type="text" class="form-control" id="newUsername" name="newUsername" placeholder="John Doe" />
                         </div>
 <!--
@@ -22,17 +17,21 @@
                             <label for="email" class="form-label">Email address</label>
                             <input type="email" class="form-control" id="email" placeholder="john@example.com" />
                         </div>
-
+-->
                         <div class="mb-3">
                             <label for="newPassword" class="form-label">Password</label>
                             <input type="password" class="form-control" id="newPassword" name = "newPassword" placeholder="********" />
                         </div>
-
+<!--
                         <div class="mb-3">
                             <label for="bio" class="form-label">Bio</label>
                             <textarea class="form-control" id="bio" rows="3" placeholder="Add a bio"></textarea>
                         </div>
 -->
+                        <div class="mb-3">
+                            <label for="profilePic" class="form-label">Profile Picture</label>
+                            <input class="form-control" type="file" id="profilePic" name="profilePic" />
+                        </div>
                         <!-- This is kinda clumsy right now, I want to work on making it look a little better for the user -->
 
                         <!-- 
@@ -50,3 +49,21 @@
         </div>
     </div>
 </div>
+<!--
+<script>
+    document.getElementById('editProfile').addEventListener('submit', function (e) {
+        const username = document.getElementById('newUsername').value.trim();
+        const password = document.getElementById('newPassword').value.trim();
+        // const profilePic = document.getElementById('profilePic').files.length;
+
+        const formMessage = document.getElementById('formMessage');
+
+        if (!username && !password) {
+            e.preventDefault();
+            formMessage.classList.remove('d-none');
+        } else {
+            formMessage.classList.add('d-none');
+        }
+    });
+</script>
+-->

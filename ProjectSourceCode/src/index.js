@@ -132,15 +132,15 @@ app.get('/', async (req, res) => {
 });
 
 // =========== /profile Route ===========
-app.get('/profile', (req, res) => {
+app.get('/editProfile', (req, res) => {
   if (!req.session.user) {
     return res.redirect('/login');
   }
   
-  res.render('pages/profile');
+  res.render('pages/editProfile');
 }); 
 
-app.post('/profile', async(req, res) => {
+app.post('/editProfile', async(req, res) => {
   if (!req.session.user) {
     return res.redirect('/login');
   }
@@ -176,7 +176,7 @@ app.post('/profile', async(req, res) => {
   } catch (err) {
     console.error('Error sending updated profile data', err);
     // res.status(400).json({ error: err.message});
-    res.render('pages/profile', {error: true, message: err});
+    res.render('pages/editProfile', {error: true, message: err});
   }
 });
 
