@@ -482,9 +482,10 @@ app.get("/clubs", async(req, res) => {
 // =========== /club-details Route ===========
 app.get("/club-details", async(req, res) => {
   try{
-    const club = await db.one(`SELECT clubs.*, club_categories.categoryName as category FROM clubs
+    const club = await db.one(`SELECT clubs.*, club_categories.categoryName as categoryName FROM clubs
       INNER JOIN club_categories ON clubs.category = club_categories.categoryID
-      WHERE clubs.clubName = $1;`, [req.query.club]);
+      WHERE clubs.clubName = $1
+      ORDER BY clubs.clubName ASC;`, [req.query.club]);
   
     const events = await db.any(`SELECT events.* FROM events 
       INNER JOIN clubs ON events.clubSponsor = clubs.clubID
@@ -534,6 +535,28 @@ app.post("/follow-club", async(req, res) => {
     })
   }
 });
+
+// =========== /clubs-by-category Route ===========
+app.get("/clubs-by-category", async(req, res) => {
+  try {
+    const clubs = await db.any(`SELECT clubs.*, club_categories.categoryName as categoryName FROM clubs 
+      INNER JOIN club_categories ON clubs.category = club_categories.categoryID
+      WHERE club_categories.categoryName = $1;`, [req.query.category]);
+    console.log(clubs);
+    
+    res.render('pages/clubs-by-category', {
+      category: req.query.category,
+      clubs: clubs
+    });
+  }
+  catch (err) {
+    res.render('pages/clubs-by-category', {
+      clubs: [],
+      error: true,
+      message: err.message
+    });
+  }
+})
 
 //The app simply closes if it isn't listening for anything so this is load bearing. -- Julia
 const port = 3000
