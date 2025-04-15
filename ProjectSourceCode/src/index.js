@@ -464,7 +464,7 @@ app.get("/clubs", async(req, res) => {
         clubs: clubs
       });
     }
-    console.log(clubsByCategory);
+    // console.log(clubsByCategory);
 
     res.render('pages/clubs', {
       clubsByCategory: clubsByCategory,
@@ -482,21 +482,47 @@ app.get("/clubs", async(req, res) => {
 // =========== /club-details Route ===========
 app.get("/club-details", async(req, res) => {
   try{
-    const club = await db.one(`SELECT clubs.*, club_categories.categoryName FROM clubs
+    const club = await db.one(`SELECT clubs.*, club_categories.categoryName as category FROM clubs
       INNER JOIN club_categories ON clubs.category = club_categories.categoryID
       WHERE clubs.clubName = $1;`, [req.query.club]);
   
     const events = await db.any(`SELECT events.* FROM events 
       INNER JOIN clubs ON events.clubSponsor = clubs.clubID
-      WHERE clubs.clubID = $1;`, [club.clubID]);
+      WHERE clubs.clubID = $1
+      ORDER BY events.eventDate ASC, events.startTime ASC;`, [club.clubid]);
+
+    const formattedEvents = events.map(events => {
+      return {
+        ...events,
+        eventDateFormatted: format(new Date(events.eventdate), 'MMM d, yyyy'),
+        startTimeFormatted: format(new Date(`1970-01-01T${events.starttime}`), 'h:mm a'),
+        endTimeFormatted: format(new Date(`1970-01-01T${events.endtime}`), 'h:mm a'),
+      };
+    });
 
     const memberCount = await db.one(`SELECT COUNT(userID) FROM users_to_clubs WHERE clubID = $1;`, [club.clubID]);
 
     res.render('pages/club-details', {
       club: club,
-      events: events,
-      memberCount: memberCount
+      events: formattedEvents,
+      memberCount: memberCount.count
     })
+  }
+  catch (err) {
+    res.render('pages/club-details', {
+      club: [],
+      events: [],
+      memberCount: '',
+      error: true,
+      message: err.message
+    })
+  }
+});
+
+// =========== /follow-club Route ===========
+app.post("/follow-club", async(req, res) => {
+  try {
+    
   }
   catch (err) {
     res.render('pages/club-details', {

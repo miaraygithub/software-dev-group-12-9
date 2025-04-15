@@ -8,19 +8,53 @@
     
     <div class="row mb-3">
       <div class="col-md-6">
-        <p><strong>Category:</strong> {{club.categoryName}}</p>
+        <p><strong>Category:</strong> {{club.category}}</p>
         <p><strong>Number of members:</strong> {{memberCount}}</p>
+        <form action="/follow-club" method="POST">
+          <input type="hidden" name="clubid" value="{{club.clubid}}">
+          <button type="submit"
+            class="btn btn-outline-primary my-2 my-sm-0"
+            data-bs-toggle="popover"
+            data-bs-trigger="hover focus"
+            data-bs-placement="right"
+            data-bs-content="Click to follow this club and add RSVP to all their upcoming events.">
+            Follow
+          </button>
+        </form>
       </div>
       <div class="col-md-6">
-        <p><strong>Date:</strong></p>
-      </div>
-    </div>
-
-    <div>
-      <h5 class="mb-2">Description</h5>
+        <h5 class="mb-2">Description</h5>
       <p class="card-text">
         {{club.clubdescription}}  
       </p>
+      </div>
     </div>
   </section>
+  <section class="mt-5">
+    <h2 class="mb-4 text-center">Upcoming Events</h2>
+    <div class="row">
+      {{#each events}}
+        <div class="col-md-6 col-lg-4 mb-4">
+          <div class="card shadow h-100">
+            <div class="card-body">
+              <h4 class="card-title">{{this.eventname}}</h4>
+              <p class="card-text"><strong>Date:</strong> {{this.eventDateFormatted}}</p>
+              <p class="card-text">{{this.eventdescription}}</p>
+            </div>
+            <div class="card-footer bg-transparent border-top-0">
+              <a href="/event-details?eventID={{this.eventid}}" target="_blank" class="btn btn-sm btn-primary">View Details</a>
+            </div>
+          </div>
+        </div>
+      {{/each}}
+    </div>
+  </section>
+  <script>
+    document.addEventListener("DOMContentLoaded", function(){
+      const popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+      popoverTriggerList.forEach(function (popoverTriggerEl) {
+        new bootstrap.Popover(popoverTriggerEl);
+      });
+    });
+  </script>
 </main>
