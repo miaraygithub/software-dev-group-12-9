@@ -14,7 +14,7 @@ CREATE TABLE club_categories (
 
 CREATE TABLE clubs (
     clubID serial NOT NULL,
-    clubName varchar(30) UNIQUE NOT NULL,
+    clubName varchar(60) NOT NULL,
     clubDescription text NOT NULL,
     organizer int NOT NULL,
     category int NOT NULL,
