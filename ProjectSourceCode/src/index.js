@@ -453,6 +453,7 @@ async function fetchAndInsertICSEvents() {
     next30Days.setDate(now.getDate() + 30);
 
     //Events is an object populated by multiple events differentiated by a 'key', thus iterate through all the events from 0<key<n 
+    insertedCount = 0;
     for (const key in events) {
       const event = events[key];
       //The event file may contain other objects not of type 'event' which are irrelevant and we ignore
@@ -474,7 +475,7 @@ async function fetchAndInsertICSEvents() {
       const startTime = event.start.toTimeString().slice(0, 8);      // 'HH:MM:SS'
       const endTime = event.end.toTimeString().slice(0, 8);          // 'HH:MM:SS'
       const organizerRaw = event.organizer || '';
-      const clubSponser = typeof organizerRaw === 'string' //Check if it is a string or an object
+      const clubSponserName = typeof organizerRaw === 'string' //Check if it is a string or an object
           ? (organizerRaw.match(/CN="([^"]+)"/) || [])[1] || null //If it's a string manually parse out the values inside quotes -> the club name
           : organizerRaw?.params?.CN || null; //Otherwise if its an object, extract it as such, object of type CN
 
@@ -484,6 +485,33 @@ async function fetchAndInsertICSEvents() {
 
       //Log the events inserted for debugging
       console.log(`📅 Inserting event: "${title}" on ${eventDate} at ${startTime}`);
+      
+      //get clubid from clubs table
+      const clubSponser = await db.one(`
+        SELECT
+          COALESCE (
+            (SELECT clubid FROM clubs WHERE clubName = $1 LIMIT 1),
+            0
+          ) as clubSponserResult;
+      `, [clubSponserName]
+      );
+      //if club doesnt exist, insert club and get id
+      if (clubSponser['clubsponserresult'] == 0) {
+        await db.none(`
+          INSERT INTO clubs (clubName, clubDescription, organizer) 
+          VALUES ($1, 'TBD', 1);
+          `, [clubSponserName]
+        );
+
+        clubSponserResult = await db.one(`
+          SELECT clubId FROM clubs
+          WHERE clubName = $1
+          LIMIT 1;
+          `, [clubSponserName]
+        );
+
+        clubSponser['clubsponserresult'] = clubSponserResult['clubid']
+      }
 
       await db.none(`
         INSERT INTO events (
@@ -496,7 +524,7 @@ async function fetchAndInsertICSEvents() {
         title,
         defaultBuildingID,
         eventDate,
-        clubSponser,
+        clubSponser['clubsponserresult'],
         defaultRoom,
         description,
         startTime,
@@ -506,7 +534,7 @@ async function fetchAndInsertICSEvents() {
       insertedCount++;
     }
 
-    console.log('✅ ICS events imported to DB.');
+    console.log(insertedCount,' ICS events imported to DB.');
   } catch (error) {
     console.error('❌ Error importing ICS:', error);
   } 
