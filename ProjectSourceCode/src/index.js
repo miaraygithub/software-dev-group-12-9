@@ -172,7 +172,10 @@ app.post('/profile', async(req, res) => {
       throw new Error('Please make changes before submitting.')
     } 
 
-    res.render('pages/profile', {message: 'Profile successfully edited!'});
+    res.render('pages/profile', {
+      login: !!req.session.user,
+      message: 'Profile successfully edited!'
+    });
   } catch (err) {
     console.error('Error sending updated profile data', err);
     // res.status(400).json({ error: err.message});
@@ -328,7 +331,9 @@ app.get('/event-details', async (req, res) => {
     ORDER BY created_at DESC;
   `, [eventid]);
 
-  res.render('pages/events', { event: formattedEvents[0],
+  res.render('pages/events', { 
+    event: formattedEvents[0],
+    login: !!req.session.user,
     comments
    })
 })
@@ -417,6 +422,7 @@ app.get("/search", async (req, res) => {
     res.render('pages/search-results', {
       keyword: keyword,
       resultsBool: resultsBool,
+      login: !!req.session.user,
       // users: users_results,
       clubs: clubs_results,
       events: formattedEvents
