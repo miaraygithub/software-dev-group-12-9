@@ -4,4 +4,4 @@ package-lock.json
 .DS_Store
 TeamMeetingLogs/
 uploads/
-.env
+init_db.sh
