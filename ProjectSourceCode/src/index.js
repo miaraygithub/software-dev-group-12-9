@@ -25,11 +25,21 @@ const hbs = handlebars.create({
 
 // Create uploads directory if it doesn't exist
 //const uploadDir = path.join(__dirname, 'uploads');
-const uploadDir = '/app/uploads';
+// Use Render's writable temp dir if in production, otherwise default to /app/uploads
+const uploadDir = process.env.NODE_ENV === 'production'
+  ? '/tmp/uploads'
+  : '/app/uploads';
+
 if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-  console.log('Created uploads directory');
+  fs.mkdirSync(uploadDir, { recursive: true });
+  console.log('Created uploads directory at', uploadDir);
 }
+
+// const uploadDir = '/app/uploads';
+// if (!fs.existsSync(uploadDir)) {
+//       fs.mkdirSync(uploadDir, { recursive: true });
+//   console.log('Created uploads directory');
+// }
 
 // Configure storage
 
