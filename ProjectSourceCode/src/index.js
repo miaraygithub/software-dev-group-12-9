@@ -490,10 +490,13 @@ const icsUrl = 'https://campusgroups.colorado.edu/ical/colorado/ical_colorado.ic
 //Fetch the event using the fetch library, then parse the info from the ICS file which is similar to tokenizing except that ICS files come with clear per line parameters for each item (Title, start, etc...)
 async function fetchAndInsertICSEvents() {
   try {
+    let insertedCount = 0;
+
     //Fetch the event info from the ICS link
     const response = await fetch(icsUrl);
     const icsData = await response.text();
     const events = ical.parseICS(icsData);
+
 
     //Limit the amount of events fetched and inserted to 30 days from now
     const now = new Date();
@@ -510,7 +513,7 @@ async function fetchAndInsertICSEvents() {
       //Only continue the loop within the time frame of events we want to add
       if (event.start < now || event.start > next30Days) continue;
 
-      //Begin parsing
+      //--Begin parsing--
       let titleRaw = event.summary;
         const title =
           typeof titleRaw === 'string' //Check if it is a string or an object
@@ -518,48 +521,31 @@ async function fetchAndInsertICSEvents() {
             : typeof titleRaw?.val === 'string'
             ? titleRaw.val.slice(0, 30)
             : 'Untitled';
+
       const description = event.description || '';
-      const eventDate = event.start.toISOString().slice(0, 10);      // 'YYYY-MM-DD'
-      const startTime = event.start.toTimeString().slice(0, 8);      // 'HH:MM:SS'
-      const endTime = event.end.toTimeString().slice(0, 8);          // 'HH:MM:SS'
+      const eventDate = event.start.toISOString().slice(0, 10);
+      const startTime = event.start.toTimeString().slice(0, 8);
+      const endTime = event.end.toTimeString().slice(0, 8);
+
       const organizerRaw = event.organizer || '';
-      const clubSponserName = typeof organizerRaw === 'string' //Check if it is a string or an object
+      const clubName = typeof organizerRaw === 'string' //Check if it is a string or an object
           ? (organizerRaw.match(/CN="([^"]+)"/) || [])[1] || null //If it's a string manually parse out the values inside quotes -> the club name
           : organizerRaw?.params?.CN || null; //Otherwise if its an object, extract it as such, object of type CN
+      
+      const tempClubId = await getClubId(clubName);
+      const clubID = tempClubId != null ? tempClubId : null;
+
+      const categoriesList = parseCategories(event.categories);
+      //const chosenCategoryID = await pickCategory(categoriesList);
 
       //Values we cant access unless we are logged in are defaulted for now
       const defaultBuildingID = 1;
       const defaultRoom = 'TBD';
+      //--end Parsing--
 
-      //Log the events inserted for debugging
-      console.log(`📅 Inserting event: "${title}" on ${eventDate} at ${startTime}`);
-      
-      //get clubid from clubs table
-      const clubSponser = await db.one(`
-        SELECT
-          COALESCE (
-            (SELECT clubid FROM clubs WHERE clubName = $1 LIMIT 1),
-            0
-          ) as clubSponserResult;
-      `, [clubSponserName]
-      );
-      //if club doesnt exist, insert club and get id
-      if (clubSponser['clubsponserresult'] == 0) {
-        await db.none(`
-          INSERT INTO clubs (clubName, clubDescription, organizer) 
-          VALUES ($1, 'TBD', 1);
-          `, [clubSponserName]
-        );
-
-        clubSponserResult = await db.one(`
-          SELECT clubId FROM clubs
-          WHERE clubName = $1
-          LIMIT 1;
-          `, [clubSponserName]
-        );
-
-        clubSponser['clubsponserresult'] = clubSponserResult['clubid']
-      }
+      //Debbugging
+      console.log('📝 Raw event data:', event);
+      console.log('Categories →', categoriesList);
 
       await db.none(`
         INSERT INTO events (
@@ -572,21 +558,77 @@ async function fetchAndInsertICSEvents() {
         title,
         defaultBuildingID,
         eventDate,
-        clubSponser['clubsponserresult'],
+        clubID,
         defaultRoom,
         description,
         startTime,
         endTime
       ]);
 
+      //Insert into categories list?
+
       insertedCount++;
     }
 
-    console.log(insertedCount,' ICS events imported to DB.');
+    console.log('ICS events imported to DB.');
   } catch (error) {
-    console.error('❌ Error importing ICS:', error);
+    console.error('Error importing ICS:', error);
   } 
 }
+
+async function getClubId(clubName) {
+  if (!clubName) return null; //If there is no name
+
+  //Try to find the club by name
+  const foundClub = await db.oneOrNone(
+    'SELECT clubID FROM clubs WHERE clubName = $1',
+    [clubName]
+  );
+
+  if (foundClub) { //If a club was found return it's id
+    return foundClub.clubid;
+  } else { //If it wasn't create the club
+    const insertedClub = await db.one(
+      `INSERT INTO clubs (clubName, clubDescription, organizer)
+       VALUES ($1, $2, $3)
+       RETURNING clubID`,
+      [
+        clubName,
+        'ICS feed club',
+        1    //Change this if we implement user created club tracking
+      ]
+    );
+    return insertedClub.clubid;
+  }
+}
+
+function parseCategories(categoriesRaw) {
+  //If there were no categories assigned return an empty array
+  if (!categoriesRaw) return [];
+
+  categoriesRaw.map(c => c.trim()) //Get rid of spaces
+  categoriesRaw.filter(Boolean); //Get rid of empty categories
+
+  return categoriesRaw //Return the array
+}
+
+async function pickCategory(categoriesList) {
+  //Loop through the entries in the categories array
+  for (const i of categoriesList) {
+    const foundCategory = await db.oneOrNone(
+      'SELECT categoryID FROM categories WHERE categoryName = $1',
+      [i]
+    );
+    if (foundCategory) return foundCategory.categoryid; //Return the first match
+  }
+
+  //If the array was emtpy or there were no matches return a random category
+  const randomCategory = await db.one(
+    'SELECT categoryID FROM categories ORDER BY RANDOM() LIMIT 1'
+  );
+  return randomCategory.categoryid;
+}
+
 
 //Run on server start
 fetchAndInsertICSEvents();
