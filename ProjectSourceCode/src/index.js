@@ -116,6 +116,17 @@ const dbConfig = {
 };
 const db = pgp(dbConfig);
 
+const runInitSQL = async () => {
+  try {
+    const initPath = path.join(__dirname, 'init_data', '00_create.sql'); // Adjust if path differs
+    const initSQL = fs.readFileSync(initPath, 'utf8');
+    await db.none(initSQL);
+    console.log('✅ Ran 00_create.sql successfully');
+  } catch (err) {
+    console.error('❌ Failed to run 00_create.sql:', err);
+  }
+};
+
 // db test
 db.connect()
   .then(obj => {
@@ -769,8 +780,22 @@ fetchAndInsertICSEvents();
 
 // ====================== Server Initialization ======================
 
-//The app simply closes if it isn't listening for anything so this is load bearing. -- Julia
-const port = 3000
-app.listen(port, () => {
-  console.log(`Buff's Bulletin listening on port ${port}`)
-});
+const startServer = async () => {
+  try {
+    await runInitSQL();
+    console.log('✅ Tables are initialized');
+
+    await fetchAndInsertICSEvents();
+    console.log('✅ ICS import completed');
+
+    const port = 3000;
+    app.listen(port, () => {
+      console.log(`Buff's Bulletin listening on port ${port}`);
+    });
+  } catch (err) {
+    console.error('❌ Failed during startup:', err);
+    process.exit(1); // Exit if something critical failed
+  }
+};
+
+startServer();
