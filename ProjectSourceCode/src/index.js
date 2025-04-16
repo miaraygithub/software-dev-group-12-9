@@ -738,7 +738,7 @@ async function getClubId(clubName) {
       [
         clubName,
         'ICS feed club',
-        1    //Change this if we implement user created club tracking
+        null    //Change this if we implement user created club tracking (Julia changed from 1 to null to get Render working)
       ]
     );
     return insertedClub.clubid;
