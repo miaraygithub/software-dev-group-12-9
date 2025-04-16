@@ -488,7 +488,6 @@ app.post("/rsvp", async (req, res) => {
   }
 })
 
-//!!! Currently not working, waiting to determine whether we need to change clubsponsor into a string as the current code treats it as such
 // =========== Calendar/Events Route ===========        
 
 //URL of the events calendar
@@ -507,8 +506,8 @@ async function fetchAndInsertICSEvents() {
 
     //Limit the amount of events fetched and inserted to 30 days from now
     const now = new Date();
-    const next30Days = new Date(now);
-    next30Days.setDate(now.getDate() + 30);
+    const nextXDays = new Date(now);
+    nextXDays.setDate(now.getDate() + 15);
 
     //Events is an object populated by multiple events differentiated by a 'key', thus iterate through all the events from 0<key<n 
     insertedCount = 0;
@@ -518,7 +517,7 @@ async function fetchAndInsertICSEvents() {
       if (event.type !== 'VEVENT') continue;
 
       //Only continue the loop within the time frame of events we want to add
-      if (event.start < now || event.start > next30Days) continue;
+      if (event.start < now || event.start > nextXDays) continue;
 
       //--Begin parsing--
       let titleRaw = event.summary;
