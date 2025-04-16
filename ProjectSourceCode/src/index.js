@@ -25,11 +25,21 @@ const hbs = handlebars.create({
 
 // Create uploads directory if it doesn't exist
 //const uploadDir = path.join(__dirname, 'uploads');
-const uploadDir = '/app/uploads';
+// Use Render's writable temp dir if in production, otherwise default to /app/uploads
+const uploadDir = process.env.NODE_ENV === 'production'
+  ? '/tmp/uploads'
+  : '/app/uploads';
+
 if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-  console.log('Created uploads directory');
+  fs.mkdirSync(uploadDir, { recursive: true });
+  console.log('Created uploads directory at', uploadDir);
 }
+
+// const uploadDir = '/app/uploads';
+// if (!fs.existsSync(uploadDir)) {
+//       fs.mkdirSync(uploadDir, { recursive: true });
+//   console.log('Created uploads directory');
+// }
 
 // Configure storage
 
@@ -170,12 +180,19 @@ app.get('/', async (req, res) => {
 
     const buildings = await db.any(`SELECT locationID, buildingName FROM locations;`)
 
+    req.session.login = !!req.session.user;
+    req.session.events = formattedEvents;
+    req.session.geoEvents = JSON.stringify(geoEvents);
+    req.session.buildings = buildings;
+    req.session.save;
+
     res.render('pages/home', { 
       login: !!req.session.user,
       events: formattedEvents, 
       geoEvents: JSON.stringify(geoEvents),
       buildings: buildings
     });
+
   } catch (err) {
     console.error('Error fetching events:', err);
     res.status(500).send('Internal server error');
@@ -188,7 +205,7 @@ app.get('/editProfile', (req, res) => {
     return res.redirect('/login');
   }
   
-  res.render('pages/editProfile');
+  res.render('pages/editProfile', {login: !!req.session.user});
 }); 
 
 app.post('/editProfile', upload.single('profilePic'), async(req, res) => {
@@ -258,12 +275,12 @@ app.post('/editProfile', upload.single('profilePic'), async(req, res) => {
   } catch (err) {
     console.error('Error sending updated profile data', err);
     // res.status(400).json({ error: err.message});
-    res.render('pages/editProfile', {error: true, message: err});
+    res.render('pages/editProfile', {login: !!req.session.user, error: true, message: err});
   }
 });
 
 app.get('/profile', (req, res) => {
-  res.render('pages/profile');
+  res.render('pages/profile', {login: !!req.session.user});
 });
 
 // =========== /login Routes ===========
@@ -345,18 +362,6 @@ app.get('/logout', (req, res) => {
   // res.render('pages/logout');
 });
 
-// =========== GET /events Route for sidebar ===========
-app.get('/events', async (req, res) => {
-  var query = `SELECT * FROM users`;
-  try {
-    const response = await db.any(query);
-    console.log(response);
-  } catch (err) {
-    console.error('Error fetching data: ', err);
-    res.status(400).json({ error: err.message});
-  }
-});
-
 //=========== /saveEvent Route ===========
 app.post("/save-event", async (req, res) => {
   console.log('Save Event')
@@ -383,16 +388,82 @@ app.post("/save-event", async (req, res) => {
     insertEvent = await db.none(saveQuery, eventSave)
     res.redirect('/')
   } catch (err) {
-    console.error('Error saving event: ', err);
-    res.status(400).json({ error: err.message});
+    console.error('Error Saving Event:', err);
+    // res.status(400).json({ error: err.message});
+    res.render('pages/home', {
+      error: true,
+      message: err,
+      login: req.session.login,
+      events: req.session.events,
+      geoEvents: req.session.geoEvents,
+      buildings: req.session.buildings
+    });
   }
 })
+
 
 // =========== /eventDetails Route ===========
 app.get('/event-details', async (req, res) => {
   const eventid = req.query.eventID;
+  try {
+    const events = await db.any(`
+        SELECT events.eventID as eventid, events.eventName as eventname, locations.buildingName as building, events.eventDate as eventdate, clubs.clubName as clubsponser, events.roomNumber as roomnumber, events.eventDescription as eventdescription, events.startTime as starttime, events.endTime as endtime
+        FROM events
+        INNER JOIN locations ON events.building = locations.locationID
+        INNER JOIN clubs ON events.clubSponser = clubs.clubID
+        WHERE eventid = $1
+        LIMIT 1;
+    `, [eventid]);
 
-  const events = await db.any(`
+    const formattedEvents = events.map(events => {
+      return {
+        ...events,
+        eventDateFormatted: format(new Date(events.eventdate), 'MMM d, yyyy'),
+        startTimeFormatted: format(new Date(`1970-01-01T${events.starttime}`), 'h:mm a'),
+        endTimeFormatted: format(new Date(`1970-01-01T${events.endtime}`), 'h:mm a'),
+      };
+    });
+
+    const rsvp = await db.any(`
+      SELECT users.userName  as name
+      FROM users
+      INNER JOIN rsvp ON rsvp.userID = users.userID
+      WHERE rsvp.eventID = $1;
+      `, [eventid]);
+
+    // Fetch Comments
+    const comments = await db.any(`
+      SELECT * FROM comments
+      WHERE eventid = $1
+      ORDER BY created_at DESC;
+    `, [eventid]);
+
+    res.render('pages/events', {
+      comments,
+      user: !!req.session.user,
+      event: formattedEvents[0],
+      rsvpList: rsvp,
+    })
+  } catch (err) {
+    console.log('error saving events', err);
+    res.render('pages/home', {
+      error: true,
+      message: err,
+      login: req.session.login,
+      events: req.session.events,
+      geoEvents: req.session.geoEvents,
+      buildings: req.session.buildings,
+    });
+  }
+})
+
+
+
+//For handling the redirect/reload once the user posts a comment
+app.get('/event/:id', async (req, res) => {
+  const eventid = req.params.id;
+  try {
+    const events = await db.any(`
       SELECT events.eventID as eventid, events.eventName as eventname, locations.buildingName as building, events.eventDate as eventdate, clubs.clubName as clubsponser, events.roomNumber as roomnumber, events.eventDescription as eventdescription, events.startTime as starttime, events.endTime as endtime
       FROM events
       INNER JOIN locations ON events.building = locations.locationID
@@ -401,78 +472,44 @@ app.get('/event-details', async (req, res) => {
       LIMIT 1;
   `, [eventid]);
 
-  const formattedEvents = events.map(events => {
-    return {
-      ...events,
-      eventDateFormatted: format(new Date(events.eventdate), 'MMM d, yyyy'),
-      startTimeFormatted: format(new Date(`1970-01-01T${events.starttime}`), 'h:mm a'),
-      endTimeFormatted: format(new Date(`1970-01-01T${events.endtime}`), 'h:mm a'),
-    };
-  });
+    const formattedEvents = events.map(event => {
+      return {
+        ...event,
+        eventDateFormatted: format(new Date(event.eventdate), 'MMM d, yyyy'),
+        startTimeFormatted: format(new Date(`1970-01-01T${event.starttime}`), 'h:mm a'),
+        endTimeFormatted: format(new Date(`1970-01-01T${event.endtime}`), 'h:mm a'),
+      };
+    });
 
-  
-  const rsvp = await db.any(`
-    SELECT users.userName  as name
-    FROM users
-    INNER JOIN rsvp ON rsvp.userID = users.userID
-    WHERE rsvp.eventID = $1;
+    const comments = await db.any(`
+      SELECT * FROM comments
+      WHERE eventid = $1
+      ORDER BY created_at DESC;
     `, [eventid]);
 
-  // Fetch Comments
-  const comments = await db.any(`
-    SELECT * FROM comments
-    WHERE eventid = $1
-    ORDER BY created_at DESC;
-  `, [eventid]);
+    const rsvp = await db.any(`
+      SELECT users.userName  as name
+      FROM users
+      INNER JOIN rsvp ON rsvp.userID = users.userID
+      WHERE rsvp.eventID = $1;
+      `, [eventid]);
 
-  res.render('pages/events', { 
-    event: formattedEvents[0],
-    login: !!req.session.user,
-    comments,
-    rsvpList: rsvp
-   })
-})
-
-//For handling the redirect/reload once the user posts a comment
-app.get('/event/:id', async (req, res) => {
-  const eventid = req.params.id;
-
-  const events = await db.any(`
-    SELECT events.eventID as eventid, events.eventName as eventname, locations.buildingName as building, events.eventDate as eventdate, clubs.clubName as clubsponser, events.roomNumber as roomnumber, events.eventDescription as eventdescription, events.startTime as starttime, events.endTime as endtime
-    FROM events
-    INNER JOIN locations ON events.building = locations.locationID
-    INNER JOIN clubs ON events.clubSponser = clubs.clubID
-    WHERE eventid = $1
-    LIMIT 1;
-`, [eventid]);
-
-  const formattedEvents = events.map(event => {
-    return {
-      ...event,
-      eventDateFormatted: format(new Date(event.eventdate), 'MMM d, yyyy'),
-      startTimeFormatted: format(new Date(`1970-01-01T${event.starttime}`), 'h:mm a'),
-      endTimeFormatted: format(new Date(`1970-01-01T${event.endtime}`), 'h:mm a'),
-    };
-  });
-
-  const comments = await db.any(`
-    SELECT * FROM comments
-    WHERE eventid = $1
-    ORDER BY created_at DESC;
-  `, [eventid]);
-
-  const rsvp = await db.any(`
-    SELECT users.userName  as name
-    FROM users
-    INNER JOIN rsvp ON rsvp.userID = users.userID
-    WHERE rsvp.eventID = $1;
-    `, [eventid]);
-
-  res.render('pages/events', {
-    event: formattedEvents[0],
-    comments,
-    rsvpList: rsvp
-  });
+    res.render('pages/events', {
+      event: formattedEvents[0],
+      comments,
+      rsvpList: rsvp
+    });
+  } catch (err) {
+    console.log('Error Reloading Event Page', err);
+    res.render('pages/home', {
+      error: true,
+      message: err,
+      login: req.session.login,
+      events: req.session.events,
+      geoEvents: req.session.geoEvents,
+      buildings: req.session.buildings,
+    });
+  }
 });
 
 app.post('/comment', async (req, res) => {
@@ -490,7 +527,14 @@ app.post('/comment', async (req, res) => {
     res.redirect(`/event/${eventId}`);
   } catch (err) {
     console.error('Error submitting comment:', err);
-    res.status(500).send('Failed to post comment.');
+    res.render('pages/home', {
+      error: true,
+      message: err,
+      login: req.session.login,
+      events: req.session.events,
+      geoEvents: req.session.geoEvents,
+      buildings: req.session.buildings,
+    });
   }
 });
 
@@ -562,9 +606,9 @@ app.post("/rsvp", async (req, res) => {
     res.redirect(`/event/${eventid}`);
   } catch (err) {
     console.error('Error during rsvp:', err);
-    res.render('pages/home', {
+    res.render('pages/login', {
       error: true,
-      message: err
+      message: err,
     });
   }
 })
