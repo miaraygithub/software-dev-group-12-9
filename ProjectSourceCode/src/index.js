@@ -11,6 +11,8 @@ const app = express();
 const ical = require('node-ical');
 app.use(bodyParser.json());
 const { format } = require('date-fns'); //needed to format the event dates in a user friendly way
+const fs = require('fs'); 
+const multer = require('multer');
 
 // -------------------------------------  APP CONFIG   ----------------------------------------------
 
@@ -21,6 +23,56 @@ const hbs = handlebars.create({
   partialsDir: __dirname + '/views/partials',
 });
 
+// Create uploads directory if it doesn't exist
+//const uploadDir = path.join(__dirname, 'uploads');
+// Use Render's writable temp dir if in production, otherwise default to /app/uploads
+const uploadDir = process.env.NODE_ENV === 'production'
+  ? '/tmp/uploads'
+  : '/app/uploads';
+
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+  console.log('Created uploads directory at', uploadDir);
+}
+
+// const uploadDir = '/app/uploads';
+// if (!fs.existsSync(uploadDir)) {
+//       fs.mkdirSync(uploadDir, { recursive: true });
+//   console.log('Created uploads directory');
+// }
+
+// Configure storage
+
+const storage = multer.diskStorage({
+  destination: function(req, file, cb) {
+  //cb(null, 'uploads/'); // Destination folder
+  cb(null, uploadDir);
+ },
+ 
+  filename: function(req, file, cb) {
+  // Create unique filename with original extension
+    cb(null, Date.now() + '-' + file.originalname);
+  }
+});
+ 
+//  // Set up file filter if you want to restrict file types
+//  const fileFilter = (req, file, cb) => {
+//   if (file.mimetype.startsWith('image/')) {
+//     cb(null, true);
+//   } else {
+//     cb(new Error('Not an image! Please upload only images.'), false);
+//   }
+//  };
+ 
+ // Initialize upload middleware
+const upload = multer({
+  storage: storage,
+    limits: {
+      fileSize: 1024 * 1024 * 5 // Limit file size to 5MB
+    },
+  //fileFilter: fileFilter
+});
+
 // Register `hbs` as our view engine using its bound `engine()` function.
 app.engine('hbs', hbs.engine);
 app.set('view engine', 'hbs');
@@ -29,6 +81,10 @@ app.use('/js', express.static(__dirname + '/src/resources/js'));
 app.use('/js', express.static(path.join(__dirname, 'resources', 'js')));
 app.use('/css', express.static(path.join(__dirname, 'resources', 'css')));
 app.use(bodyParser.json());
+// This allows serving static files from the uploads directory
+//app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(uploadDir));
+console.log(path.join(__dirname, 'uploads'));
 
 // set Session
 app.use(
@@ -142,15 +198,15 @@ app.get('/', async (req, res) => {
 });
 
 // =========== /profile Route ===========
-app.get('/profile', (req, res) => {
+app.get('/editProfile', (req, res) => {
   if (!req.session.user) {
     return res.redirect('/login');
   }
   
-  res.render('pages/profile');
+  res.render('pages/editProfile', {login: !!req.session.user});
 }); 
 
-app.post('/profile', async(req, res) => {
+app.post('/editProfile', upload.single('profilePic'), async(req, res) => {
   if (!req.session.user) {
     return res.redirect('/login');
   }
@@ -172,22 +228,57 @@ app.post('/profile', async(req, res) => {
       // console.log(updatedUser);
     }
     if (req.body.newPassword) {
-      const passwordQuery = 'UPDATE users SET userPassword = ($1) WHERE users.userPassword = ($2)';
-      await db.none(passwordQuery, [req.body.newPassword, req.session.user.userpassword]);
+      const passwordQuery = 'UPDATE users SET userPassword = ($1) WHERE users.userName = ($2)';
+      await db.none(passwordQuery, [req.body.newPassword, req.session.user.username]);
       // const updatedPass = await db.oneOrNone('SELECT DISTINCT * FROM users WHERE users.userPassword = ($1) LIMIT 1;', [req.body.newPassword])
       // console.log(updatedPass);
     }
 
-    if (!(req.body.newUsername || req.body.newPassword)) {
+    if (req.file) {
+      console.log(req.file);
+      const filePath = `/uploads/${req.file.filename}`;
+      console.log(filePath);
+      if (req.session.user.profilepic) {
+        const newPicQuery = 'UPDATE users SET profilePic = ($1) WHERE users.userName = ($2)';
+        try {
+          await db.none(newPicQuery, [filePath, req.session.user.username]);
+
+          req.session.user.profilepic = filePath;
+
+          const updatedPic = await db.oneOrNone('SELECT DISTINCT * FROM users WHERE users.userName = ($1) LIMIT 1;', [req.session.user.username]);
+          console.log(updatedPic);
+        } catch (dbErr) {
+          console.error('Database error:', dbErr);
+          res.render('pages/editProfile', {error: true, message: dbErr});
+        }
+      }
+      // const picQuery = 'INSERT INTO users (profilePic) VALUES ($1)';
+      // try {
+      //   await db.none(picQuery, [req.body.profilePic]);
+      // } catch (dbErr) {
+      //   console.error('Database error:', dbErr);
+      //   res.render('pages/editProfile', {error: true, message: dbErr});
+      // }
+      
+    }
+
+    if (!(req.body.newUsername || req.body.newPassword || req.file)) {
       throw new Error('Please make changes before submitting.')
     } 
 
-    res.render('pages/profile', {message: 'Profile successfully edited!'});
+    res.render('pages/profile', {
+      login: !!req.session.user,
+      message: 'Profile successfully edited!'
+    });
   } catch (err) {
     console.error('Error sending updated profile data', err);
     // res.status(400).json({ error: err.message});
-    res.render('pages/profile', {error: true, message: err});
+    res.render('pages/editProfile', {login: !!req.session.user, error: true, message: err});
   }
+});
+
+app.get('/profile', (req, res) => {
+  res.render('pages/profile', {login: !!req.session.user});
 });
 
 // =========== /login Routes ===========
@@ -347,10 +438,10 @@ app.get('/event-details', async (req, res) => {
 
     res.render('pages/events', {
       comments,
+      user: !!req.session.user,
       event: formattedEvents[0],
       rsvpList: rsvp,
     })
-
   } catch (err) {
     console.log('error saving events', err);
     res.render('pages/home', {
@@ -480,6 +571,7 @@ app.get("/search", async (req, res) => {
     res.render('pages/search-results', {
       keyword: keyword,
       resultsBool: resultsBool,
+      login: !!req.session.user,
       // users: users_results,
       clubs: clubs_results,
       events: formattedEvents
@@ -519,7 +611,6 @@ app.post("/rsvp", async (req, res) => {
   }
 })
 
-//!!! Currently not working, waiting to determine whether we need to change clubsponsor into a string as the current code treats it as such
 // =========== Calendar/Events Route ===========        
 
 //URL of the events calendar
@@ -528,15 +619,18 @@ const icsUrl = 'https://campusgroups.colorado.edu/ical/colorado/ical_colorado.ic
 //Fetch the event using the fetch library, then parse the info from the ICS file which is similar to tokenizing except that ICS files come with clear per line parameters for each item (Title, start, etc...)
 async function fetchAndInsertICSEvents() {
   try {
+    let insertedCount = 0;
+
     //Fetch the event info from the ICS link
     const response = await fetch(icsUrl);
     const icsData = await response.text();
     const events = ical.parseICS(icsData);
 
+
     //Limit the amount of events fetched and inserted to 30 days from now
     const now = new Date();
-    const next30Days = new Date(now);
-    next30Days.setDate(now.getDate() + 30);
+    const nextXDays = new Date(now);
+    nextXDays.setDate(now.getDate() + 30);
 
     //Events is an object populated by multiple events differentiated by a 'key', thus iterate through all the events from 0<key<n 
     insertedCount = 0;
@@ -546,9 +640,9 @@ async function fetchAndInsertICSEvents() {
       if (event.type !== 'VEVENT') continue;
 
       //Only continue the loop within the time frame of events we want to add
-      if (event.start < now || event.start > next30Days) continue;
+      if (event.start < now || event.start > nextXDays) continue;
 
-      //Begin parsing
+      //--Begin parsing--
       let titleRaw = event.summary;
         const title =
           typeof titleRaw === 'string' //Check if it is a string or an object
@@ -556,48 +650,31 @@ async function fetchAndInsertICSEvents() {
             : typeof titleRaw?.val === 'string'
             ? titleRaw.val.slice(0, 30)
             : 'Untitled';
+
       const description = event.description || '';
-      const eventDate = event.start.toISOString().slice(0, 10);      // 'YYYY-MM-DD'
-      const startTime = event.start.toTimeString().slice(0, 8);      // 'HH:MM:SS'
-      const endTime = event.end.toTimeString().slice(0, 8);          // 'HH:MM:SS'
+      const eventDate = event.start.toISOString().slice(0, 10);
+      const startTime = event.start.toTimeString().slice(0, 8);
+      const endTime = event.end.toTimeString().slice(0, 8);
+
       const organizerRaw = event.organizer || '';
-      const clubSponserName = typeof organizerRaw === 'string' //Check if it is a string or an object
+      const clubName = typeof organizerRaw === 'string' //Check if it is a string or an object
           ? (organizerRaw.match(/CN="([^"]+)"/) || [])[1] || null //If it's a string manually parse out the values inside quotes -> the club name
           : organizerRaw?.params?.CN || null; //Otherwise if its an object, extract it as such, object of type CN
+      
+      const tempClubId = await getClubId(clubName);
+      const clubID = tempClubId != null ? tempClubId : null;
+
+      const categoriesList = parseCategories(event.categories);
+      //const chosenCategoryID = await pickCategory(categoriesList);
 
       //Values we cant access unless we are logged in are defaulted for now
       const defaultBuildingID = 1;
       const defaultRoom = 'TBD';
+      //--end Parsing--
 
-      //Log the events inserted for debugging
-      console.log(`📅 Inserting event: "${title}" on ${eventDate} at ${startTime}`);
-      
-      //get clubid from clubs table
-      const clubSponser = await db.one(`
-        SELECT
-          COALESCE (
-            (SELECT clubid FROM clubs WHERE clubName = $1 LIMIT 1),
-            0
-          ) as clubSponserResult;
-      `, [clubSponserName]
-      );
-      //if club doesnt exist, insert club and get id
-      if (clubSponser['clubsponserresult'] == 0) {
-        await db.none(`
-          INSERT INTO clubs (clubName, clubDescription, organizer) 
-          VALUES ($1, 'TBD', 1);
-          `, [clubSponserName]
-        );
-
-        clubSponserResult = await db.one(`
-          SELECT clubId FROM clubs
-          WHERE clubName = $1
-          LIMIT 1;
-          `, [clubSponserName]
-        );
-
-        clubSponser['clubsponserresult'] = clubSponserResult['clubid']
-      }
+      //Debbugging
+      console.log('📝 Raw event data:', event);
+      console.log('Categories →', categoriesList);
 
       await db.none(`
         INSERT INTO events (
@@ -610,21 +687,82 @@ async function fetchAndInsertICSEvents() {
         title,
         defaultBuildingID,
         eventDate,
-        clubSponser['clubsponserresult'],
+        clubID,
         defaultRoom,
         description,
         startTime,
         endTime
       ]);
 
+      //Insert into categories list?
+
       insertedCount++;
     }
 
-    console.log(insertedCount,' ICS events imported to DB.');
+    console.log(insertedCount, 'ICS events imported to DB.');
   } catch (error) {
-    console.error('❌ Error importing ICS:', error);
+    console.error('Error importing ICS:', error);
   } 
 }
+
+//--Helper fxns--
+
+//Find the club ID by club Name and return it
+async function getClubId(clubName) {
+  if (!clubName) return null; //If there is no name
+
+  //Try to find the club by name
+  const foundClub = await db.oneOrNone(
+    'SELECT clubID FROM clubs WHERE clubName = $1',
+    [clubName]
+  );
+
+  if (foundClub) { //If a club was found return it's id
+    return foundClub.clubid;
+  } else { //If it wasn't create the club
+    const insertedClub = await db.one(
+      `INSERT INTO clubs (clubName, clubDescription, organizer)
+       VALUES ($1, $2, $3)
+       RETURNING clubID`,
+      [
+        clubName,
+        'ICS feed club',
+        1    //Change this if we implement user created club tracking
+      ]
+    );
+    return insertedClub.clubid;
+  }
+}
+
+//Tokenize categories and return them in an array
+function parseCategories(categoriesRaw) {
+  //If there were no categories assigned return an empty array
+  if (!categoriesRaw) return [];
+
+  categoriesRaw.map(c => c.trim()) //Get rid of spaces
+  categoriesRaw.filter(Boolean); //Get rid of empty categories
+
+  return categoriesRaw //Return the array
+}
+
+//Select a category from matchin categories in our DB or assign a random one
+async function pickCategory(categoriesList) {
+  //Loop through the entries in the categories array
+  for (const i of categoriesList) {
+    const foundCategory = await db.oneOrNone(
+      'SELECT categoryID FROM categories WHERE categoryName = $1',
+      [i]
+    );
+    if (foundCategory) return foundCategory.categoryid; //Return the first match
+  }
+
+  //If the array was emtpy or there were no matches return a random category
+  const randomCategory = await db.one(
+    'SELECT categoryID FROM categories ORDER BY RANDOM() LIMIT 1'
+  );
+  return randomCategory.categoryid;
+}
+//--End of Helpers--
 
 //Run on server start
 fetchAndInsertICSEvents();
