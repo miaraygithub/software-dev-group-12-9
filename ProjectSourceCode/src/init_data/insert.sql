@@ -6,27 +6,28 @@ VALUES --DO NOT USE THESE TO LOG IN. PASSWORD IS NOT ENCODED--
 ('DevUser2', '123', False),
 ('DevUser3', '123', False);
 
-INSERT INTO club_categories (categoryName)
+INSERT INTO categories (categoryName)
 VALUES
-('Academic'),
-('Art'),
-('Career'),
-('Community Service'),
-('Culture'),
-('Film'),
-('Greek Life'),
-('LGBTQ+'),
-('Music'),
-('Sports'),
-('Technology');
+('Academic'), --1
+('Art, Music, & Entertainment'), --2
+('Community Service'), --3
+('Crafts & DIY'), --4
+('Cultural & International'), --5
+('Gaming'), --6
+('Greek Life'), --7
+('LGBTQ+'), --8
+('Recreation & Wellness'), --9
+('Religion & Spirituality'), --10
+('Social'), --11
+('Sports'); --12
 
-INSERT INTO clubs (clubName, clubDescription, organizer, category)
+INSERT INTO clubs (clubName, clubDescription, organizer)
 VALUES 
-('Club1', 'This is sample club 1.', 1, 1),
-('Musical Theater Club', 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate.', 2, 2),
-('Intramural Tennis', 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate.', 1, 10),
-('Club4', 'This is sample club 4.', 2, 4),
-('Club5', 'This is sample club 5,', 1, 2);
+('CU Boulder Nordic Ski Club', 'TBD', 1),
+('Musical Theater Club', 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate.', 2),
+('Intramural Tennis', 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate.', 1),
+('Club4', 'This is sample club 4.', 2),
+('Club5', 'This is sample club 5,', 1);
 
 INSERT INTO users_to_clubs (userID, clubID)
 VALUES

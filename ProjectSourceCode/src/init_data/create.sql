@@ -6,21 +6,26 @@ CREATE TABLE users (
     PRIMARY KEY (userID)
 );
 
-CREATE TABLE club_categories (
-    categoryID SERIAL NOT NULL,
-    categoryName VARCHAR(30) NOT NULL,
-    PRIMARY KEY (categoryID)
-);
-
 CREATE TABLE clubs (
     clubID serial NOT NULL,
     clubName varchar(60) NOT NULL,
     clubDescription text NOT NULL,
     organizer int NOT NULL,
-    category int NOT NULL,
     PRIMARY KEY (ClubID),
-    CONSTRAINT FK_OrganizerUserID FOREIGN KEY (organizer) REFERENCES users (userID),
-    CONSTRAINT FK_ClubCategoryID FOREIGN KEY (category) REFERENCES club_categories (categoryID)
+    CONSTRAINT FK_OrganizerUserID FOREIGN KEY (organizer) REFERENCES users (userID)
+);
+
+CREATE TABLE categories (
+    categoryID SERIAL NOT NULL,
+    categoryName VARCHAR(30) NOT NULL,
+    PRIMARY KEY (categoryID)
+);
+
+CREATE TABLE clubs_to_categories (
+    clubID INT NOT NULL,
+    categoryID INT NOT NULL,
+    CONSTRAINT FK_Club FOREIGN KEY (clubID) REFERENCES clubs (clubID),
+    CONSTRAINT FK_Category FOREIGN KEY (categoryID) REFERENCES categories (categoryID)
 );
 
 CREATE TABLE users_to_clubs (

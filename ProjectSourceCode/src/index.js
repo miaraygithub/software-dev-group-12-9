@@ -294,7 +294,7 @@ app.post("/save-event", async (req, res) => {
 
     
     //QUERIES
-    const saveQuery = `INSERT INTO events (eventName, building, eventDate, clubSponser, roomNumber, eventDescription, startTime, endTime)
+    const saveQuery = `INSERT INTO events (eventName, building, eventDate, clubSponsor, roomNumber, eventDescription, startTime, endTime)
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8);`
 
     //Data to send to query 
@@ -487,7 +487,7 @@ async function fetchAndInsertICSEvents() {
       const startTime = event.start.toTimeString().slice(0, 8);      // 'HH:MM:SS'
       const endTime = event.end.toTimeString().slice(0, 8);          // 'HH:MM:SS'
       const organizerRaw = event.organizer || '';
-      const clubSponserName = typeof organizerRaw === 'string' //Check if it is a string or an object
+      const clubSponsorName = typeof organizerRaw === 'string' //Check if it is a string or an object
           ? (organizerRaw.match(/CN="([^"]+)"/) || [])[1] || null //If it's a string manually parse out the values inside quotes -> the club name
           : organizerRaw?.params?.CN || null; //Otherwise if its an object, extract it as such, object of type CN
 
@@ -499,35 +499,35 @@ async function fetchAndInsertICSEvents() {
       console.log(`📅 Inserting event: "${title}" on ${eventDate} at ${startTime}`);
       
       //get clubid from clubs table
-      const clubSponser = await db.one(`
+      const clubSponsor = await db.one(`
         SELECT
           COALESCE (
             (SELECT clubid FROM clubs WHERE clubName = $1 LIMIT 1),
             0
-          ) as clubSponserResult;
-      `, [clubSponserName]
+          ) as clubSponsorResult;
+      `, [clubSponsorName]
       );
       //if club doesnt exist, insert club and get id
-      if (clubSponser['clubsponserresult'] == 0) {
+      if (clubSponsor['clubsponsorresult'] == 0) {
         await db.none(`
           INSERT INTO clubs (clubName, clubDescription, organizer) 
           VALUES ($1, 'TBD', 1);
-          `, [clubSponserName]
+          `, [clubSponsorName]
         );
 
-        clubSponserResult = await db.one(`
+        clubSponsorResult = await db.one(`
           SELECT clubId FROM clubs
           WHERE clubName = $1
           LIMIT 1;
-          `, [clubSponserName]
+          `, [clubSponsorName]
         );
 
-        clubSponser['clubsponserresult'] = clubSponserResult['clubid']
+        clubSponsor['clubsponsorresult'] = clubSponsorResult['clubid']
       }
 
       await db.none(`
         INSERT INTO events (
-          eventName, building, eventDate, clubSponser,
+          eventName, building, eventDate, clubSponsor,
           roomNumber, eventDescription, startTime, endTime
         )
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -536,7 +536,7 @@ async function fetchAndInsertICSEvents() {
         title,
         defaultBuildingID,
         eventDate,
-        clubSponser['clubsponserresult'],
+        clubSponsor['clubsponsorresult'],
         defaultRoom,
         description,
         startTime,
@@ -554,8 +554,6 @@ async function fetchAndInsertICSEvents() {
 
 //Run on server start
 fetchAndInsertICSEvents();
-
-// ====================== Server Initialization ======================
 
 // =========== /clubs Route ===========
 app.get("/clubs", async(req, res) => {
@@ -653,7 +651,7 @@ app.get("/clubs-by-category", async(req, res) => {
   try {
     const clubs = await db.any(`SELECT clubs.*, club_categories.categoryName as categoryName FROM clubs 
       INNER JOIN club_categories ON clubs.category = club_categories.categoryID
-      WHERE club_categories.categoryName = $1;`, [req.query.category]);
+      WHERE clubs.category = $1;`, [req.query.categoryID]);
     console.log(clubs);
     
     res.render('pages/clubs-by-category', {
@@ -669,6 +667,8 @@ app.get("/clubs-by-category", async(req, res) => {
     });
   }
 })
+
+// ====================== Server Initialization ======================
 
 //The app simply closes if it isn't listening for anything so this is load bearing. -- Julia
 const port = 3000
