@@ -46,14 +46,8 @@
                 usedCoords.add(coordKey);
 
                 const el = document.createElement('div');
-<<<<<<< HEAD
-                const category = marker.properties.category;
-                el.id = `marker-${marker.properties.id}`;
-                el.className = `marker category-${category}`;
-=======
                 el.id = `marker-${marker.properties.eventID}`;
                 el.className = 'marker';
->>>>>>> 00abef52d9aede5890a5d776f6ffaf429d1be405
                 el.innerHTML = '<i class="fa-solid fa-location-dot"></i>'
 
                 // Click event listener

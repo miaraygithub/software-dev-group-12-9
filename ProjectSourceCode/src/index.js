@@ -130,7 +130,7 @@ app.get('/', async (req, res) => {
       SELECT events.eventID as eventid, events.eventName as eventname, locations.buildingName as building, events.eventDate as eventdate, clubs.clubName as clubsponser, events.roomNumber as roomnumber, events.eventDescription as eventdescription, events.startTime as starttime, events.endTime as endtime
       FROM events
       INNER JOIN locations ON events.building = locations.locationID
-      INNER JOIN clubs ON events.clubSponser = clubs.clubID
+      INNER JOIN clubs ON events.clubSponsor = clubs.clubID
       ORDER BY "eventdate" ASC, "starttime" ASC
       LIMIT 50;
     `);
@@ -159,8 +159,7 @@ app.get('/', async (req, res) => {
               'properties', jsonb_build_object(
                   'eventID', events.eventID,
                   'buildingName', locations.buildingName,
-                  'roomNumber', events.roomNumber,
-                  'category', clubs.category
+                  'roomNumber', events.roomNumber
               )
             )
           )
@@ -400,7 +399,7 @@ app.get('/event-details', async (req, res) => {
       SELECT events.eventID as eventid, events.eventName as eventname, locations.buildingName as building, events.eventDate as eventdate, clubs.clubName as clubsponser, events.roomNumber as roomnumber, events.eventDescription as eventdescription, events.startTime as starttime, events.endTime as endtime
       FROM events
       INNER JOIN locations ON events.building = locations.locationID
-      INNER JOIN clubs ON events.clubSponser = clubs.clubID
+      INNER JOIN clubs ON events.clubSponsor = clubs.clubID
       WHERE eventid = $1
       LIMIT 1;
   `, [eventid]);
@@ -450,7 +449,7 @@ app.get('/event/:id', async (req, res) => {
     SELECT events.eventID as eventid, events.eventName as eventname, locations.buildingName as building, events.eventDate as eventdate, clubs.clubName as clubsponser, events.roomNumber as roomnumber, events.eventDescription as eventdescription, events.startTime as starttime, events.endTime as endtime
     FROM events
     INNER JOIN locations ON events.building = locations.locationID
-    INNER JOIN clubs ON events.clubSponser = clubs.clubID
+    INNER JOIN clubs ON events.clubSponsor = clubs.clubID
     WHERE eventid = $1
     LIMIT 1;
 `, [eventid]);
@@ -640,7 +639,7 @@ async function fetchAndInsertICSEvents() {
       //--end Parsing--
 
       //Debbugging
-      console.log('📝 Raw event data:', event);
+      // console.log('📝 Raw event data:', event);
       console.log('Categories →', categoriesList);
 
       await db.none(`
