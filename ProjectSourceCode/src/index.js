@@ -186,7 +186,7 @@ app.get('/editProfile', (req, res) => {
     return res.redirect('/login');
   }
   
-  res.render('pages/editProfile');
+  res.render('pages/editProfile', {login: !!req.session.user});
 }); 
 
 app.post('/editProfile', upload.single('profilePic'), async(req, res) => {
@@ -256,12 +256,12 @@ app.post('/editProfile', upload.single('profilePic'), async(req, res) => {
   } catch (err) {
     console.error('Error sending updated profile data', err);
     // res.status(400).json({ error: err.message});
-    res.render('pages/editProfile', {error: true, message: err});
+    res.render('pages/editProfile', {login: !!req.session.user, error: true, message: err});
   }
 });
 
 app.get('/profile', (req, res) => {
-  res.render('pages/profile');
+  res.render('pages/profile', {login: !!req.session.user});
 });
 
 // =========== /login Routes ===========
