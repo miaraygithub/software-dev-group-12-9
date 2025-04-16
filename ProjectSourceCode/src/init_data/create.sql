@@ -3,6 +3,7 @@ CREATE TABLE users (
     userName VARCHAR(30) NOT NULL,
     userPassword VARCHAR(60) NOT NULL,
     userAdmin BOOL NOT NULL,
+    profilePic VARCHAR(200) DEFAULT './uploads/default.jpg',
     PRIMARY KEY (userID)
 );
 
