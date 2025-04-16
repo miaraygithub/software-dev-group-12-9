@@ -171,8 +171,7 @@ app.get('/', async (req, res) => {
           )
       ) AS geojson
       FROM events
-      INNER JOIN locations ON events.building = locations.locationID
-      ORDER BY events.eventDate ASC, events.startTime ASC;`);
+      INNER JOIN locations ON events.building = locations.locationID;`);
 
     const geoEvents = geojson[0].geojson;
     // console.log(JSON.stringify(geoEvents, null, 2)); // see if geoEvents is formatted correctly
