@@ -81,7 +81,8 @@ app.get('/', async (req, res) => {
       FROM events
       INNER JOIN locations ON events.building = locations.locationID
       INNER JOIN clubs ON events.clubSponser = clubs.clubID
-      ORDER BY "eventdate" ASC, "starttime" ASC;
+      ORDER BY "eventdate" ASC, "starttime" ASC
+      LIMIT 50;
     `);
 
     const formattedEvents = events.map(events => {
@@ -507,7 +508,7 @@ async function fetchAndInsertICSEvents() {
     //Limit the amount of events fetched and inserted to 30 days from now
     const now = new Date();
     const nextXDays = new Date(now);
-    nextXDays.setDate(now.getDate() + 15);
+    nextXDays.setDate(now.getDate() + 30);
 
     //Events is an object populated by multiple events differentiated by a 'key', thus iterate through all the events from 0<key<n 
     insertedCount = 0;
@@ -576,7 +577,7 @@ async function fetchAndInsertICSEvents() {
       insertedCount++;
     }
 
-    console.log('ICS events imported to DB.');
+    console.log(insertedCount, 'ICS events imported to DB.');
   } catch (error) {
     console.error('Error importing ICS:', error);
   } 
