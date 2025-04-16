@@ -1,30 +1,33 @@
+{{>message}}
 <title>Buff's Bulletin</title>
-<main role="main" class="d-flex flex-column vh-100 px-4">
+<main role="main" class="d-flex flex-column vh-100">
   <!-- Page Heading (fixed height) -->
   <div class="mb-1 text-center">
     <h1 class="display-6">Welcome to Buff's Bulletin!</h1>
     <p class="lead text-muted small">See what's happening around campus</p>
   </div>
-
+  
   <!-- Layout: Sidebar + Map (fills remaining height) -->
   <div class="d-flex flex-grow-1 overflow-hidden">
     <!-- Sidebar -->
-  <div
-    id="sidebar"
-    class="bg-light border-end pt-1 pb-1 d-flex flex-column"
-    style="width: 300px; height: 100%; overflow-x: hidden; transition: all 0.3s;"
-  >
+      <div id="sidebar" class="bg-light border-end d-flex flex-column gap-2 p-2">
+        {{> new_event}}
+        
+        <!-- Fixed top content -->
+        <div class="d-flex align-items-center justify-content-between gap-2">
+          <button class="btn btn-sm btn-outline-secondary" id="expandSidebarBtn">Expand</button>
+          <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#event_modal">
+            Create Event
+          </button>
+        </div>
 
-      <div class="d-flex p-2 align-items-center mb-2">
-        <button class="btn btn-sm btn-outline-secondary me-2 text-center" id="expandSidebarBtn" style="width: 90px;">Expand</button>
-        <h2 class="mb-0 ms-4">Events</h2>
+        <h2 class="events-title">Events</h2>
+    
+        <!-- Scrollable Event List container -->
+        <div class="sidebar-scroll-container">
+          {{> event_sidebar events=events }}
+        </div>
       </div>
-
-      <!-- Scrollable Event List -->
-      <div class="flex-grow-1 overflow-auto" style="overflow-x: hidden;">
-        {{> event_sidebar events=events }}
-      </div>
-    </div>
 
     <!-- Map -->
     <div id="map-container" class="flex-grow-1 position-relative" style="height: 100%;">

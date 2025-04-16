@@ -29,22 +29,64 @@
         });
 
         function addMarkers() {
+            const usedCoords = new Set()
             /* For each feature in the GeoJSON object above: */
             for (const marker of geoEvents.features) {
-                /* Create a div element for the marker. */
+                let [lng, lat] = marker.geometry.coordinates;
+                let coordKey = `${lng},${lat}`;
+                
+                let attempts = 0;
+                while (usedCoords.has(coordKey) && attempts < 10){
+                    const offset = 0.0007;
+                    lng += (Math.random() - 0.5) * offset;
+                    lat += (Math.random() - 0.5) * offset;
+                    coordKey = `${lng},${lat}`;
+                    attempts++;
+                }
+                usedCoords.add(coordKey);
+
                 const el = document.createElement('div');
-                /* Assign a unique `id` to the marker. */
-                el.id = `marker-${marker.properties.id}`;
-                /* Assign the `marker` class to each marker for styling. */
+                el.id = `marker-${marker.properties.eventID}`;
                 el.className = 'marker';
                 el.innerHTML = '<i class="fa-solid fa-location-dot"></i>'
 
+                // Click event listener
+                el.addEventListener('click', () => {
+                    //console.log("Clicked marker for eventid:", marker.properties.eventID); //debug
+
+                    flyToStore(marker);
+                    createPopUp(marker);
+
+                    const activeItem = document.querySelector('.sidebar-item.active');
+                    if (activeItem) activeItem.classList.remove('active');
+
+                    //debugging stuff:
+                    //const target = document.querySelector(`#sidebar-item-${marker.properties.eventID}`);
+                    //console.log("Sidebar target:", target);
+
+                    const target = document.querySelector(`#sidebar-item-${marker.properties.eventID}`);
+                    const sidebarContainer = document.querySelector('.sidebar-scroll-container');
+
+                    //Stop the zoom and scroll from scrolling the whole page down
+                    if (target && sidebarContainer) {
+                        
+                        const top = target.offsetTop - sidebarContainer.offsetTop;
+                        sidebarContainer.scrollTo({
+                            top,
+                            behavior: 'smooth'
+                        });
+
+                        target.classList.add('active');
+                    }
+
+                });
+                
                 /**
                 * Create a marker using the div element
                 * defined above and add it to the map.
                 **/
                 new mapboxgl.Marker(el, { offset: [0, -23] })
-                .setLngLat(marker.geometry.coordinates)
+                .setLngLat([lng, lat])
                 .addTo(map);
             }
         }
@@ -53,18 +95,25 @@
         function flyToStore(currentFeature) {
             map.flyTo({
                 center: currentFeature.geometry.coordinates,
-                zoom: 15
+                zoom: 17
             });
         }
 
-        function createPopUp(currentFeature) {
-            const popUps = document.getElementsByClassName('mapboxgl-popup');
-            if (popUps[0]) popUps[0].remove();
+    function createPopUp(currentFeature) {
+        const popUps = document.getElementsByClassName('mapboxgl-popup');
+        if (popUps[0]) popUps[0].remove();
 
-            const popup = new mapboxgl.Popup({ closeOnClick: false })
-                .setLngLat(currentFeature.geometry.coordinates)
-                .setHTML(`<h3>${currentFeature.properties.eventName}</h3><h4>${currentFeature.properties.building} - ${currentFeature.properties.room}</h4>`)
-                .addTo(map);
-        }
+        const { buildingName, roomNumber } = currentFeature.properties;
+
+        const popup = new mapboxgl.Popup({ closeOnClick: false })
+            .setLngLat(currentFeature.geometry.coordinates)
+            .setHTML(`
+                <div class="popup-section-header">Building</div>
+                <p class="popup-section-body">${buildingName || 'Unknown'}</p>
+                <div class="popup-section-header">Room</div>
+                <p class="popup-section-body">${roomNumber || 'N/A'}</p>
+                `)
+            .addTo(map);
+    }
     </script>
 </body>
