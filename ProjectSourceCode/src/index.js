@@ -153,27 +153,29 @@ app.get('/', async (req, res) => {
     // generate geojson formatted event list to show pins
     const geojson = await db.any(`
       SELECT jsonb_build_object(
-          'type', 'FeatureCollection',
-
-          'features', jsonb_agg(
-            jsonb_build_object(
-              'type', 'Feature',
-              'geometry', jsonb_build_object(
-                  'type', 'Point',
-                  'coordinates', jsonb_build_array(locations.longitude, locations.latitude)
-              ),
-              'properties', jsonb_build_object(
-                  'eventID', events.eventID,
-                  'buildingName', locations.buildingName,
-                  'roomNumber', events.roomNumber
-              )
-            )
-          )
+        'type', 'FeatureCollection',
+        'features', jsonb_agg(feature)
       ) AS geojson
-      FROM events
-      INNER JOIN locations ON events.building = locations.locationID
-      ORDER BY events.eventDate ASC, events.startTime ASC,
-      LIMIT 50;`);
+      FROM (
+        SELECT jsonb_build_object(
+          'type', 'Feature',
+          'geometry', jsonb_build_object(
+            'type', 'Point',
+            'coordinates', jsonb_build_array(locations.longitude, locations.latitude)
+          ),
+          'properties', jsonb_build_object(
+            'eventID', events.eventID,
+            'buildingName', locations.buildingName,
+            'roomNumber', events.roomNumber
+          )
+        ) AS feature
+        FROM events
+        INNER JOIN locations ON events.building = locations.locationID
+        ORDER BY events.eventDate ASC, events.startTime ASC
+        LIMIT 50
+      ) AS limited_features;
+    `);
+
 
     const geoEvents = geojson[0].geojson;
     // console.log(JSON.stringify(geoEvents, null, 2)); // see if geoEvents is formatted correctly
