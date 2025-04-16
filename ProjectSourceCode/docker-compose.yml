@@ -20,6 +20,7 @@ services:
       - '3000:3000'
     volumes:
       - ./:/home/node/app
+      - ./uploads:/app/uploads
     command: 'npm start'
 volumes:
   group-project:

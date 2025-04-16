@@ -10,9 +10,9 @@
                     <form method="GET" action = "/profile">
                         <div class="mb-3">
                             <label for="profilePic" class="form-label">Profile Picture</label>
-                            <input class="form-control" type="file" id="profilePic" name="profilePic" />
+                            <img src={{user.profilepic}} alt="Profile Picture" class="img-thumbnail" style="max-width: 300px;">
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="username" class="form-label">Username</label>
                             <input type="text" class="form-control" id="newUsername" name="newUsername" placeholder="John Doe" />
@@ -42,7 +42,7 @@
                         -->
 
                         <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                            <a href="/editProfile" class="btn btn-primary">Edit Profile</a>
                         </div>
                     </form>
                 </div>
