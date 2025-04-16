@@ -576,6 +576,9 @@ async function fetchAndInsertICSEvents() {
   } 
 }
 
+//--Helper fxns--
+
+//Find the club ID by club Name and return it
 async function getClubId(clubName) {
   if (!clubName) return null; //If there is no name
 
@@ -602,6 +605,7 @@ async function getClubId(clubName) {
   }
 }
 
+//Tokenize categories and return them in an array
 function parseCategories(categoriesRaw) {
   //If there were no categories assigned return an empty array
   if (!categoriesRaw) return [];
@@ -612,6 +616,7 @@ function parseCategories(categoriesRaw) {
   return categoriesRaw //Return the array
 }
 
+//Select a category from matchin categories in our DB or assign a random one
 async function pickCategory(categoriesList) {
   //Loop through the entries in the categories array
   for (const i of categoriesList) {
@@ -628,7 +633,7 @@ async function pickCategory(categoriesList) {
   );
   return randomCategory.categoryid;
 }
-
+//--End of Helpers--
 
 //Run on server start
 fetchAndInsertICSEvents();
