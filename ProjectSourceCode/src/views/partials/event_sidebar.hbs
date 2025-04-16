@@ -1,13 +1,11 @@
 <ul class="list-group">
   {{#each events}}
-    <li
-      class="list-group-item flex-column row event-item"
-      data-eventid="{{this.eventid}}"
-      onclick="submitFromElement(this)"
-      onkeydown="if(event.key === 'Enter') submitFromElement(this)"
-      role="button"
-      tabindex="0"
-    >
+  <li class="list-group-item event-item sidebar-item"
+    id="sidebar-item-{{this.eventid}}"
+    data-eventid="{{this.eventid}}" onclick="submitFromElement(this)"
+    onkeydown="if(event.key === 'Enter') submitFromElement(this)"
+    role="button" tabindex="0"
+  >
       <div class="w-100">
         <strong class="fs-5">{{this.eventname}}</strong><br>
           <p class="mb-0"><strong>Location:</strong> {{building}} Room {{roomnumber}}</p>
@@ -28,7 +26,7 @@
       </small>
 
       </div>
-    </li>
+  </li>
   {{/each}}
 </ul>
 

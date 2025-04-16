@@ -9,12 +9,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   btn.addEventListener('click', () => {
     if (expanded) {
-      sidebar.style.width = '300px';
       btn.textContent = 'Expand';
     } else {
-      sidebar.style.width = '100%';
       btn.textContent = 'Collapse';
     }
+
     expanded = !expanded;
     sidebar.classList.toggle('expanded', expanded);
   });
