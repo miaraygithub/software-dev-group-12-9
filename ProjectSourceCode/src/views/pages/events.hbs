@@ -17,6 +17,7 @@
         <p><strong>Start Time:</strong> {{event.startTimeFormatted}}</p>
         <p><strong>End Time:</strong> {{event.endTimeFormatted}}</p>
       </div>
+
     </div>
 
     <div>
@@ -24,6 +25,10 @@
       <p class="card-text">
         {{event.eventdescription}}  
       </p>
+      <form action="/rsvp" method="POST" >
+        <input type="hidden" name="eventId" value="{{event.eventid}}">
+        <button type="submit" class="btn btn-primary">RSVP</button>
+      </form>   
     </div>
   </section>
   
@@ -54,6 +59,22 @@
     </ul>
   {{else}}
     <p>No comments yet — be the first!</p>
+  {{/if}}
+</section>
+
+<!--Displayed RSVP-->
+<section class="mt-5">
+  <h4>Attendees</h4>
+  {{#if rsvpList.length}}
+    <ul class="list-group">
+      {{#each rsvpList}}
+        <li class="list-group-item">
+          <strong>{{this.name}}</strong>
+        </li>
+      {{/each}}
+    </ul>
+  {{else}}
+    <p>No attendees yet!</p>
   {{/if}}
 </section>
 

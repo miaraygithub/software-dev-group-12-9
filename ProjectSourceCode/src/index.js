@@ -1,4 +1,5 @@
 // ----------------------------------   DEPENDENCIES  ----------------------------------------------
+
 const express = require('express');
 const handlebars = require('express-handlebars');
 const path = require('path');
@@ -7,6 +8,7 @@ const bodyParser = require('body-parser');
 const session = require('express-session');
 const bcrypt = require('bcryptjs'); //  To hash passwords
 const app = express();
+const ical = require('node-ical');
 app.use(bodyParser.json());
 const { format } = require('date-fns'); //needed to format the event dates in a user friendly way
 
@@ -310,9 +312,12 @@ app.get('/event-details', async (req, res) => {
   const eventid = req.query.eventID;
 
   const events = await db.any(`
-    SELECT *
-    FROM events
-    WHERE eventid = $1;
+      SELECT events.eventID as eventid, events.eventName as eventname, locations.buildingName as building, events.eventDate as eventdate, clubs.clubName as clubsponser, events.roomNumber as roomnumber, events.eventDescription as eventdescription, events.startTime as starttime, events.endTime as endtime
+      FROM events
+      INNER JOIN locations ON events.building = locations.locationID
+      INNER JOIN clubs ON events.clubSponser = clubs.clubID
+      WHERE eventid = $1
+      LIMIT 1;
   `, [eventid]);
 
   const formattedEvents = events.map(events => {
@@ -324,6 +329,14 @@ app.get('/event-details', async (req, res) => {
     };
   });
 
+  
+  const rsvp = await db.any(`
+    SELECT users.userName  as name
+    FROM users
+    INNER JOIN rsvp ON rsvp.userID = users.userID
+    WHERE rsvp.eventID = $1;
+    `, [eventid]);
+
   // Fetch Comments
   const comments = await db.any(`
     SELECT * FROM comments
@@ -334,7 +347,8 @@ app.get('/event-details', async (req, res) => {
   res.render('pages/events', { 
     event: formattedEvents[0],
     login: !!req.session.user,
-    comments
+    comments,
+    rsvpList: rsvp
    })
 })
 
@@ -343,9 +357,13 @@ app.get('/event/:id', async (req, res) => {
   const eventid = req.params.id;
 
   const events = await db.any(`
-    SELECT * FROM events
-    WHERE eventid = $1;
-  `, [eventid]);
+    SELECT events.eventID as eventid, events.eventName as eventname, locations.buildingName as building, events.eventDate as eventdate, clubs.clubName as clubsponser, events.roomNumber as roomnumber, events.eventDescription as eventdescription, events.startTime as starttime, events.endTime as endtime
+    FROM events
+    INNER JOIN locations ON events.building = locations.locationID
+    INNER JOIN clubs ON events.clubSponser = clubs.clubID
+    WHERE eventid = $1
+    LIMIT 1;
+`, [eventid]);
 
   const formattedEvents = events.map(event => {
     return {
@@ -362,9 +380,17 @@ app.get('/event/:id', async (req, res) => {
     ORDER BY created_at DESC;
   `, [eventid]);
 
+  const rsvp = await db.any(`
+    SELECT users.userName  as name
+    FROM users
+    INNER JOIN rsvp ON rsvp.userID = users.userID
+    WHERE rsvp.eventID = $1;
+    `, [eventid]);
+
   res.render('pages/events', {
     event: formattedEvents[0],
-    comments
+    comments,
+    rsvpList: rsvp
   });
 });
 
@@ -437,7 +463,189 @@ app.get("/search", async (req, res) => {
   }
 });
 
-// =========== Comments Route ===========
+// =========== /rsvp Route ===========
+app.post("/rsvp", async (req, res) => {
+  try {
+    if (!req.session.user) {
+      console.log('Not Logged In.');
+      throw new Error('Please Login Before RSVPing.');
+    }
+
+    const userid = req.session.user.userid;
+    const eventid = req.body.eventId;
+    await db.none(`
+      INSERT INTO rsvp (eventID, userID) 
+      VALUES ($1, $2)
+      ON CONFLICT DO NOTHING;`,[eventid, userid]
+    );
+    res.redirect(`/event/${eventid}`);
+  } catch (err) {
+    console.error('Error during rsvp:', err);
+    res.render('pages/home', {
+      error: true,
+      message: err
+    });
+  }
+})
+
+//!!! Currently not working, waiting to determine whether we need to change clubsponsor into a string as the current code treats it as such
+// =========== Calendar/Events Route ===========        
+
+//URL of the events calendar
+const icsUrl = 'https://campusgroups.colorado.edu/ical/colorado/ical_colorado.ics';
+
+//Fetch the event using the fetch library, then parse the info from the ICS file which is similar to tokenizing except that ICS files come with clear per line parameters for each item (Title, start, etc...)
+async function fetchAndInsertICSEvents() {
+  try {
+    let insertedCount = 0;
+
+    //Fetch the event info from the ICS link
+    const response = await fetch(icsUrl);
+    const icsData = await response.text();
+    const events = ical.parseICS(icsData);
+
+
+    //Limit the amount of events fetched and inserted to 30 days from now
+    const now = new Date();
+    const next30Days = new Date(now);
+    next30Days.setDate(now.getDate() + 30);
+
+    //Events is an object populated by multiple events differentiated by a 'key', thus iterate through all the events from 0<key<n 
+    insertedCount = 0;
+    for (const key in events) {
+      const event = events[key];
+      //The event file may contain other objects not of type 'event' which are irrelevant and we ignore
+      if (event.type !== 'VEVENT') continue;
+
+      //Only continue the loop within the time frame of events we want to add
+      if (event.start < now || event.start > next30Days) continue;
+
+      //--Begin parsing--
+      let titleRaw = event.summary;
+        const title =
+          typeof titleRaw === 'string' //Check if it is a string or an object
+            ? titleRaw.slice(0, 30)
+            : typeof titleRaw?.val === 'string'
+            ? titleRaw.val.slice(0, 30)
+            : 'Untitled';
+
+      const description = event.description || '';
+      const eventDate = event.start.toISOString().slice(0, 10);
+      const startTime = event.start.toTimeString().slice(0, 8);
+      const endTime = event.end.toTimeString().slice(0, 8);
+
+      const organizerRaw = event.organizer || '';
+      const clubName = typeof organizerRaw === 'string' //Check if it is a string or an object
+          ? (organizerRaw.match(/CN="([^"]+)"/) || [])[1] || null //If it's a string manually parse out the values inside quotes -> the club name
+          : organizerRaw?.params?.CN || null; //Otherwise if its an object, extract it as such, object of type CN
+      
+      const tempClubId = await getClubId(clubName);
+      const clubID = tempClubId != null ? tempClubId : null;
+
+      const categoriesList = parseCategories(event.categories);
+      //const chosenCategoryID = await pickCategory(categoriesList);
+
+      //Values we cant access unless we are logged in are defaulted for now
+      const defaultBuildingID = 1;
+      const defaultRoom = 'TBD';
+      //--end Parsing--
+
+      //Debbugging
+      console.log('📝 Raw event data:', event);
+      console.log('Categories →', categoriesList);
+
+      await db.none(`
+        INSERT INTO events (
+          eventName, building, eventDate, clubSponser,
+          roomNumber, eventDescription, startTime, endTime
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        ON CONFLICT DO NOTHING
+      `, [
+        title,
+        defaultBuildingID,
+        eventDate,
+        clubID,
+        defaultRoom,
+        description,
+        startTime,
+        endTime
+      ]);
+
+      //Insert into categories list?
+
+      insertedCount++;
+    }
+
+    console.log('ICS events imported to DB.');
+  } catch (error) {
+    console.error('Error importing ICS:', error);
+  } 
+}
+
+//--Helper fxns--
+
+//Find the club ID by club Name and return it
+async function getClubId(clubName) {
+  if (!clubName) return null; //If there is no name
+
+  //Try to find the club by name
+  const foundClub = await db.oneOrNone(
+    'SELECT clubID FROM clubs WHERE clubName = $1',
+    [clubName]
+  );
+
+  if (foundClub) { //If a club was found return it's id
+    return foundClub.clubid;
+  } else { //If it wasn't create the club
+    const insertedClub = await db.one(
+      `INSERT INTO clubs (clubName, clubDescription, organizer)
+       VALUES ($1, $2, $3)
+       RETURNING clubID`,
+      [
+        clubName,
+        'ICS feed club',
+        1    //Change this if we implement user created club tracking
+      ]
+    );
+    return insertedClub.clubid;
+  }
+}
+
+//Tokenize categories and return them in an array
+function parseCategories(categoriesRaw) {
+  //If there were no categories assigned return an empty array
+  if (!categoriesRaw) return [];
+
+  categoriesRaw.map(c => c.trim()) //Get rid of spaces
+  categoriesRaw.filter(Boolean); //Get rid of empty categories
+
+  return categoriesRaw //Return the array
+}
+
+//Select a category from matchin categories in our DB or assign a random one
+async function pickCategory(categoriesList) {
+  //Loop through the entries in the categories array
+  for (const i of categoriesList) {
+    const foundCategory = await db.oneOrNone(
+      'SELECT categoryID FROM categories WHERE categoryName = $1',
+      [i]
+    );
+    if (foundCategory) return foundCategory.categoryid; //Return the first match
+  }
+
+  //If the array was emtpy or there were no matches return a random category
+  const randomCategory = await db.one(
+    'SELECT categoryID FROM categories ORDER BY RANDOM() LIMIT 1'
+  );
+  return randomCategory.categoryid;
+}
+//--End of Helpers--
+
+//Run on server start
+fetchAndInsertICSEvents();
+
+// ====================== Server Initialization ======================
 
 //The app simply closes if it isn't listening for anything so this is load bearing. -- Julia
 const port = 3000

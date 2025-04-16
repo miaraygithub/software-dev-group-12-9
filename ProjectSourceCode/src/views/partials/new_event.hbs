@@ -1,11 +1,6 @@
-<div class="custom-container">
-    <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#event_modal">Create Event</button>
-</div>
-
-
 <div class="modal" tabindex="-1" id="event_modal">
-    <div class="modal-dialog">
-        <div class="modal-content">
+  <div class="modal-dialog modal-dialog-centered modal-lg" style="max-width: 600px;">
+    <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Add Event</h5>
             </div>
@@ -60,14 +55,11 @@
                             required
                         ></textarea>
                     </div>    
-                    <button type="submit" class="btn btn-primary" >Create Event</button>
-                                   
+                    <div class="d-flex justify-content-between mt-3">
+                        <button type="submit" class="btn btn-primary">Create Event</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
                 </form>
-            </div>
-
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >Close</button>
-                
             </div>
         </div>
     </div>
