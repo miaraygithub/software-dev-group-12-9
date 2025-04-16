@@ -11,6 +11,8 @@ const app = express();
 const ical = require('node-ical');
 app.use(bodyParser.json());
 const { format } = require('date-fns'); //needed to format the event dates in a user friendly way
+const fs = require('fs'); 
+const multer = require('multer');
 
 // -------------------------------------  APP CONFIG   ----------------------------------------------
 
@@ -21,6 +23,46 @@ const hbs = handlebars.create({
   partialsDir: __dirname + '/views/partials',
 });
 
+// Create uploads directory if it doesn't exist
+//const uploadDir = path.join(__dirname, 'uploads');
+const uploadDir = '/app/uploads';
+if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+  console.log('Created uploads directory');
+}
+
+// Configure storage
+
+const storage = multer.diskStorage({
+  destination: function(req, file, cb) {
+  //cb(null, 'uploads/'); // Destination folder
+  cb(null, uploadDir);
+ },
+ 
+  filename: function(req, file, cb) {
+  // Create unique filename with original extension
+    cb(null, Date.now() + '-' + file.originalname);
+  }
+});
+ 
+//  // Set up file filter if you want to restrict file types
+//  const fileFilter = (req, file, cb) => {
+//   if (file.mimetype.startsWith('image/')) {
+//     cb(null, true);
+//   } else {
+//     cb(new Error('Not an image! Please upload only images.'), false);
+//   }
+//  };
+ 
+ // Initialize upload middleware
+const upload = multer({
+  storage: storage,
+    limits: {
+      fileSize: 1024 * 1024 * 5 // Limit file size to 5MB
+    },
+  //fileFilter: fileFilter
+});
+
 // Register `hbs` as our view engine using its bound `engine()` function.
 app.engine('hbs', hbs.engine);
 app.set('view engine', 'hbs');
@@ -29,6 +71,10 @@ app.use('/js', express.static(__dirname + '/src/resources/js'));
 app.use('/js', express.static(path.join(__dirname, 'resources', 'js')));
 app.use('/css', express.static(path.join(__dirname, 'resources', 'css')));
 app.use(bodyParser.json());
+// This allows serving static files from the uploads directory
+//app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(uploadDir));
+console.log(path.join(__dirname, 'uploads'));
 
 // set Session
 app.use(
@@ -135,15 +181,15 @@ app.get('/', async (req, res) => {
 });
 
 // =========== /profile Route ===========
-app.get('/profile', (req, res) => {
+app.get('/editProfile', (req, res) => {
   if (!req.session.user) {
     return res.redirect('/login');
   }
   
-  res.render('pages/profile');
+  res.render('pages/editProfile');
 }); 
 
-app.post('/profile', async(req, res) => {
+app.post('/editProfile', upload.single('profilePic'), async(req, res) => {
   if (!req.session.user) {
     return res.redirect('/login');
   }
@@ -165,13 +211,41 @@ app.post('/profile', async(req, res) => {
       // console.log(updatedUser);
     }
     if (req.body.newPassword) {
-      const passwordQuery = 'UPDATE users SET userPassword = ($1) WHERE users.userPassword = ($2)';
-      await db.none(passwordQuery, [req.body.newPassword, req.session.user.userpassword]);
+      const passwordQuery = 'UPDATE users SET userPassword = ($1) WHERE users.userName = ($2)';
+      await db.none(passwordQuery, [req.body.newPassword, req.session.user.username]);
       // const updatedPass = await db.oneOrNone('SELECT DISTINCT * FROM users WHERE users.userPassword = ($1) LIMIT 1;', [req.body.newPassword])
       // console.log(updatedPass);
     }
 
-    if (!(req.body.newUsername || req.body.newPassword)) {
+    if (req.file) {
+      console.log(req.file);
+      const filePath = `/uploads/${req.file.filename}`;
+      console.log(filePath);
+      if (req.session.user.profilepic) {
+        const newPicQuery = 'UPDATE users SET profilePic = ($1) WHERE users.userName = ($2)';
+        try {
+          await db.none(newPicQuery, [filePath, req.session.user.username]);
+
+          req.session.user.profilepic = filePath;
+
+          const updatedPic = await db.oneOrNone('SELECT DISTINCT * FROM users WHERE users.userName = ($1) LIMIT 1;', [req.session.user.username]);
+          console.log(updatedPic);
+        } catch (dbErr) {
+          console.error('Database error:', dbErr);
+          res.render('pages/editProfile', {error: true, message: dbErr});
+        }
+      }
+      // const picQuery = 'INSERT INTO users (profilePic) VALUES ($1)';
+      // try {
+      //   await db.none(picQuery, [req.body.profilePic]);
+      // } catch (dbErr) {
+      //   console.error('Database error:', dbErr);
+      //   res.render('pages/editProfile', {error: true, message: dbErr});
+      // }
+      
+    }
+
+    if (!(req.body.newUsername || req.body.newPassword || req.file)) {
       throw new Error('Please make changes before submitting.')
     } 
 
@@ -182,8 +256,12 @@ app.post('/profile', async(req, res) => {
   } catch (err) {
     console.error('Error sending updated profile data', err);
     // res.status(400).json({ error: err.message});
-    res.render('pages/profile', {error: true, message: err});
+    res.render('pages/editProfile', {error: true, message: err});
   }
+});
+
+app.get('/profile', (req, res) => {
+  res.render('pages/profile');
 });
 
 // =========== /login Routes ===========
