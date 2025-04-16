@@ -309,9 +309,12 @@ app.get('/event-details', async (req, res) => {
   const eventid = req.query.eventID;
 
   const events = await db.any(`
-    SELECT *
-    FROM events
-    WHERE eventid = $1;
+      SELECT events.eventID as eventid, events.eventName as eventname, locations.buildingName as building, events.eventDate as eventdate, clubs.clubName as clubsponser, events.roomNumber as roomnumber, events.eventDescription as eventdescription, events.startTime as starttime, events.endTime as endtime
+      FROM events
+      INNER JOIN locations ON events.building = locations.locationID
+      INNER JOIN clubs ON events.clubSponser = clubs.clubID
+      WHERE eventid = $1
+      LIMIT 1;
   `, [eventid]);
 
   const formattedEvents = events.map(events => {
@@ -323,6 +326,14 @@ app.get('/event-details', async (req, res) => {
     };
   });
 
+  
+  const rsvp = await db.any(`
+    SELECT users.userName  as name
+    FROM users
+    INNER JOIN rsvp ON rsvp.userID = users.userID
+    WHERE rsvp.eventID = $1;
+    `, [eventid]);
+
   // Fetch Comments
   const comments = await db.any(`
     SELECT * FROM comments
@@ -331,7 +342,7 @@ app.get('/event-details', async (req, res) => {
   `, [eventid]);
 
   res.render('pages/events', { event: formattedEvents[0],
-    comments
+    comments, rsvpList: rsvp
    })
 })
 
@@ -340,9 +351,13 @@ app.get('/event/:id', async (req, res) => {
   const eventid = req.params.id;
 
   const events = await db.any(`
-    SELECT * FROM events
-    WHERE eventid = $1;
-  `, [eventid]);
+    SELECT events.eventID as eventid, events.eventName as eventname, locations.buildingName as building, events.eventDate as eventdate, clubs.clubName as clubsponser, events.roomNumber as roomnumber, events.eventDescription as eventdescription, events.startTime as starttime, events.endTime as endtime
+    FROM events
+    INNER JOIN locations ON events.building = locations.locationID
+    INNER JOIN clubs ON events.clubSponser = clubs.clubID
+    WHERE eventid = $1
+    LIMIT 1;
+`, [eventid]);
 
   const formattedEvents = events.map(event => {
     return {
@@ -359,9 +374,17 @@ app.get('/event/:id', async (req, res) => {
     ORDER BY created_at DESC;
   `, [eventid]);
 
+  const rsvp = await db.any(`
+    SELECT users.userName  as name
+    FROM users
+    INNER JOIN rsvp ON rsvp.userID = users.userID
+    WHERE rsvp.eventID = $1;
+    `, [eventid]);
+
   res.render('pages/events', {
     event: formattedEvents[0],
-    comments
+    comments,
+    rsvpList: rsvp
   });
 });
 
@@ -432,6 +455,31 @@ app.get("/search", async (req, res) => {
     });
   }
 });
+
+// =========== /rsvp Route ===========
+app.post("/rsvp", async (req, res) => {
+  try {
+    if (!req.session.user) {
+      console.log('Not Logged In.');
+      throw new Error('Please Login Before RSVPing.');
+    }
+
+    const userid = req.session.user.userid;
+    const eventid = req.body.eventId;
+    await db.none(`
+      INSERT INTO rsvp (eventID, userID) 
+      VALUES ($1, $2)
+      ON CONFLICT DO NOTHING;`,[eventid, userid]
+    );
+    res.redirect(`/event/${eventid}`);
+  } catch (err) {
+    console.error('Error during rsvp:', err);
+    res.render('pages/home', {
+      error: true,
+      message: err
+    });
+  }
+})
 
 //!!! Currently not working, waiting to determine whether we need to change clubsponsor into a string as the current code treats it as such
 // =========== Calendar/Events Route ===========        
