@@ -24,8 +24,47 @@ VALUES
 ('Norlin Library', 40.00880772946871, -105.27078912943777),
 ('Kittredge Field', 40.003046875220576, -105.25962041124946),
 ('Koelbel', 40.00568493017682, -105.26347206326568),
-('CASE', 40.006414911245734, -105.2701860457083);
+('CASE', 40.006414911245734, -105.2701860457083),
+('Math Building', 40.006414911245734, -105.2701860457083),
+('ATLAS', 40.006414911245734, -105.2701860457083),
+('Hallet Hall', 40.006414911245734, -105.2701860457083),
+('IHOP', 40.006414911245734, -105.2701860457083),
+('Stearns', 40.006414911245734, -105.2701860457083);
 
+INSERT INTO building_aliases (alias, buildingID)
+VALUES 
+  ('Engineering Center', 1),
+  ('EC', 1),
+  ('Eng Center', 1),
+  ('Farrand Field',2),
+  ('Farrand',2),
+  ('CU Events Center',3),
+  ('Recreation Center',3),
+  ('Rec Center',3),
+  ('Rec',3),
+  ('Fiske Planetarium', 4),
+  ('UMC',5),
+  ('University Memorial Center',5),
+  ('Muenzinger Auditorium', 6),
+  ('Muenzinger', 6),
+  ('MUEN', 6),
+  ('Folsom Field', 7),
+  ('Macky Auditorium', 8),
+  ('Norlin Library', 9),
+  ('Kittredge Field',10),
+  ('Kittredge',10),
+  ('Koelbel', 11),
+  ('CASE', 12),
+  ('Math Building', 13),
+  ('Mathematics', 13),
+  ('MATH', 13),
+  ('ATLAS',14),
+  ('Atlas Center',14),
+  ('Atlas',14),
+  ('Hallet Hall',15),
+  ('Hallet',15),
+  ('IHOP',16),
+  ('Stearns',17);
 
 INSERT INTO events (eventName, building, eventDate, clubSponser, roomNumber, eventDescription, startTime, endTime)
 VALUES 

@@ -635,73 +635,92 @@ async function fetchAndInsertICSEvents() {
     //Events is an object populated by multiple events differentiated by a 'key', thus iterate through all the events from 0<key<n 
     insertedCount = 0;
     for (const key in events) {
-      const event = events[key];
-      //The event file may contain other objects not of type 'event' which are irrelevant and we ignore
-      if (event.type !== 'VEVENT') continue;
+      try {
+        const event = events[key];
+        //The event file may contain other objects not of type 'event' which are irrelevant and we ignore
+        if (event.type !== 'VEVENT') continue;
 
-      //Only continue the loop within the time frame of events we want to add
-      if (event.start < now || event.start > nextXDays) continue;
+        //Only continue the loop within the time frame of events we want to add
+        if (event.start < now || event.start > nextXDays) continue;
 
-      //--Begin parsing--
-      let titleRaw = event.summary;
-        const title =
-          typeof titleRaw === 'string' //Check if it is a string or an object
-            ? titleRaw.slice(0, 30)
-            : typeof titleRaw?.val === 'string'
-            ? titleRaw.val.slice(0, 30)
-            : 'Untitled';
+        //--Begin parsing--
+        let titleRaw = event.summary;
+          const title =
+            typeof titleRaw === 'string' //Check if it is a string or an object
+              ? titleRaw.slice(0, 30)
+              : typeof titleRaw?.val === 'string'
+              ? titleRaw.val.slice(0, 30)
+              : 'Untitled';
 
-      const description = event.description || '';
-      const eventDate = event.start.toISOString().slice(0, 10);
-      const startTime = event.start.toTimeString().slice(0, 8);
-      const endTime = event.end.toTimeString().slice(0, 8);
+        const description = event.description || '';
+        const eventDate = event.start.toISOString().slice(0, 10);
+        const startTime = event.start.toTimeString().slice(0, 8);
+        const endTime = event.end.toTimeString().slice(0, 8);
 
-      const organizerRaw = event.organizer || '';
-      const clubName = typeof organizerRaw === 'string' //Check if it is a string or an object
-          ? (organizerRaw.match(/CN="([^"]+)"/) || [])[1] || null //If it's a string manually parse out the values inside quotes -> the club name
-          : organizerRaw?.params?.CN || null; //Otherwise if its an object, extract it as such, object of type CN
-      
-      const tempClubId = await getClubId(clubName);
-      const clubID = tempClubId != null ? tempClubId : null;
+        const organizerRaw = event.organizer || '';
+        const clubName = typeof organizerRaw === 'string' //Check if it is a string or an object
+            ? (organizerRaw.match(/CN="([^"]+)"/) || [])[1] || null //If it's a string manually parse out the values inside quotes -> the club name
+            : organizerRaw?.params?.CN || null; //Otherwise if its an object, extract it as such, object of type CN
+        
+        const tempClubId = await getClubId(clubName);
+        const clubID = tempClubId != null ? tempClubId : null;
 
-      const categoriesList = parseCategories(event.categories);
-      //const chosenCategoryID = await pickCategory(categoriesList);
+        const categoriesList = parseCategories(event.categories);
+        //const chosenCategoryID = await pickCategory(categoriesList);
 
-      //Values we cant access unless we are logged in are defaulted for now
-      const defaultBuildingID = 1;
-      const defaultRoom = 'TBD';
-      //--end Parsing--
+        //Values we cant access unless we are logged in are defaulted for now
+        const defaultRoom = 'TBD';
+        //--end Parsing--
 
-      //Debbugging
-      console.log('📝 Raw event data:', event);
-      console.log('Categories →', categoriesList);
+        //Check For duplicates before inserting
+        const duplicate = await db.oneOrNone(
+          `SELECT 1
+          FROM events
+          WHERE eventname = $1
+            AND eventdate = $2
+            AND starttime = $3
+            AND endtime   = $4
+          LIMIT 1`,
+          [title, eventDate, startTime, endTime]
+        );
+        
+        if (duplicate) continue; //Skip if there is a match
 
-      await db.none(`
-        INSERT INTO events (
-          eventName, building, eventDate, clubSponser,
-          roomNumber, eventDescription, startTime, endTime
-        )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        ON CONFLICT DO NOTHING
-      `, [
-        title,
-        defaultBuildingID,
-        eventDate,
-        clubID,
-        defaultRoom,
-        description,
-        startTime,
-        endTime
-      ]);
+        //Debbugging
+        console.log(`📅 Event inserted: ${title} at: ${eventDate} with description 🔭: ${description}`);
+        const detectedBuilding = await detectBuilding(description);
+        console.log("♦️Detected building:", detectedBuilding);
+        const buildingID = detectedBuilding || 1
 
-      //Insert into categories list?
 
-      insertedCount++;
+        await db.none(`
+          INSERT INTO events (
+            eventName, building, eventDate, clubSponser,
+            roomNumber, eventDescription, startTime, endTime
+          )
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+          ON CONFLICT DO NOTHING
+        `, [
+          title,
+          buildingID,
+          eventDate,
+          clubID,
+          defaultRoom,
+          description,
+          startTime,
+          endTime
+        ]);
+
+        //Insert into categories list?
+
+        insertedCount++;
+      } catch (eventError) {
+        console.error('⚠️ Skipping event due to error:', eventError.message);
+      }
     }
-
-    console.log(insertedCount, 'ICS events imported to DB.');
+    console.log(insertedCount, '✅ICS events imported to DB.');
   } catch (error) {
-    console.error('Error importing ICS:', error);
+    console.error('❌Error importing ICS:', error);
   } 
 }
 
@@ -762,6 +781,36 @@ async function pickCategory(categoriesList) {
   );
   return randomCategory.categoryid;
 }
+
+async function detectBuilding(rawDescription) {
+  let row = await db.oneOrNone(
+    `
+    SELECT l.locationID
+    FROM   building_aliases a
+    JOIN   locations       l ON a.buildingID = l.locationID
+    WHERE  similarity(lower(a.alias), lower($1)) > 0.01   -- tweak cutoff
+    ORDER  BY similarity(lower(a.alias), lower($1)) DESC
+    LIMIT  1
+    `,
+    [rawDescription]
+  );
+  if (row) return row.locationid;
+
+  // 2. Fallback: direct match on buildingName -----------------
+  row = await db.oneOrNone(
+    `
+    SELECT locationID
+    FROM   locations
+    WHERE  similarity(lower(buildingName), lower($1)) > 0.01
+    ORDER  BY similarity(lower(buildingName), lower($1)) DESC
+    LIMIT  1
+    `,
+    [rawDescription]
+  );
+  return row?.locationid ?? null;
+}
+
+
 //--End of Helpers--
 
 //Run on server start

@@ -1,3 +1,6 @@
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+
 CREATE TABLE users (
     userID SERIAL NOT NULL,
     userName VARCHAR(30) NOT NULL,
@@ -53,4 +56,9 @@ CREATE TABLE rsvp (
     PRIMARY KEY (userID, eventID),
     CONSTRAINT FK_UserID FOREIGN KEY (userID) REFERENCES users (userID),
     CONSTRAINT FK_EventID FOREIGN KEY (eventID) REFERENCES events (eventID)
+);
+
+CREATE TABLE building_aliases (
+  alias TEXT PRIMARY KEY,
+  buildingID INT REFERENCES locations(locationID)
 );
