@@ -1,15 +1,15 @@
 INSERT INTO users (userName, userPassword, userAdmin)
 VALUES --DO NOT USE THESE TO LOG IN. PASSWORD IS NOT ENCODED--
-('DevOrg1', '123', True),
-('DevOrg2', '123', True),
+('Default Organizer 1', '123', True),
+('Default Organizer 2', '123', True),
 ('DevUser1', '123', False),
 ('DevUser2', '123', False),
 ('DevUser3', '123', False);
 
-INSERT INTO clubs (clubName, clubDescription, organizer)
+INSERT INTO clubs (clubName, organizer)
 VALUES 
-('Club1', 'This is sample club 1.', 1),
-('Club2', 'This is sample club 2.', 2);
+('Club1', 1),
+('Club2', 1);
 
 INSERT INTO locations (buildingName, latitude, longitude)
 VALUES
