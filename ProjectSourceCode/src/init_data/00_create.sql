@@ -10,7 +10,6 @@ CREATE TABLE users (
 CREATE TABLE clubs (
     clubID serial NOT NULL,
     clubName varchar(60) NOT NULL,
-    clubDescription text NOT NULL,
     organizer int NOT NULL,
     PRIMARY KEY (ClubID),
     CONSTRAINT FK_OrganizerUserID FOREIGN KEY (organizer) REFERENCES users (userID)

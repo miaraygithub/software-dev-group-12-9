@@ -325,23 +325,58 @@ app.post('/register', async(req,res) => {
   try {
     // const hash = await bcrypt.hash(req.body.password, 10);
     var userAdmin = true;
+    let clubId = null;
 
-    if (!req.body.userAdmin) {
+    if (!req.body.useradmin) {
       userAdmin = false;
     }
 
+    console.log(req.body.useradmin)
+
     // Validation that user doesn't already exist in db
-    const searchQuery = 'SELECT DISTINCT * FROM users WHERE users.userName = ($1)';
-    const existingUser = await db.oneOrNone(searchQuery, [req.body.username]);
+    var searchQuery = 'SELECT DISTINCT * FROM users WHERE users.userName = ($1)';
+    var existingUser = await db.oneOrNone(searchQuery, [req.body.username]);
 
     if (!!existingUser) {
       console.log('User already exists in database.');
       throw new Error('Username taken. Please choose a different one.');
     }
 
-    const insertQuery = 'INSERT INTO users(userName, userPassword, userAdmin) VALUES($1, $2, $3)';
-    await db.none(insertQuery, [req.body.username, req.body.password, userAdmin]);
+    var insertQuery = 'INSERT INTO users(userName, userPassword, userAdmin) VALUES($1, $2, $3) RETURNING userid';
+    var userId = await db.one(insertQuery, [req.body.username, req.body.password, userAdmin]);
+    userId = userId.userid;
+    // If user is an organizer, verify club exists
+    if (userAdmin) {
+      var clubName = req.body.forclub?.trim();
+      var createClub = !!req.body.createclub;
 
+      if (!clubName) {
+        throw new Error('Club name is required for organizers.');
+      }
+
+      var clubQuery = 'SELECT clubid FROM clubs WHERE clubname = $1';
+      var clubRow = await db.oneOrNone(clubQuery, [clubName]);
+
+      if (!clubRow && createClub) {
+        // Create the club
+        var insertClubQuery = 'INSERT INTO clubs (clubname, organizer) VALUES ($1, $2) RETURNING clubid';
+        clubRow = await db.one(insertClubQuery, [clubName, userId.userid]);
+        console.log(`Creating new club with namem, id: ${clubName}, ${clubRow.clubid}`);
+      }
+
+      if (!clubRow && !createClub) {
+        throw new Error(`No club found with name "${clubName}". Click the New Club box when registering if you'd like to be an organizer for a new club with that name.`);
+      }
+
+      clubId = clubRow.clubid;
+
+      var updateClub = `UPDATE clubs SET organizer = $1 WHERE clubid = $2 RETURNING *;`;
+      var newClubInfo = await db.one(updateClub, [userId, clubId]);
+
+      console.log(newClubInfo)
+      users = await db.any(`SELECT * FROM users;`)
+      console.log(users)
+    }
     res.redirect('/login');
   } catch (err) {
     console.error('Error during registration:', err);
@@ -451,6 +486,7 @@ app.get('/event-details', async (req, res) => {
       events: req.session.events,
       geoEvents: req.session.geoEvents,
       buildings: req.session.buildings,
+      user: req.session.user,
     });
   }
 })
@@ -495,7 +531,8 @@ app.get('/event/:id', async (req, res) => {
     res.render('pages/events', {
       event: formattedEvents[0],
       comments,
-      rsvpList: rsvp
+      rsvpList: rsvp,
+      user: req.session.user,
     });
   } catch (err) {
     console.log('Error Reloading Event Page', err);
@@ -506,6 +543,7 @@ app.get('/event/:id', async (req, res) => {
       events: req.session.events,
       geoEvents: req.session.geoEvents,
       buildings: req.session.buildings,
+      user: req.session.user,
     });
   }
 });
@@ -532,6 +570,7 @@ app.post('/comment', async (req, res) => {
       events: req.session.events,
       geoEvents: req.session.geoEvents,
       buildings: req.session.buildings,
+      user: req.session.user,
     });
   }
 });
@@ -574,7 +613,8 @@ app.get("/search", async (req, res) => {
       login: !!req.session.user,
       // users: users_results,
       clubs: clubs_results,
-      events: formattedEvents
+      events: formattedEvents,
+      user: req.session.user,
     });
   }
   catch (err) {
@@ -721,12 +761,11 @@ async function getClubId(clubName) {
     return foundClub.clubid;
   } else { //If it wasn't create the club
     const insertedClub = await db.one(
-      `INSERT INTO clubs (clubName, clubDescription, organizer)
-       VALUES ($1, $2, $3)
+      `INSERT INTO clubs (clubName, organizer)
+       VALUES ($1, $2)
        RETURNING clubID`,
       [
         clubName,
-        'ICS feed club',
         1    //Change this if we implement user created club tracking
       ]
     );
