@@ -3,6 +3,13 @@
   --double-highlight: #f0c850;
 }
 
+#map {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+}
+
 .sidebar-extra {
   opacity: 0;
   max-height: 0;
@@ -44,7 +51,9 @@ li.list-group-item.sidebar-item.active:hover {
 }
 
 .event-item:hover {
-  background-color: var(--highlight-yellow); /* or a slightly darker Bootstrap gray like #e9ecef */
+  background-color: var(
+    --highlight-yellow
+  ); /* or a slightly darker Bootstrap gray like #e9ecef */
   cursor: pointer;
 }
 

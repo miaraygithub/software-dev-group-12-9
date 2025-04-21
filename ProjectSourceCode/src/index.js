@@ -10,7 +10,7 @@ const bcrypt = require("bcryptjs"); //  To hash passwords
 const app = express();
 const ical = require("node-ical");
 app.use(bodyParser.json());
-const { format } = require("date-fns"); //needed to format the event dates in a user friendly way
+const { format, parseISO } = require("date-fns"); //needed to format the event dates in a user friendly way
 const fs = require("fs");
 const multer = require("multer");
 
@@ -205,29 +205,21 @@ app.get("/", async (req, res) => {
 
 app.get("/get-events", async (req, res) => {
   try {
-    const startTime = req.params.startTime;
-    const endTime = req.params.endTime;
-    const date = req.params.Date;
-    console.log(startTime, endTime, date);
+    const parsedStartTime = req.query.startTime;
+    const parsedEndTime = req.query.endTime;
 
-    // const events = await db.any(`
-    //   SELECT events.eventID as eventid, events.eventName as eventname, locations.buildingName as building, events.eventDate as eventdate, clubs.clubName as clubsponser, events.roomNumber as roomnumber, events.eventDescription as eventdescription, events.startTime as starttime, events.endTime as endtime
-    //   FROM events
-    //   INNER JOIN locations ON events.building = locations.locationID
-    //   INNER JOIN clubs ON events.clubSponser = clubs.clubID
-    //   ORDER BY "date" ASC, "starttime" ASC
-    //   LIMIT 50;
-    // `);
-
-    const events = await db.any(`
-      SELECT events.eventID as eventid, events.eventName as eventname, locations.buildingName as building, events.eventDate as eventdate, clubs.clubName as clubsponser, events.roomNumber as roomnumber, events.eventDescription as eventdescription, events.startTime as starttime, events.endTime as endtime
-      FROM events
-      INNER JOIN locations ON events.building = locations.locationID
-      INNER JOIN clubs ON events.clubSponser = clubs.clubID
-      WHERE eventdate >= ${startTime} AND eventdate <= ${endTime} AND
-      ORDER BY "eventdate" ASC, "starttime" ASC
-      LIMIT 50;
-    `);
+    const events = await db.any(
+      `
+        SELECT events.eventID as eventid, events.eventName as eventname, locations.buildingName as building, events.eventDate as eventdate, clubs.clubName as clubsponser, events.roomNumber as roomnumber, events.eventDescription as eventdescription, events.startTime as starttime, events.endTime as endtime
+        FROM events
+        INNER JOIN locations ON events.building = locations.locationID
+        INNER JOIN clubs ON events.clubSponser = clubs.clubID
+        WHERE (starttime BETWEEN $1::time AND $2::time) AND (endtime BETWEEN $1::time AND $2::time)
+        ORDER BY "eventdate" ASC, "starttime" ASC
+        LIMIT 50;
+      `,
+      [parsedStartTime, parsedEndTime]
+    );
 
     const formattedEvents = events.map((event) => {
       return {
@@ -245,42 +237,39 @@ app.get("/get-events", async (req, res) => {
     });
 
     // generate geojson formatted event list to show pins
-    const geojson = await db.any(`
-      SELECT jsonb_build_object(
-          'type', 'FeatureCollection',
+    const geojson = await db.any(
+      `
+        SELECT jsonb_build_object(
+            'type', 'FeatureCollection',
 
-          'features', jsonb_agg(
-            jsonb_build_object(
-              'type', 'Feature',
-              'geometry', jsonb_build_object(
-                  'type', 'Point',
-                  'coordinates', jsonb_build_array(locations.longitude, locations.latitude)
-              ),
-              'properties', jsonb_build_object(
-                  'eventID', events.eventID,
-                  'buildingName', locations.buildingName,
-                  'roomNumber', events.roomNumber
+            'features', jsonb_agg(
+              jsonb_build_object(
+                'type', 'Feature',
+                'geometry', jsonb_build_object(
+                    'type', 'Point',
+                    'coordinates', jsonb_build_array(locations.longitude, locations.latitude)
+                ),
+                'properties', jsonb_build_object(
+                    'eventID', events.eventID,
+                    'buildingName', locations.buildingName,
+                    'roomNumber', events.roomNumber
+                )
               )
             )
-          )
-      ) AS geojson
-      FROM events
-      INNER JOIN locations ON events.building = locations.locationID;`);
-
-    const geoEvents = geojson[0].geojson;
-    // console.log(JSON.stringify(geoEvents, null, 2)); // see if geoEvents is formatted correctly
-
-    const buildings = await db.any(
-      `SELECT locationID, buildingName FROM locations;`
+        ) AS geojson
+        FROM events
+        INNER JOIN locations ON events.building = locations.locationID
+        WHERE (starttime BETWEEN $1::time AND $2::time) AND (endtime BETWEEN $1::time AND $2::time);
+      `,
+      [parsedStartTime, parsedEndTime]
     );
 
-    req.session.login = !!req.session.user;
-    req.session.events = formattedEvents;
-    req.session.geoEvents = JSON.stringify(geoEvents);
-    req.session.buildings = buildings;
-    req.session.save;
+    const geoEvents = geojson[0].geojson;
 
-    res.send(formattedEvents);
+    res.send({
+      events: formattedEvents,
+      geoEvents,
+    });
   } catch (err) {
     console.error("Error fetching events:", err);
     res.status(500).send("Internal server error");
@@ -844,8 +833,8 @@ async function fetchAndInsertICSEvents() {
       //--end Parsing--
 
       //Debbugging
-      console.log("📝 Raw event data:", event);
-      console.log("Categories →", categoriesList);
+      //console.log("📝 Raw event data:", event);
+      //console.log("Categories →", categoriesList);
 
       await db.none(
         `

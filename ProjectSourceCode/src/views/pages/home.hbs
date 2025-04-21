@@ -22,6 +22,20 @@
         </div>
 
         <h2 class="events-title">Events</h2>
+
+        <div>
+          <div class="mb-3">
+            <label for="start-time" class="form-label">Start Time:</label>
+            <input type="time" id="start-time" name="start-time" class="form-control" required>
+          </div>
+          
+          <div class="mb-3">
+            <label for="end-time" class="form-label">End Time:</label>
+            <input type="time" id="end-time" name="end-time" class="form-control" required>
+          </div>
+
+          <button id="sidebar-submit-button" class="btn" onclick="handleTimeSubmit(this)">Submit</button>
+        </div>
     
         <!-- Scrollable Event List container -->
         <div class="sidebar-scroll-container"></div>
@@ -29,7 +43,7 @@
 
     <!-- Map -->
     <div id="map-container" class="flex-grow-1 position-relative" style="height: 100%;">
-      {{> map }}
+      <div id="map" class="map"></div>
     </div>
   </div>
 </main>
@@ -41,7 +55,7 @@
       onclick="submitFromElement(this)" onkeydown="if(event.key === 'Enter') submitFromElement(this)" role="button"
       tabindex="0">
       <div class="w-100">
-        <strong class="fs-5">{{eventname}}</strong><br />
+        <strong class="fs-5">\{{eventname}}</strong><br />
         <p class="mb-0"><strong>Location:</strong>
           \{{building}}
           Room
@@ -74,37 +88,172 @@
     \{{/each}}
   </ul>
 </script>
-  
-  <!-- script to bring user to an individual event's page on click -->
-  <script>
-    function submitFromElement(el) {
-      const eventId = el.dataset.eventid; const
-        form = document.getElementById(`eventForm-${eventId}`); if (form) {
-          form.submit();
-        }
-    }
-  </script>
 
 <script type="text/javascript">
-  var sidebarRender = document.querySelector('#sidebar-template');
-  var sidebarContentContainer = document.querySelector('.sidebar-scroll-container');
+  const mapMarkers = [];
 
-  setTimeout(function () {
-    var getEventsUrl = new Url('/get-events',. {
-      params: {
-        startTime: '10:00'
-      }
+  const sidebarRender = document.querySelector('#sidebar-template');
+  const sidebarContentContainer = document.querySelector('.sidebar-scroll-container');
+  const sidebarSubmitButton = document.querySelector('#sidebar-submit-button');
+
+  const map = new mapboxgl.Map({
+    container: 'map', // container ID
+    center: [-105.26598, 40.00777], // starting [lng, lat] of CU Boulder
+    zoom: 14.3 // starting zoom
+  });
+
+  map.on('load', () => {
+    map.addSource('places', {
+      type: 'geojson',
+      data: {
+        type: 'FeatureCollection',
+        features: []
+      },
+      dynamic: true
     });
 
-    fetch(getEventsUrl.url)
-      .then(function (result) {
-        return result.json()
+    map.addLayer({
+      id: 'events',
+      source: 'places',
+      type: 'circle'
+    });
+  });
+
+
+  function getEvents(startTime, endTime) {
+    const params = new URLSearchParams({
+      startTime,
+      endTime
+    });
+
+    const getEventsUrl = `/get-events?${params}`;
+
+    fetch(getEventsUrl)
+      .then((result) => result.json())
+      .then(({
+        events,
+        geoEvents
+      }) => {
+        console.log(geoEvents)
+        const htmlString = Handlebars.compile(sidebarRender.innerHTML)({
+          fetchedEvents: events
+        });
+        sidebarContentContainer.innerHTML = htmlString;
+
+        addMarkers(geoEvents);
       })
-      .then(function (data) {
-        console.log(data, Handlebars)
-        var htmlString = Handlebars.compile(sidebarRender.innerHTML)({ fetchedEvents: data });
-        console.log(htmlString)
-        sidebarContentContainer.insertAdjacentHTML('beforeend', htmlString);
-      })
-  }, 500);
+  }
+
+  function handleTimeSubmit() {
+    const currentDate = new Date();
+
+    const startTimeInput = document.querySelector('#start-time');
+    const endTimeInput = document.querySelector('#end-time');
+
+    getEvents(`${startTimeInput.value}:00`, `${endTimeInput.value}:00`);
+  }
+
+  function clearMarkers() {
+    mapMarkers.every((marker) => marker.remove());
+  }
+
+  function addMarkers(events) {
+    // Always clear markers
+    clearMarkers();
+
+    map.getSource('places').setData(events);
+
+    const usedCoords = new Set()
+    /* For each feature in the GeoJSON object above: */
+    for (const marker of events.features) {
+      let [lng, lat] = marker.geometry.coordinates;
+      let coordKey = `${lng},${lat}`;
+
+      let attempts = 0;
+      while (usedCoords.has(coordKey) && attempts < 10) {
+        const offset = 0.0007;
+        lng += (Math.random() - 0.5) * offset;
+        lat += (Math.random() - 0.5) * offset;
+        coordKey = `${lng},${lat}`;
+        attempts++;
+      }
+      usedCoords.add(coordKey);
+
+      const el = document.createElement('div');
+      el.id = `marker-${marker.properties.eventID}`;
+      el.className = 'marker';
+      el.innerHTML = '<i class="fa-solid fa-location-dot"></i>'
+
+      // Click event listener
+      el.addEventListener('click', () => {
+        //console.log("Clicked marker for eventid:", marker.properties.eventID); //debug
+
+        flyToStore(marker);
+        createPopUp(marker);
+
+        const activeItem = document.querySelector('.sidebar-item.active');
+        if (activeItem) activeItem.classList.remove('active');
+
+        //debugging stuff:
+        //const target = document.querySelector(`#sidebar-item-${marker.properties.eventID}`);
+        //console.log("Sidebar target:", target);
+
+        const target = document.querySelector(`#sidebar-item-${marker.properties.eventID}`);
+        const sidebarContainer = document.querySelector('.sidebar-scroll-container');
+
+        //Stop the zoom and scroll from scrolling the whole page down
+        if (target && sidebarContainer) {
+
+          const top = target.offsetTop - sidebarContainer.offsetTop;
+          sidebarContainer.scrollTo({
+            top,
+            behavior: 'smooth'
+          });
+
+          target.classList.add('active');
+        }
+
+      });
+
+      /**
+        * Create a marker using the div element
+        * defined above and add it to the map.
+        **/
+      const newMapMarker = new mapboxgl.Marker(el, {
+        offset: [0, -23]
+      }).setLngLat([lng, lat]).addTo(map);
+
+      mapMarkers.push(newMapMarker);
+    }
+  }
+
+  // need to finish implementing flyToStore and createPopUp
+  function flyToStore(currentFeature) {
+    map.flyTo({
+      center: currentFeature.geometry.coordinates,
+      zoom: 17
+    });
+  }
+
+  function createPopUp(currentFeature) {
+    const popUps = document.getElementsByClassName('mapboxgl-popup');
+    if (popUps[0]) popUps[0].remove();
+
+    const {
+      buildingName,
+      roomNumber
+    } = currentFeature.properties;
+
+    const popup = new mapboxgl.Popup({
+      closeOnClick: false
+    })
+      .setLngLat(currentFeature.geometry.coordinates)
+      .setHTML(`
+          <div class="popup-section-header">Building</div>
+          <p class="popup-section-body">${buildingName || 'Unknown'}</p>
+          <div class="popup-section-header">Room</div>
+          <p class="popup-section-body">${roomNumber || 'N/A'}</p>
+          `)
+      .addTo(map);
+  }
 </script>
