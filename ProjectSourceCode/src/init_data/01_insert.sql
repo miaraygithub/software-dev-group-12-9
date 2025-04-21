@@ -1,15 +1,18 @@
+INSERT INTO clubs (clubName)
+VALUES 
+('Club1'),
+('Club2');
+
+INSERT INTO users (userName, userPassword, userAdmin, adminClub)
+VALUES --DO NOT USE THESE TO LOG IN. PASSWORD IS NOT ENCODED--
+('Default Organizer 1', '123', True, 1),
+('Default Organizer 2', '123', True, 2);
+
 INSERT INTO users (userName, userPassword, userAdmin)
 VALUES --DO NOT USE THESE TO LOG IN. PASSWORD IS NOT ENCODED--
-('Default Organizer 1', '123', True),
-('Default Organizer 2', '123', True),
-('DevUser1', '123', False),
-('DevUser2', '123', False),
-('DevUser3', '123', False);
-
-INSERT INTO clubs (clubName, organizer)
-VALUES 
-('Club1', 1),
-('Club2', 1);
+('Default User 1', '123', False),
+('Default User 2', '123', False),
+('Default User 3', '123', False);
 
 INSERT INTO locations (buildingName, latitude, longitude)
 VALUES
