@@ -188,7 +188,8 @@ app.get('/', async (req, res) => {
       login: !!req.session.user,
       events: formattedEvents, 
       geoEvents: JSON.stringify(geoEvents),
-      buildings: buildings
+      buildings: buildings,
+      user: req.session.user
     });
 
   } catch (err) {
@@ -342,10 +343,7 @@ app.post('/register', async(req,res) => {
       throw new Error('Username taken. Please choose a different one.');
     }
 
-    var insertQuery = 'INSERT INTO users(userName, userPassword, userAdmin) VALUES($1, $2, $3) RETURNING userid';
-    var userId = await db.one(insertQuery, [req.body.username, req.body.password, userAdmin]);
-    userId = userId.userid;
-    // If user is an organizer, verify club exists
+    // If user is an organizer, connect to club or create one
     if (userAdmin) {
       var clubName = req.body.forclub?.trim();
       var createClub = !!req.body.createclub;
@@ -354,14 +352,14 @@ app.post('/register', async(req,res) => {
         throw new Error('Club name is required for organizers.');
       }
 
-      var clubQuery = 'SELECT clubid FROM clubs WHERE clubname = $1';
+      var clubQuery = 'SELECT * FROM clubs WHERE clubname = $1';
       var clubRow = await db.oneOrNone(clubQuery, [clubName]);
 
       if (!clubRow && createClub) {
         // Create the club
-        var insertClubQuery = 'INSERT INTO clubs (clubname, organizer) VALUES ($1, $2) RETURNING clubid';
-        clubRow = await db.one(insertClubQuery, [clubName, userId.userid]);
-        console.log(`Creating new club with namem, id: ${clubName}, ${clubRow.clubid}`);
+        var insertClubQuery = 'INSERT INTO clubs (clubname) VALUES ($1) RETURNING *';
+        clubRow = await db.one(insertClubQuery, [clubName]);
+        console.log(`Creating new club with name, id: ${clubName}, ${clubRow.clubid}`);
       }
 
       if (!clubRow && !createClub) {
@@ -369,14 +367,31 @@ app.post('/register', async(req,res) => {
       }
 
       clubId = clubRow.clubid;
-
-      var updateClub = `UPDATE clubs SET organizer = $1 WHERE clubid = $2 RETURNING *;`;
-      var newClubInfo = await db.one(updateClub, [userId, clubId]);
-
-      console.log(newClubInfo)
-      users = await db.any(`SELECT * FROM users;`)
-      console.log(users)
+      console.log('User Attaching to Club: ', clubRow)
     }
+
+    let insertQuery;
+    let values;
+    
+    if (userAdmin) {
+      insertQuery = `
+        INSERT INTO users(userName, userPassword, userAdmin, adminClub)
+        VALUES($1, $2, $3, $4)
+        RETURNING *;
+      `;
+      values = [req.body.username, req.body.password, userAdmin, clubId];
+    } else {
+      insertQuery = `
+        INSERT INTO users(userName, userPassword, userAdmin)
+        VALUES($1, $2, $3)
+        RETURNING *;
+      `;
+      values = [req.body.username, req.body.password, userAdmin];
+    }
+    
+    var userInfo = await db.one(insertQuery, values);
+    console.log('New User:', userInfo);
+
     res.redirect('/login');
   } catch (err) {
     console.error('Error during registration:', err);
@@ -405,7 +420,7 @@ app.post("/save-event", async (req, res) => {
     const eventDate = req.body.event_date;
     const eventStartTime = req.body.event_start_time;
     const eventEndTime = req.body.event_end_time;
-    const eventClub = 1 // NEEDS TO BE CONNECTED TO USER 
+    const eventClub = req.body.event_club;
     const eventDescription = req.body.event_description;
 
     
@@ -429,7 +444,8 @@ app.post("/save-event", async (req, res) => {
       login: req.session.login,
       events: req.session.events,
       geoEvents: req.session.geoEvents,
-      buildings: req.session.buildings
+      buildings: req.session.buildings,
+      user: req.session.user
     });
   }
 })
@@ -761,12 +777,11 @@ async function getClubId(clubName) {
     return foundClub.clubid;
   } else { //If it wasn't create the club
     const insertedClub = await db.one(
-      `INSERT INTO clubs (clubName, organizer)
-       VALUES ($1, $2)
+      `INSERT INTO clubs (clubName)
+       VALUES ($1)
        RETURNING clubID`,
       [
-        clubName,
-        1    //Change this if we implement user created club tracking
+        clubName
       ]
     );
     return insertedClub.clubid;

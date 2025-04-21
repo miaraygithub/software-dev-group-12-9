@@ -1,18 +1,18 @@
+CREATE TABLE clubs (
+    clubID serial NOT NULL,
+    clubName varchar(60) NOT NULL,
+    PRIMARY KEY (ClubID)
+);
+
 CREATE TABLE users (
     userID SERIAL NOT NULL,
     userName VARCHAR(30) NOT NULL,
     userPassword VARCHAR(60) NOT NULL,
     userAdmin BOOL NOT NULL,
     profilePic VARCHAR(200) DEFAULT './uploads/default.jpg',
-    PRIMARY KEY (userID)
-);
-
-CREATE TABLE clubs (
-    clubID serial NOT NULL,
-    clubName varchar(60) NOT NULL,
-    organizer int NOT NULL,
-    PRIMARY KEY (ClubID),
-    CONSTRAINT FK_OrganizerUserID FOREIGN KEY (organizer) REFERENCES users (userID)
+    adminClub int,
+    PRIMARY KEY (userID),
+    CONSTRAINT FK_AdminClubId FOREIGN KEY (adminClub) REFERENCES clubs (clubID)
 );
 
 CREATE TABLE locations (
