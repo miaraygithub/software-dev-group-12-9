@@ -36,7 +36,7 @@ const uploadDir = process.env.NODE_ENV === 'production'
 
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
-  console.log('Created uploads directory at', uploadDir);
+  // console.log('Created uploads directory at', uploadDir);
 }
 
 // const uploadDir = '/app/uploads';
@@ -88,7 +88,7 @@ app.use(bodyParser.json());
 // This allows serving static files from the uploads directory
 //app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/uploads', express.static(uploadDir));
-console.log(path.join(__dirname, 'uploads'));
+// console.log(path.join(__dirname, 'uploads'));
 
 // set Session
 app.use(
@@ -154,7 +154,7 @@ app.get('/', async (req, res) => {
       };
     });
 
-    console.log(formattedEvents);
+    // console.log(formattedEvents);
 
     // const formattedEvents = events.map(event => {
     //   const eventDate = utcToZonedTime(new Date(event.eventdate), timeZone);
@@ -237,7 +237,7 @@ app.post('/editProfile', upload.single('profilePic'), async(req, res) => {
       const existingUser = await db.oneOrNone(searchQuery, [req.body.newUsername]);
   
       if (!!existingUser) {
-        console.log('User already exists in database.');
+        // console.log('User already exists in database.');
         throw new Error('Username taken. Please choose a different one.');
       }
 
@@ -254,9 +254,9 @@ app.post('/editProfile', upload.single('profilePic'), async(req, res) => {
     }
 
     if (req.file) {
-      console.log(req.file);
+      // console.log(req.file);
       const filePath = `/uploads/${req.file.filename}`;
-      console.log(filePath);
+      // console.log(filePath);
       if (req.session.user.profilepic) {
         const newPicQuery = 'UPDATE users SET profilePic = ($1) WHERE users.userName = ($2)';
         try {
@@ -265,7 +265,7 @@ app.post('/editProfile', upload.single('profilePic'), async(req, res) => {
           req.session.user.profilepic = filePath;
 
           const updatedPic = await db.oneOrNone('SELECT DISTINCT * FROM users WHERE users.userName = ($1) LIMIT 1;', [req.session.user.username]);
-          console.log(updatedPic);
+          // console.log(updatedPic);
         } catch (dbErr) {
           console.error('Database error:', dbErr);
           res.render('pages/editProfile', {error: true, message: dbErr});
@@ -371,7 +371,7 @@ app.post('/login', async(req, res) => {
     const match = await bcrypt.compare(password, hash);
 
     if (!match) { 
-      console.log('Passwords do not match.');
+      // console.log('Passwords do not match.');
       throw new Error('Invalid username or password.'); 
     }
 
@@ -404,14 +404,14 @@ app.post('/register', async(req,res) => {
       userAdmin = false;
     }
 
-    console.log(req.body.useradmin)
+    // console.log(req.body.useradmin)
 
     // Validation that user doesn't already exist in db
     var searchQuery = 'SELECT DISTINCT * FROM users WHERE users.userName = ($1)';
     var existingUser = await db.oneOrNone(searchQuery, [req.body.username]);
 
     if (!!existingUser) {
-      console.log('User already exists in database.');
+      // console.log('User already exists in database.');
       throw new Error('Username taken. Please choose a different one.');
     }
 
@@ -462,11 +462,11 @@ app.post('/register', async(req,res) => {
     }
     
     var userInfo = await db.one(insertQuery, values);
-    console.log('New User:', userInfo);
+    // console.log('New User:', userInfo);
 
     res.redirect('/login');
   } catch (err) {
-    console.error('Error during registration:', err);
+    // console.error('Error during registration:', err);
     res.render('pages/register', {
       error: true,
       message: err
@@ -484,7 +484,6 @@ app.get('/logout', (req, res) => {
 
 //=========== /saveEvent Route ===========
 app.post("/save-event", async (req, res) => {
-  console.log('Save Event')
   try {
     const eventName = req.body.event_name;
     const eventBuildingID = req.body.event_building;
@@ -504,7 +503,7 @@ app.post("/save-event", async (req, res) => {
     const eventSave = [eventName, eventBuildingID, eventDate, eventClub, eventRoomNumber, eventDescription, eventStartTime+':00', eventEndTime+':00']
 
     //insert event into database
-    console.log(eventSave)
+    // console.log(eventSave)
     insertEvent = await db.none(saveQuery, eventSave)
     res.redirect('/')
   } catch (err) {
@@ -566,7 +565,7 @@ app.get('/event-details', async (req, res) => {
       rsvpList: rsvp,
     })
   } catch (err) {
-    console.log('error saving events', err);
+    // console.log('error saving events', err);
     res.render('pages/home', {
       error: true,
       message: err,
@@ -774,7 +773,6 @@ async function fetchAndInsertICSEvents() {
     nextXDays.setDate(now.getDate() + 30);
 
     //Events is an object populated by multiple events differentiated by a 'key', thus iterate through all the events from 0<key<n 
-    insertedCount = 0;
     for (const key in events) {
       try {
         const event = events[key];
@@ -824,6 +822,7 @@ async function fetchAndInsertICSEvents() {
         const clubID = tempClubId != null ? tempClubId : null;
 
         const categoriesList = parseCategories(event.categories);
+        console.log(categoriesList);
         //const chosenCategoryID = await pickCategory(categoriesList);
 
         //Values we cant access unless we are logged in are defaulted for now
@@ -843,14 +842,14 @@ async function fetchAndInsertICSEvents() {
         );
         
         if (duplicate){
-          console.log("❌ Duplicate event. Skipping.")
+          // console.log("❌ Duplicate event. Skipping.")
           continue;
         }  //Skip if there is a match
 
         //Debbugging
-        console.log(`📅 Event inserted: ${title} at: ${eventDate} with description 🔭: ${description}`);
+        // console.log(`📅 Event inserted: ${title} at: ${eventDate} with description 🔭: ${description}`);
         const detectedBuilding = await detectBuilding(description);
-        console.log("♦️Detected building:", detectedBuilding);
+        // console.log("♦️Detected building:", detectedBuilding);
         const buildingID = detectedBuilding || 1;
 
 
