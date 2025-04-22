@@ -742,6 +742,9 @@ app.post('/friend-req', async (req, res) => {
     const createReqQuery = `INSERT INTO friendReq(senderUsername, receiverUsername) VALUES ($1, $2)`;
     await db.none(createReqQuery, [senderUsername, receiverUsername]);
 
+    const incoming = await db.any(`SELECT * FROM friendReq WHERE receiverUsername = ($1) AND status = 'pending';`, [senderUsername]);
+    const outgoing = await db.any(`SELECT * FROM friendReq WHERE senderUsername = ($1) AND status = 'pending';`, [senderUsername]);
+
     res.render('pages/myFriends', {
       incoming,
       outgoing,
@@ -753,30 +756,39 @@ app.post('/friend-req', async (req, res) => {
     res.render('pages/myFriends', {
       error: true,
       message: err,
+      login: !!req.session.user
     });
   }
 });
 
-app.post('/accept-request', async (req, res) => {
-  const receiver = req.session.user.username;
-  const sender = req.body.senderUsername;
+app.post('/accept-req', async (req, res) => {
+  const currentUser = req.session.user.username;
+  const friendUser = req.body.senderUsername;
 
   await db.none(
-    `UPDATE friend_requests
+    `UPDATE friendReq
      SET status = 'accepted'
      WHERE senderUsername = ($1) AND receiverUsername = ($2)`,
-    [sender, receiver]
+    [friendUser, currentUser]
   );
 
-  res.redirect('/myFriends');
+  await db.none(`INSERT INTO friends(user1, user2) VALUES ($1, $2);`, [currentUser, friendUser]);
+  const friends = await db.any('SELECT * FROM friends WHERE user1 = ($1);', [currentUser]);
+  console.log(friends);
+  // have to account for if user2 = receiver as well
+
+  res.render('pages/myFriends', {
+    friends,
+    login: !!req.session.user
+  });
 });
 
-app.post('/decline-request', async (req, res) => {
+app.post('/decline-req', async (req, res) => {
   const receiver = req.session.user.username;
   const sender = req.body.senderUsername;
 
   await db.none(
-    `UPDATE friend_requests
+    `UPDATE friendReq
      SET status = 'declined'
      WHERE senderUsername = ($1) AND receiverUsername = ($2)`,
     [sender, receiver]

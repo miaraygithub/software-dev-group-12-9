@@ -58,7 +58,7 @@ CREATE TABLE friendReq (
     requestID SERIAL PRIMARY KEY,
     senderUsername VARCHAR(30) NOT NULL REFERENCES users(userName) ON DELETE CASCADE,
     receiverUsername VARCHAR(30) NOT NULL REFERENCES users(userName) ON DELETE CASCADE,
-    status VARCHAR(20) DEFAULT 'pending',
+    status VARCHAR(20) DEFAULT 'pending'
 );
 
 CREATE TABLE friends (
@@ -67,3 +67,4 @@ CREATE TABLE friends (
     user2 VARCHAR(30) NOT NULL REFERENCES users(userName) ON DELETE CASCADE,
     UNIQUE(user1, user2)
 );
+

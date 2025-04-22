@@ -20,7 +20,7 @@
     {{#if friends.length}}
         <ul>
             {{#each friends}}
-                <li>{{this.friendUsername}}</li>
+                <li>{{this.user2}}</li>
             {{/each}}
         </ul>
     {{else}}
@@ -45,11 +45,11 @@
                     <td>{{this.senderusername}}</td>
                     <td>
                         <form action="/accept-req" method="POST" class="d-inline">
-                            <input type="hidden" name="senderUsername" value="{{this.senderUsername}}" />
+                            <input type="hidden" name="senderUsername" value="{{this.senderusername}}" />
                             <button type="submit" class="btn btn-success btn-sm">Accept</button>
                         </form>
                         <form action="/decline-req" method="POST" class="d-inline">
-                            <input type="hidden" name="senderUsername" value="{{this.senderUsername}}" />
+                            <input type="hidden" name="senderUsername" value="{{this.senderusername}}" />
                             <button type="submit" class="btn btn-danger btn-sm">Decline</button>
                         </form>
                     </td>
