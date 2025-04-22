@@ -776,7 +776,7 @@ async function fetchAndInsertICSEvents() {
         console.log(`📅 Event inserted: ${title} at: ${eventDate} with description 🔭: ${description}`);
         const detectedBuilding = await detectBuilding(description);
         console.log("♦️Detected building:", detectedBuilding);
-        const buildingID = detectedBuilding || 1
+        const buildingID = detectedBuilding || 1;
 
 
         await db.none(`
