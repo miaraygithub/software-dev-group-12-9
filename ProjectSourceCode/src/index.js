@@ -19,6 +19,10 @@ const multer = require('multer');
 // create `ExpressHandlebars` instance and configure the layouts and partials dir.
 const hbs = handlebars.create({
   extname: 'hbs',
+  helpers: {
+    trim: (text = '', len = 120) =>
+      text.length > len ? text.slice(0, len) : text
+  },
   layoutsDir: __dirname + '/views/layouts',
   partialsDir: __dirname + '/views/partials',
 });
@@ -262,6 +266,60 @@ app.post('/editProfile', upload.single('profilePic'), async(req, res) => {
 
 app.get('/profile', (req, res) => {
   res.render('pages/profile', {login: !!req.session.user});
+});
+
+// =========== /myEvents Routes ===========
+
+// GET  /my-events  ──────────────────────────────────────────────
+// GET  /my-events  (in index.js)
+app.get('/myEvents', async (req, res) => {
+  if (!req.session.user) return res.redirect('/login');
+  const userID = req.session.user.userid;
+
+  const events = await db.any(`
+    SELECT e.eventID, e.eventName, e.eventDescription,
+           e.roomNumber, e.eventDate, e.startTime, e.endTime,
+           l.buildingName, l.longitude, l.latitude            -- NEW cols
+    FROM   events  e
+    JOIN   rsvp    r ON r.eventID = e.eventID
+    LEFT JOIN locations l ON l.locationID = e.building
+    WHERE  r.userID = $1
+    ORDER  BY e.eventDate, e.startTime;
+  `, [userID]);
+
+  const formattedEvents = events.map(ev => ({
+    ...ev,
+    eventDateFormatted: format(new Date(ev.eventdate), 'MMM d, yyyy'),
+    startTimeFormatted: format(new Date(`1970-01-01T${ev.starttime}`), 'h:mm a'),
+    endTimeFormatted:   format(new Date(`1970-01-01T${ev.endtime}`),   'h:mm a')
+  }));
+
+  res.render('pages/my_events', {
+    login : true,
+    events: formattedEvents
+  });
+});
+
+
+// POST /cancel-rsvp  ────────────────────────────────────────────
+app.post('/cancel-rsvp', async (req, res) => {
+  if (!req.session.user) return res.redirect('/login');
+
+  try {
+    const userID  = req.session.user.userid;
+    const eventID = req.body.eventid;
+
+    await db.none(
+      'DELETE FROM rsvp WHERE userID = $1 AND eventID = $2;',
+      [userID, eventID]
+    );
+
+    // Redirect back to My Events (or event page if you prefer)
+    res.redirect('/myEvents');
+  } catch (err) {
+    console.error('Error cancelling RSVP:', err);
+    res.status(500).send('Internal server error');
+  }
 });
 
 // =========== /login Routes ===========
