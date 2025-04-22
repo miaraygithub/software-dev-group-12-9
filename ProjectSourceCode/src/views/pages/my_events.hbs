@@ -2,6 +2,22 @@
 
 <title>My Events – Buff's Bulletin</title>
 
+<head>
+  <link  rel="stylesheet"
+         href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css">
+
+  <!-- `defer` makes the browser download the file early but execute it only after HTML parsing is finished, so `mapboxgl` exists before any inline scripts are executed. -->
+  <script defer
+          src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js">
+  </script>
+
+  <!-- Set the token as soon as Mapbox GL JS is in scope -->
+  <script>
+    mapboxgl.accessToken =
+      'pk.eyJ1IjoibWFrZmF1YiIsImEiOiJjbTg2ZHBoODMwM2NtMm1xMnlmYXgzbTJuIn0.Q3Knt4QC1wNxRg0wGCc0Mw';
+  </script>
+</head>
+
 <main class="container py-4 d-flex flex-column gap-3 vh-100">
   <!-- Heading -->
   <div class="text-center">
@@ -15,10 +31,7 @@
       {{#each events}}
         <div class="border-bottom pb-3 mb-3 d-flex flex-row-reverse gap-3">
           {{!-- ───────────── Mini‑map thumbnail ───────────── --}}
-          {{!--
-            Renders a 120×120 map for one event.
-            Needed params: eventid, longitude, latitude, buildingname, roomnumber
-          --}}
+          {{!-- Needed params: eventid, longitude, latitude, buildingname, roomnumber --}}
           <div class="mini-map-wrapper">
             <div id="map-{{eventid}}" class="mini-map rounded border" style="width:120px;height:120px;"></div>
             <script>
@@ -37,14 +50,18 @@
                 };
 
                 const map = new mapboxgl.Map({
-                  container: 'map-{{eventid}}',
-                  center: [{{longitude}}, {{latitude}}],
-                  zoom: 17,
-                  interactive: false,
-                  attributionControl: false
+                container: 'map-{{eventid}}',
+                style: 'mapbox://styles/mapbox/streets-v12',
+                center: [{{longitude}}, {{latitude}}],
+                zoom: 15,
+                interactive: false,
+                attributionControl: false
                 });
 
                 map.on('load', () => {
+                  map.setPaintProperty('building', 'fill-color', '#b8b8b8');
+                  map.setPaintProperty('building', 'fill-opacity', 0.8);
+
                   map.addSource('place-{{eventid}}', { type:'geojson', data: geoEvent });
                   new mapboxgl.Marker({ offset:[0,-23] })
                     .setLngLat([{{longitude}}, {{latitude}}])
@@ -100,15 +117,4 @@ document.addEventListener('click', e => {
   p.querySelector('.full').classList.toggle('d-none');
   e.target.textContent = e.target.textContent.includes('more') ? 'less' : '… more';
 });
-</script>
-
-<!-- Mapbox GL stylesheet -->
-<link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
-
-<!-- Mapbox GL script -->
-<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
-
-<!-- Your token (set once, anywhere before the mini‑map scripts run) -->
-<script>
-  mapboxgl.accessToken = 'pk.eyJ1IjoibWFrZmF1YiIsImEiOiJjbTg2ZHBoODMwM2NtMm1xMnlmYXgzbTJuIn0.Q3Knt4QC1wNxRg0wGCc0Mw';
 </script>
