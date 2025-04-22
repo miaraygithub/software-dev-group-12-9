@@ -737,8 +737,25 @@ async function fetchAndInsertICSEvents() {
 
         const description = event.description || '';
         const eventDate = event.start.toISOString().slice(0, 10);
-        const startTime = event.start.toTimeString().slice(0, 8);
-        const endTime = event.end.toTimeString().slice(0, 8);
+
+        //Pick the zone you want the string *shown/stored* in
+        const DISPLAY_TZ = 'America/Denver';          // or 'UTC', or read from event.start.tz
+
+        const startTime = event.start.toLocaleTimeString('en-US', {
+          hour:   '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false,            // change to true if you actually want AM/PM
+          timeZone: DISPLAY_TZ      // <- prevents the silent conversion
+        });
+
+        const endTime = event.end.toLocaleTimeString('en-US', {
+          hour:   '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false,
+          timeZone: DISPLAY_TZ
+        });
 
         const organizerRaw = event.organizer || '';
         const clubName = typeof organizerRaw === 'string' //Check if it is a string or an object
