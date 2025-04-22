@@ -738,15 +738,15 @@ async function fetchAndInsertICSEvents() {
         const description = event.description || '';
         const eventDate = event.start.toISOString().slice(0, 10);
 
-        //Pick the zone you want the string *shown/stored* in
-        const DISPLAY_TZ = 'America/Denver';          // or 'UTC', or read from event.start.tz
+        //Zone to display time
+        const DISPLAY_TZ = 'America/Denver';
 
         const startTime = event.start.toLocaleTimeString('en-US', {
           hour:   '2-digit',
           minute: '2-digit',
           second: '2-digit',
-          hour12: false,            // change to true if you actually want AM/PM
-          timeZone: DISPLAY_TZ      // <- prevents the silent conversion
+          hour12: false, 
+          timeZone: DISPLAY_TZ
         });
 
         const endTime = event.end.toLocaleTimeString('en-US', {
