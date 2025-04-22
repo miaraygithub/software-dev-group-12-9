@@ -10,7 +10,7 @@ const bcrypt = require('bcryptjs'); //  To hash passwords
 const app = express();
 const ical = require('node-ical');
 app.use(bodyParser.json());
-const { format } = require('date-fns'); //needed to format the event dates in a user friendly way
+const { format } = require('date-fns');
 const fs = require('fs'); 
 const multer = require('multer');
 
@@ -150,6 +150,20 @@ app.get('/', async (req, res) => {
       };
     });
 
+    console.log(formattedEvents);
+
+    // const formattedEvents = events.map(event => {
+    //   const eventDate = utcToZonedTime(new Date(event.eventdate), timeZone);
+    //   const startTime = utcToZonedTime(new Date(`1970-01-01T${event.starttime}Z`), timeZone);
+    //   const endTime = utcToZonedTime(new Date(`1970-01-01T${event.endtime}Z`), timeZone);
+    
+    //   return {
+    //     ...event,
+    //     eventDateFormatted: format(eventDate, 'MMM d, yyyy', { timeZone }),
+    //     startTimeFormatted: format(startTime, 'h:mm a', { timeZone }),
+    //     endTimeFormatted: format(endTime, 'h:mm a', { timeZone }),
+    //   };
+    // });
     // generate geojson formatted event list to show pins
     const geojson = await db.any(`
       SELECT jsonb_build_object(
@@ -188,7 +202,8 @@ app.get('/', async (req, res) => {
       login: !!req.session.user,
       events: formattedEvents, 
       geoEvents: JSON.stringify(geoEvents),
-      buildings: buildings
+      buildings: buildings,
+      user: req.session.user
     });
 
   } catch (err) {
@@ -325,22 +340,71 @@ app.post('/register', async(req,res) => {
   try {
     // const hash = await bcrypt.hash(req.body.password, 10);
     var userAdmin = true;
+    let clubId = null;
 
-    if (!req.body.userAdmin) {
+    if (!req.body.useradmin) {
       userAdmin = false;
     }
 
+    console.log(req.body.useradmin)
+
     // Validation that user doesn't already exist in db
-    const searchQuery = 'SELECT DISTINCT * FROM users WHERE users.userName = ($1)';
-    const existingUser = await db.oneOrNone(searchQuery, [req.body.username]);
+    var searchQuery = 'SELECT DISTINCT * FROM users WHERE users.userName = ($1)';
+    var existingUser = await db.oneOrNone(searchQuery, [req.body.username]);
 
     if (!!existingUser) {
       console.log('User already exists in database.');
       throw new Error('Username taken. Please choose a different one.');
     }
 
-    const insertQuery = 'INSERT INTO users(userName, userPassword, userAdmin) VALUES($1, $2, $3)';
-    await db.none(insertQuery, [req.body.username, req.body.password, userAdmin]);
+    // If user is an organizer, connect to club or create one
+    if (userAdmin) {
+      var clubName = req.body.forclub?.trim();
+      var createClub = !!req.body.createclub;
+
+      if (!clubName) {
+        throw new Error('Club name is required for organizers.');
+      }
+
+      var clubQuery = 'SELECT * FROM clubs WHERE clubname = $1';
+      var clubRow = await db.oneOrNone(clubQuery, [clubName]);
+
+      if (!clubRow && createClub) {
+        // Create the club
+        var insertClubQuery = 'INSERT INTO clubs (clubname) VALUES ($1) RETURNING *';
+        clubRow = await db.one(insertClubQuery, [clubName]);
+        console.log(`Creating new club with name, id: ${clubName}, ${clubRow.clubid}`);
+      }
+
+      if (!clubRow && !createClub) {
+        throw new Error(`No club found with name "${clubName}". Click the New Club box when registering if you'd like to be an organizer for a new club with that name.`);
+      }
+
+      clubId = clubRow.clubid;
+      console.log('User Attaching to Club: ', clubRow)
+    }
+
+    let insertQuery;
+    let values;
+    
+    if (userAdmin) {
+      insertQuery = `
+        INSERT INTO users(userName, userPassword, userAdmin, adminClub)
+        VALUES($1, $2, $3, $4)
+        RETURNING *;
+      `;
+      values = [req.body.username, req.body.password, userAdmin, clubId];
+    } else {
+      insertQuery = `
+        INSERT INTO users(userName, userPassword, userAdmin)
+        VALUES($1, $2, $3)
+        RETURNING *;
+      `;
+      values = [req.body.username, req.body.password, userAdmin];
+    }
+    
+    var userInfo = await db.one(insertQuery, values);
+    console.log('New User:', userInfo);
 
     res.redirect('/login');
   } catch (err) {
@@ -370,7 +434,7 @@ app.post("/save-event", async (req, res) => {
     const eventDate = req.body.event_date;
     const eventStartTime = req.body.event_start_time;
     const eventEndTime = req.body.event_end_time;
-    const eventClub = 1 // NEEDS TO BE CONNECTED TO USER 
+    const eventClub = req.body.event_club;
     const eventDescription = req.body.event_description;
 
     
@@ -394,7 +458,8 @@ app.post("/save-event", async (req, res) => {
       login: req.session.login,
       events: req.session.events,
       geoEvents: req.session.geoEvents,
-      buildings: req.session.buildings
+      buildings: req.session.buildings,
+      user: req.session.user
     });
   }
 })
@@ -451,6 +516,7 @@ app.get('/event-details', async (req, res) => {
       events: req.session.events,
       geoEvents: req.session.geoEvents,
       buildings: req.session.buildings,
+      user: req.session.user,
     });
   }
 })
@@ -470,14 +536,27 @@ app.get('/event/:id', async (req, res) => {
       LIMIT 1;
   `, [eventid]);
 
-    const formattedEvents = events.map(event => {
-      return {
-        ...event,
-        eventDateFormatted: format(new Date(event.eventdate), 'MMM d, yyyy'),
-        startTimeFormatted: format(new Date(`1970-01-01T${event.starttime}`), 'h:mm a'),
-        endTimeFormatted: format(new Date(`1970-01-01T${event.endtime}`), 'h:mm a'),
-      };
-    });
+  const formattedEvents = events.map(events => {
+    return {
+      ...events,
+      eventDateFormatted: format(new Date(events.eventdate), 'MMM d, yyyy'),
+      startTimeFormatted: format(new Date(`1970-01-01T${events.starttime}`), 'h:mm a'),
+      endTimeFormatted: format(new Date(`1970-01-01T${events.endtime}`), 'h:mm a'),
+    };
+  });
+    // const formattedEvents = events.map(event => {
+    //   const eventDate = utcToZonedTime(new Date(event.eventdate), timeZone);
+    //   console.log(eventDate);
+    //   const startTime = utcToZonedTime(new Date(`1970-01-01T${event.starttime}Z`), timeZone);
+    //   const endTime = utcToZonedTime(new Date(`1970-01-01T${event.endtime}Z`), timeZone);
+
+    //   return {
+    //     ...event,
+    //     eventDateFormatted: format(new Date(event.eventdate), 'MMM d, yyyy'),
+    //     startTimeFormatted: format(new Date(`1970-01-01T${event.starttime}`), 'h:mm a'),
+    //     endTimeFormatted: format(new Date(`1970-01-01T${event.endtime}`), 'h:mm a'),
+    //   };
+    // });
 
     const comments = await db.any(`
       SELECT * FROM comments
@@ -495,7 +574,8 @@ app.get('/event/:id', async (req, res) => {
     res.render('pages/events', {
       event: formattedEvents[0],
       comments,
-      rsvpList: rsvp
+      rsvpList: rsvp,
+      user: req.session.user,
     });
   } catch (err) {
     console.log('Error Reloading Event Page', err);
@@ -506,6 +586,7 @@ app.get('/event/:id', async (req, res) => {
       events: req.session.events,
       geoEvents: req.session.geoEvents,
       buildings: req.session.buildings,
+      user: req.session.user,
     });
   }
 });
@@ -532,6 +613,7 @@ app.post('/comment', async (req, res) => {
       events: req.session.events,
       geoEvents: req.session.geoEvents,
       buildings: req.session.buildings,
+      user: req.session.user,
     });
   }
 });
@@ -560,8 +642,8 @@ app.get("/search", async (req, res) => {
       return {
         ...events,
         eventDateFormatted: format(new Date(events.eventdate), 'MMM d, yyyy'),
-        startTimeFormatted: format(new Date(`1970-01-01T${events.starttime}`), 'h:mm a'),
-        endTimeFormatted: format(new Date(`1970-01-01T${events.endtime}`), 'h:mm a'),
+        startTimeFormatted: format(new Date(`1970-01-01T${events.starttime}Z`), 'h:mm a'),
+        endTimeFormatted: format(new Date(`1970-01-01T${events.endtime}Z`), 'h:mm a'),
       };
     });
 
@@ -574,7 +656,8 @@ app.get("/search", async (req, res) => {
       login: !!req.session.user,
       // users: users_results,
       clubs: clubs_results,
-      events: formattedEvents
+      events: formattedEvents,
+      user: req.session.user,
     });
   }
   catch (err) {
@@ -743,13 +826,11 @@ async function getClubId(clubName) {
     return foundClub.clubid;
   } else { //If it wasn't create the club
     const insertedClub = await db.one(
-      `INSERT INTO clubs (clubName, clubDescription, organizer)
-       VALUES ($1, $2, $3)
+      `INSERT INTO clubs (clubName)
+       VALUES ($1)
        RETURNING clubID`,
       [
-        clubName,
-        'ICS feed club',
-        1    //Change this if we implement user created club tracking
+        clubName
       ]
     );
     return insertedClub.clubid;
