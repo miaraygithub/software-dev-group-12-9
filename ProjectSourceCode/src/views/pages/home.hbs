@@ -27,17 +27,18 @@
 
         <div>
           <div class="mb-3">
-            <label for="start-time" class="form-label">Start Time:</label>
-            <input type="time" id="start-time" name="start-time" class="form-control" required>
-          </div>
-          
-          <div class="mb-3">
-            <label for="end-time" class="form-label">End Time:</label>
-            <input type="time" id="end-time" name="end-time" class="form-control" required>
+            <label for="date-filter" class="form-label">Show events for:</label>
+            <select id="date-filter" class="form-select">
+              <option value="today" selected>Today</option>
+              <option value="today-tomorrow">Today & Tomorrow</option>
+              <option value="next-week">Next 7 Days</option>
+              <option value="next-month">Next 30 Days</option>
+            </select>
           </div>
 
-          <button id="sidebar-submit-button" class="btn" onclick="handleTimeSubmit(this)">Submit</button>
+          <button id="sidebar-submit-button" class="btn btn-primary" onclick="handleDateFilterSubmit()">Submit</button>
         </div>
+
     
         <!-- Scrollable Event List container -->
         <div class="sidebar-scroll-container"></div>
@@ -91,8 +92,11 @@
   </ul>
 </script>
 
+
+
 <script type="text/javascript">
   const mapMarkers = [];
+  let initialGeoEvents;
 
   const sidebarRender = document.querySelector('#sidebar-template');
   const sidebarContentContainer = document.querySelector('.sidebar-scroll-container');
@@ -102,6 +106,16 @@
     container: 'map', // container ID
     center: [-105.26598, 40.00777], // starting [lng, lat] of CU Boulder
     zoom: 14.3 // starting zoom
+  });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const events = {{{json events}}};
+    initialGeoEvents = {{{geoEvents}}};
+
+    const sidebarTemplate = document.querySelector('#sidebar-template');
+    const sidebarContainer = document.querySelector('.sidebar-scroll-container');
+
+    sidebarContainer.innerHTML = Handlebars.compile(sidebarTemplate.innerHTML)({ fetchedEvents: events });
   });
 
   map.on('load', () => {
@@ -119,7 +133,52 @@
       source: 'places',
       type: 'circle'
     });
+
+    if (initialGeoEvents && initialGeoEvents.features.length) {
+      addMarkers(initialGeoEvents);
+    }
   });
+  
+
+  function handleDateFilterSubmit() {
+    const filterSelect = document.querySelector('#date-filter');
+    const filterValue = filterSelect.value;
+
+    let startDate = new Date();
+    let endDate = new Date();
+
+    switch (filterValue) {
+      case 'today':
+        // Do nothing: same day
+        break;
+      case 'today-tomorrow':
+        endDate.setDate(startDate.getDate() + 1);
+        break;
+      case 'next-week':
+        endDate.setDate(startDate.getDate() + 7);
+        break;
+      case 'next-month':
+        endDate.setDate(startDate.getDate() + 30);
+        break;
+    }
+
+    const params = new URLSearchParams({
+      startDate: startDate.toISOString().slice(0, 10),
+      endDate: endDate.toISOString().slice(0, 10)
+    });
+
+    fetch(`/get-events?${params}`)
+      .then(result => result.json())
+      .then(({ events, geoEvents }) => {
+        const htmlString = Handlebars.compile(sidebarRender.innerHTML)({
+          fetchedEvents: events
+        });
+        sidebarContentContainer.innerHTML = htmlString;
+        addMarkers(geoEvents);
+      })
+      .catch(err => console.error("Error fetching events:", err));
+  }
+
 
 
   function getEvents(startTime, endTime) {

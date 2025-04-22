@@ -10,7 +10,7 @@ const bcrypt = require("bcryptjs"); //  To hash passwords
 const app = express();
 const ical = require("node-ical");
 app.use(bodyParser.json());
-const { format, parseISO } = require("date-fns"); //needed to format the event dates in a user friendly way
+const { format, parseISO, isValid, startOfToday, startOfDay, addDays } = require("date-fns"); //needed to format the event dates in a user friendly way
 const fs = require("fs");
 const multer = require("multer");
 
@@ -21,7 +21,8 @@ const hbs = handlebars.create({
   extname: 'hbs',
   helpers: {
     trim: (text = '', len = 120) =>
-      text.length > len ? text.slice(0, len) : text
+      text.length > len ? text.slice(0, len) : text,
+    json: (context) => JSON.stringify(context)
   },
   layoutsDir: __dirname + '/views/layouts',
   partialsDir: __dirname + '/views/partials',
@@ -133,167 +134,158 @@ db.connect()
 // -------------------------------------  ROUTES  ---------------------------------------
 
 // =========== / Route ===========
-app.get("/", async (req, res) => {
-  try {
-    const events = await db.any(`
-      SELECT events.eventID as eventid, events.eventName as eventname, locations.buildingName as building, events.eventDate as eventdate, clubs.clubName as clubsponser, events.roomNumber as roomnumber, events.eventDescription as eventdescription, events.startTime as starttime, events.endTime as endtime
-      FROM events
-      INNER JOIN locations ON events.building = locations.locationID
-      INNER JOIN clubs ON events.clubSponser = clubs.clubID
-      ORDER BY "eventdate" ASC, "starttime" ASC
-      LIMIT 50;
-    `);
 
-    const formattedEvents = events.map((events) => {
-      return {
-        ...events,
-        eventDateFormatted: format(new Date(events.eventdate), "MMM d, yyyy"),
-        startTimeFormatted: format(
-          new Date(`1970-01-01T${events.starttime}`),
-          "h:mm a"
-        ),
-        endTimeFormatted: format(
-          new Date(`1970-01-01T${events.endtime}`),
-          "h:mm a"
-        ),
-      };
-    });
+//--Helpers--
+function toClientEvent(row) {
+  return {
+    ...row,
+    eventDateFormatted: format(new Date(row.eventdate), 'MMM d, yyyy'),
+    startTimeFormatted: format(
+      new Date(`1970-01-01T${row.starttime}`),
+      'h:mm a'
+    ),
+    endTimeFormatted: format(
+      new Date(`1970-01-01T${row.endtime}`),
+      'h:mm a'
+    ),
+  };
+}
 
-    console.log(formattedEvents);
-
-    // const formattedEvents = events.map(event => {
-    //   const eventDate = utcToZonedTime(new Date(event.eventdate), timeZone);
-    //   const startTime = utcToZonedTime(new Date(`1970-01-01T${event.starttime}Z`), timeZone);
-    //   const endTime = utcToZonedTime(new Date(`1970-01-01T${event.endtime}Z`), timeZone);
-    
-    //   return {
-    //     ...event,
-    //     eventDateFormatted: format(eventDate, 'MMM d, yyyy', { timeZone }),
-    //     startTimeFormatted: format(startTime, 'h:mm a', { timeZone }),
-    //     endTimeFormatted: format(endTime, 'h:mm a', { timeZone }),
-    //   };
-    // });
-    // generate geojson formatted event list to show pins
-    const geojson = await db.any(`
-      SELECT jsonb_build_object(
-          'type', 'FeatureCollection',
-
-          'features', jsonb_agg(
-            jsonb_build_object(
-              'type', 'Feature',
-              'geometry', jsonb_build_object(
-                  'type', 'Point',
-                  'coordinates', jsonb_build_array(locations.longitude, locations.latitude)
-              ),
-              'properties', jsonb_build_object(
-                  'eventID', events.eventID,
-                  'buildingName', locations.buildingName,
-                  'roomNumber', events.roomNumber
-              )
-            )
+async function buildGeoJSON(db, whereSql = '', params = []) {
+  const [{ geojson }] = await db.any(
+    `
+    SELECT jsonb_build_object(
+      'type', 'FeatureCollection',
+      'features', jsonb_agg(
+        jsonb_build_object(
+          'type', 'Feature',
+          'geometry', jsonb_build_object(
+            'type', 'Point',
+            'coordinates', jsonb_build_array(l.longitude, l.latitude)
+          ),
+          'properties', jsonb_build_object(
+            'eventID', e.eventID,
+            'buildingName', l.buildingName,
+            'roomNumber',  e.roomNumber
           )
-      ) AS geojson
-      FROM events
-      INNER JOIN locations ON events.building = locations.locationID;`);
+        )
+      )
+    ) AS geojson
+    FROM events   e
+    JOIN locations l ON e.building = l.locationID
+    ${whereSql}
+  `,
+    params
+  );
+  return geojson;
+}
+//--Helpers End--
 
-    const geoEvents = geojson[0].geojson;
-    // console.log(JSON.stringify(geoEvents, null, 2)); // see if geoEvents is formatted correctly
-
-    const buildings = await db.any(
-      `SELECT locationID, buildingName FROM locations;`
-    );
-
-    req.session.login = !!req.session.user;
-    req.session.events = formattedEvents;
-    req.session.geoEvents = JSON.stringify(geoEvents);
-    req.session.buildings = buildings;
-    req.session.save;
-
-    res.render("pages/home", {
-      login: !!req.session.user,
-      events: formattedEvents,
-      geoEvents: JSON.stringify(geoEvents),
-      buildings: buildings,
-    });
-  } catch (err) {
-    console.error("Error fetching events:", err);
-    res.status(500).send("Internal server error");
-  }
-});
-
-app.get("/get-events", async (req, res) => {
+app.get('/', async (req, res) => {
   try {
-    const parsedStartTime = req.query.startTime;
-    const parsedEndTime = req.query.endTime;
+    const today = startOfToday();
+    const thirtyDays = addDays(today, 30);
+    const todayStr = format(today, 'yyyy-MM-dd');
 
     const events = await db.any(
       `
-        SELECT events.eventID as eventid, events.eventName as eventname, locations.buildingName as building, events.eventDate as eventdate, clubs.clubName as clubsponser, events.roomNumber as roomnumber, events.eventDescription as eventdescription, events.startTime as starttime, events.endTime as endtime
-        FROM events
-        INNER JOIN locations ON events.building = locations.locationID
-        INNER JOIN clubs ON events.clubSponser = clubs.clubID
-        WHERE (starttime BETWEEN $1::time AND $2::time) AND (endtime BETWEEN $1::time AND $2::time)
-        ORDER BY "eventdate" ASC, "starttime" ASC
-        LIMIT 50;
+      SELECT e.eventID  AS eventid,
+             e.eventName AS eventname,
+             l.buildingName AS building,
+             e.eventDate AS eventdate,
+             c.clubName AS clubsponser,
+             e.roomNumber AS roomnumber,
+             e.eventDescription AS eventdescription,
+             e.startTime AS starttime,
+             e.endTime   AS endtime
+      FROM events e
+      JOIN locations l ON e.building     = l.locationID
+      JOIN clubs     c ON e.clubSponser  = c.clubID
+      WHERE e.eventDate = $1::date
+      ORDER BY e.eventDate ASC, e.startTime ASC
+      LIMIT 50
       `,
-      [parsedStartTime, parsedEndTime]
+      [todayStr, format(thirtyDays, 'yyy-MM-dd')]
     );
 
-    const formattedEvents = events.map((event) => {
-      return {
-        ...event,
-        eventDateFormatted: format(new Date(event.eventdate), "MMM d, yyyy"),
-        startTimeFormatted: format(
-          new Date(`1970-01-01T${event.starttime}`),
-          "h:mm a"
-        ),
-        endTimeFormatted: format(
-          new Date(`1970-01-01T${event.endtime}`),
-          "h:mm a"
-        ),
-      };
-      user: req.session.user
-    });
+    const formattedEvents = events.map(toClientEvent);
+    const geoEvents = await buildGeoJSON(
+      db,
+      'WHERE e.eventDate = $1::date',
+      [todayStr]);
 
-    // generate geojson formatted event list to show pins
-    const geojson = await db.any(
-      `
-        SELECT jsonb_build_object(
-            'type', 'FeatureCollection',
-
-            'features', jsonb_agg(
-              jsonb_build_object(
-                'type', 'Feature',
-                'geometry', jsonb_build_object(
-                    'type', 'Point',
-                    'coordinates', jsonb_build_array(locations.longitude, locations.latitude)
-                ),
-                'properties', jsonb_build_object(
-                    'eventID', events.eventID,
-                    'buildingName', locations.buildingName,
-                    'roomNumber', events.roomNumber
-                )
-              )
-            )
-        ) AS geojson
-        FROM events
-        INNER JOIN locations ON events.building = locations.locationID
-        WHERE (starttime BETWEEN $1::time AND $2::time) AND (endtime BETWEEN $1::time AND $2::time);
-      `,
-      [parsedStartTime, parsedEndTime]
-    );
-
-    const geoEvents = geojson[0].geojson;
-
-    res.send({
+    res.render('pages/home', {
+      login:  !!req.session.user,
+      user:   req.session.user,  // lets the hbs {{#if user.useradmin}} work
       events: formattedEvents,
-      geoEvents,
+      geoEvents: JSON.stringify(geoEvents),
+      buildings: await db.any(`SELECT locationID, buildingName FROM locations`)
     });
   } catch (err) {
-    console.error("Error fetching events:", err);
-    res.status(500).send("Internal server error");
+    console.error('GET / error:', err);
+    res.sendStatus(500);
   }
 });
+
+app.get('/get-events', async (req, res) => {
+  try {
+    let whereSql   = '';
+    const params   = [];
+
+    const { startDate, endDate, startTime, endTime } = req.query;
+
+    if (startDate && endDate) {
+      const s = parseISO(startDate);
+      const e = parseISO(endDate);
+      if (!isValid(s) || !isValid(e))
+        return res.status(400).send('Bad date format (YYYY-MM-DD expected)');
+
+      whereSql = `WHERE e.eventDate BETWEEN $1::date AND $2::date`;
+      params.push(startDate, endDate);
+    } else if (startTime && endTime) {
+      whereSql = `
+        WHERE e.startTime BETWEEN $1::time AND $2::time
+          AND e.endTime   BETWEEN $1::time AND $2::time
+      `;
+      params.push(startTime, endTime);
+    } else {
+      const today      = startOfToday();
+      const thirtyDays = addDays(today, 30);
+      whereSql = `WHERE e.eventDate BETWEEN $1::date AND $2::date`;
+      params.push(format(today, 'yyyy-MM-dd'), format(thirtyDays, 'yyyy-MM-dd'));
+    }
+
+    const rows = await db.any(
+      `
+      SELECT e.eventID  AS eventid,
+             e.eventName AS eventname,
+             l.buildingName AS building,
+             e.eventDate AS eventdate,
+             c.clubName AS clubsponser,
+             e.roomNumber AS roomnumber,
+             e.eventDescription AS eventdescription,
+             e.startTime AS starttime,
+             e.endTime   AS endtime
+      FROM events e
+      JOIN locations l ON e.building    = l.locationID
+      JOIN clubs     c ON e.clubSponser = c.clubID
+      ${whereSql}
+      ORDER BY e.eventDate ASC, e.startTime ASC
+      LIMIT 50
+      `,
+      params
+    );
+
+    const formattedEvents = rows.map(toClientEvent);
+    const geoEvents = await buildGeoJSON(db, whereSql, params);
+
+    res.json({ events: formattedEvents, geoEvents });
+  } catch (err) {
+    console.error('GET /get-events error:', err);
+    res.sendStatus(500);
+  }
+});
+
 
 // =========== /profile Route ===========
 app.get("/editProfile", (req, res) => {
