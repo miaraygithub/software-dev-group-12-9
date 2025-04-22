@@ -10,7 +10,7 @@ const bcrypt = require('bcryptjs'); //  To hash passwords
 const app = express();
 const ical = require('node-ical');
 app.use(bodyParser.json());
-const { format } = require('date-fns'); //needed to format the event dates in a user friendly way
+const { format } = require('date-fns');
 const fs = require('fs'); 
 const multer = require('multer');
 
@@ -150,6 +150,20 @@ app.get('/', async (req, res) => {
       };
     });
 
+    console.log(formattedEvents);
+
+    // const formattedEvents = events.map(event => {
+    //   const eventDate = utcToZonedTime(new Date(event.eventdate), timeZone);
+    //   const startTime = utcToZonedTime(new Date(`1970-01-01T${event.starttime}Z`), timeZone);
+    //   const endTime = utcToZonedTime(new Date(`1970-01-01T${event.endtime}Z`), timeZone);
+    
+    //   return {
+    //     ...event,
+    //     eventDateFormatted: format(eventDate, 'MMM d, yyyy', { timeZone }),
+    //     startTimeFormatted: format(startTime, 'h:mm a', { timeZone }),
+    //     endTimeFormatted: format(endTime, 'h:mm a', { timeZone }),
+    //   };
+    // });
     // generate geojson formatted event list to show pins
     const geojson = await db.any(`
       SELECT jsonb_build_object(
@@ -522,14 +536,27 @@ app.get('/event/:id', async (req, res) => {
       LIMIT 1;
   `, [eventid]);
 
-    const formattedEvents = events.map(event => {
-      return {
-        ...event,
-        eventDateFormatted: format(new Date(event.eventdate), 'MMM d, yyyy'),
-        startTimeFormatted: format(new Date(`1970-01-01T${event.starttime}`), 'h:mm a'),
-        endTimeFormatted: format(new Date(`1970-01-01T${event.endtime}`), 'h:mm a'),
-      };
-    });
+  const formattedEvents = events.map(events => {
+    return {
+      ...events,
+      eventDateFormatted: format(new Date(events.eventdate), 'MMM d, yyyy'),
+      startTimeFormatted: format(new Date(`1970-01-01T${events.starttime}`), 'h:mm a'),
+      endTimeFormatted: format(new Date(`1970-01-01T${events.endtime}`), 'h:mm a'),
+    };
+  });
+    // const formattedEvents = events.map(event => {
+    //   const eventDate = utcToZonedTime(new Date(event.eventdate), timeZone);
+    //   console.log(eventDate);
+    //   const startTime = utcToZonedTime(new Date(`1970-01-01T${event.starttime}Z`), timeZone);
+    //   const endTime = utcToZonedTime(new Date(`1970-01-01T${event.endtime}Z`), timeZone);
+
+    //   return {
+    //     ...event,
+    //     eventDateFormatted: format(new Date(event.eventdate), 'MMM d, yyyy'),
+    //     startTimeFormatted: format(new Date(`1970-01-01T${event.starttime}`), 'h:mm a'),
+    //     endTimeFormatted: format(new Date(`1970-01-01T${event.endtime}`), 'h:mm a'),
+    //   };
+    // });
 
     const comments = await db.any(`
       SELECT * FROM comments
@@ -615,8 +642,8 @@ app.get("/search", async (req, res) => {
       return {
         ...events,
         eventDateFormatted: format(new Date(events.eventdate), 'MMM d, yyyy'),
-        startTimeFormatted: format(new Date(`1970-01-01T${events.starttime}`), 'h:mm a'),
-        endTimeFormatted: format(new Date(`1970-01-01T${events.endtime}`), 'h:mm a'),
+        startTimeFormatted: format(new Date(`1970-01-01T${events.starttime}Z`), 'h:mm a'),
+        endTimeFormatted: format(new Date(`1970-01-01T${events.endtime}Z`), 'h:mm a'),
       };
     });
 

@@ -6,7 +6,7 @@ CREATE TABLE clubs (
 
 CREATE TABLE users (
     userID SERIAL NOT NULL,
-    userName VARCHAR(30) NOT NULL,
+    userName VARCHAR(30) UNIQUE NOT NULL,
     userPassword VARCHAR(60) NOT NULL,
     userAdmin BOOL NOT NULL,
     profilePic VARCHAR(200) DEFAULT './uploads/default.jpg',
@@ -52,4 +52,12 @@ CREATE TABLE rsvp (
     PRIMARY KEY (userID, eventID),
     CONSTRAINT FK_UserID FOREIGN KEY (userID) REFERENCES users (userID),
     CONSTRAINT FK_EventID FOREIGN KEY (eventID) REFERENCES events (eventID)
+);
+
+CREATE TABLE friendReq (
+    requestID SERIAL PRIMARY KEY,
+    senderUsername VARCHAR(30) NOT NULL REFERENCES users(userName) ON DELETE CASCADE,
+    receiverUsername VARCHAR(30) NOT NULL REFERENCES users(userName) ON DELETE CASCADE,
+    status VARCHAR(20) DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
