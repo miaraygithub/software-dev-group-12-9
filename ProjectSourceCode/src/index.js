@@ -852,15 +852,15 @@ async function fetchAndInsertICSEvents() {
         // console.log("♦️Detected building:", detectedBuilding);
         const buildingID = detectedBuilding || 1;
 
-
-        await db.none(`
+        const eventID = await db.one(`
           INSERT INTO events (
             eventName, building, eventDate, clubSponser,
             roomNumber, eventDescription, startTime, endTime
           )
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
           ON CONFLICT DO NOTHING
-        `, [
+          RETURNING eventID;`,
+        [
           title,
           buildingID,
           eventDate,
@@ -870,10 +870,26 @@ async function fetchAndInsertICSEvents() {
           startTime,
           endTime
         ]);
-
-        //Insert into categories list?
-
         insertedCount++;
+
+        // Insert into event_to_category
+        for (category in categoriesList) {
+          const categoryResult = await db.oneOrNone(`SELECT categoryID FROM category_aliases 
+            WHERE alias = $1;`, [category]);
+
+          if (!categoryResult) continue; // alias not found, skip
+
+          const {categoryID} = categoryResult; // convert from object
+
+          const exist = await db.oneOrNone(`SELECT 1 FROM event_to_category
+            WHERE eventID = $1 AND categoryID = $2;`, [eventID, categoryID]);
+          
+          if (!exist) { // skip duplicates
+            await db.none(`INSERT INTO event_to_category (eventID, categoryID)
+              VALUES ($1, $2);`, [eventID, categoryID]);
+          }
+        }
+        
       } catch (eventError) {
         console.error('⚠️ Skipping event due to error:', eventError.message);
       }

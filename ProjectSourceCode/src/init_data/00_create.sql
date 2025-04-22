@@ -13,11 +13,14 @@ CREATE TABLE categories (
     PRIMARY KEY (categoryID)
 );
 
-CREATE TABLE clubs_to_categories (
-    clubID INT NOT NULL,
-    categoryID INT NOT NULL,
-    CONSTRAINT FK_Club FOREIGN KEY (clubID) REFERENCES clubs (clubID),
-    CONSTRAINT FK_Category FOREIGN KEY (categoryID) REFERENCES categories (categoryID)
+CREATE TABLE category_aliases (
+    alias TEXT PRIMARY KEY,
+    categoryID INT REFERENCES categories(categoryID)
+);
+
+CREATE TABLE event_to_category (
+    eventID INT,
+    categoryID INT
 );
 
 CREATE TABLE users (

@@ -3,6 +3,40 @@ VALUES
 ('Club1'),
 ('Club2');
 
+INSERT INTO categories (categoryName)
+VALUES
+('Activism'), --1
+('Athletics'), --2
+('Community Service'), --3
+('Crafts & DIY'), --4
+('Cultural'), --5
+('Educational'), --6
+('Ethics & Responsibility'), --7
+('Leadership'), --8
+('Performances'), --9
+('Social'); --10
+
+INSERT INTO category_aliases (alias, categoryID)
+VALUES
+('ResX: Social Justice Responsibility', 1),
+('Student Activism', 1),
+('Athletics', 2),
+('Athletic/Sports', 2),
+('Fundraiser', 3),
+('Community Service', 3),
+('Crafts & DIY', 4),
+('Cultural', 5),
+('Cultural Programming', 5),
+('Educational/Awareness', 6),
+('Workshop', 6),
+('Academic', 6),
+('ResX: Community Responsibility', 7),
+('ResX: Personal Responsibility', 7),
+('Leadership', 8),
+('Leadership Development', 8),
+('Concerts & Performances', 9),
+('Social', 10);
+
 INSERT INTO users (userName, userPassword, userAdmin, adminClub)
 VALUES --DO NOT USE THESE TO LOG IN. PASSWORD IS NOT ENCODED--
 ('Default Organizer 1', '123', True, 1),
