@@ -7,6 +7,19 @@ CREATE TABLE clubs (
     PRIMARY KEY (ClubID)
 );
 
+CREATE TABLE categories (
+    categoryID SERIAL NOT NULL,
+    categoryName VARCHAR(30) NOT NULL,
+    PRIMARY KEY (categoryID)
+);
+
+CREATE TABLE clubs_to_categories (
+    clubID INT NOT NULL,
+    categoryID INT NOT NULL,
+    CONSTRAINT FK_Club FOREIGN KEY (clubID) REFERENCES clubs (clubID),
+    CONSTRAINT FK_Category FOREIGN KEY (categoryID) REFERENCES categories (categoryID)
+);
+
 CREATE TABLE users (
     userID SERIAL NOT NULL,
     userName VARCHAR(30) UNIQUE NOT NULL,
