@@ -1,0 +1,92 @@
+{{> message}}
+<!-- Search Bar -->
+<div class="mb-3">
+    <form action="/friend-req" method="POST">
+        <input type="text" name="receiverUsername" class="form-control" placeholder="Enter username" />
+        <button type="submit" class="btn btn-primary mt-2">Send Friend Request</button>
+    </form>
+</div>
+<!-- Display Friend Requests-->
+<hr class="my-4" />
+
+<div class="mb-3 d-flex gap-2">
+  <button class="btn btn-outline-primary" onclick="showSection('friends')">Show Friends</button>
+  <button class="btn btn-outline-secondary" onclick="showSection('requests')">Show Friend Requests</button>
+</div>
+
+<!-- Friends -->
+<div id="friendsSection" style="display: block;">
+    <h4>Your Friends</h4>
+    {{#if friends.length}}
+        <ul>
+            {{#each friends}}
+                <li>{{this.friendUsername}}</li>
+            {{/each}}
+        </ul>
+    {{else}}
+        <p>You have no friends yet.</p>
+    {{/if}}
+</div>
+
+<!-- Requests -->
+<div id="requestsSection" style="display: none;">
+    <h4>Pending Friend Requests</h4>
+    {{#if incoming.length}}
+        <table class="table table-striped mt-3">
+            <thead class="thead-dark">
+                <tr>
+                    <th scope="col">From</th>
+                    <th scope="col">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each incoming}}
+                <tr>
+                    <td>{{this.senderusername}}</td>
+                    <td>
+                        <form action="/accept-req" method="POST" class="d-inline">
+                            <input type="hidden" name="senderUsername" value="{{this.senderUsername}}" />
+                            <button type="submit" class="btn btn-success btn-sm">Accept</button>
+                        </form>
+                        <form action="/decline-req" method="POST" class="d-inline">
+                            <input type="hidden" name="senderUsername" value="{{this.senderUsername}}" />
+                            <button type="submit" class="btn btn-danger btn-sm">Decline</button>
+                        </form>
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    {{else}}
+        <p>No pending incoming friend requests.</p>
+    {{/if}}
+
+<!-- Need to fix the outgoing UI, looks janky-->
+    {{#if outgoing.length}}
+        <h5>Sent Friend Requests</h5>
+        <ul>
+            {{#each outgoing}}
+            <li>Waiting for {{this.receiverusername}} to respond...</li>
+            {{/each}}
+        </ul>
+    {{/if}}
+</div>
+
+<script>
+    function showSection(section) {
+        const friends = document.getElementById('friendsSection');
+        const requests = document.getElementById('requestsSection');
+
+        if (section === 'friends') {
+        friends.style.display = 'block';
+        requests.style.display = 'none';
+        } else {
+        friends.style.display = 'none';
+        requests.style.display = 'block';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        showSection('friends');
+    });
+</script>

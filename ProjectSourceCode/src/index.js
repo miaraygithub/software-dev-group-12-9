@@ -692,7 +692,98 @@ app.post("/rsvp", async (req, res) => {
       message: err,
     });
   }
-})
+});
+
+app.get('/myFriends', async(req, res) => {
+  try {
+    if (!req.session.user) {
+      res.redirect('/login');
+    }
+
+    const currentUser = req.session.user.username;
+
+    const incoming = await db.any(`SELECT * FROM friendReq WHERE receiverUsername = ($1) AND status = 'pending';`, [currentUser]);
+    const outgoing = await db.any(`SELECT * FROM friendReq WHERE senderUsername = ($1) AND status = 'pending';`, [currentUser]);
+
+    res.render('pages/myFriends', {
+      incoming,
+      outgoing,
+      login: !!req.session.user
+    });
+  } catch (err) {
+    console.error('Error loading my friends page', err);
+  }
+});
+
+app.post('/friend-req', async (req, res) => {
+  try {
+    if (!req.session.user) {
+      res.redirect('/login');
+    }
+  
+    const senderUsername = req.session.user.username;
+    const receiverUsername = req.body.receiverUsername;
+
+    if (!receiverUsername) {
+      throw new Error('Please enter a username.');
+    }
+    if (senderUsername == receiverUsername) {
+      throw new Error('You can\'t friend yourself!');
+    }
+    const existingUser = await db.oneOrNone(`SELECT DISTINCT * FROM users WHERE users.userName = ($1);`, [receiverUsername]);
+    if (!existingUser) {
+      throw new Error('User not found.');
+    }
+    const existingReq = await db.oneOrNone(`SELECT * FROM friendReq WHERE senderUsername = ($1) AND receiverUsername = ($2) AND status = 'pending';`, [senderUsername, receiverUsername]);
+    if (existingReq) {
+      throw new Error('Friend request has already been sent.');
+    }
+
+    const createReqQuery = `INSERT INTO friendReq(senderUsername, receiverUsername) VALUES ($1, $2)`;
+    await db.none(createReqQuery, [senderUsername, receiverUsername]);
+
+    res.render('pages/myFriends', {
+      incoming,
+      outgoing,
+      login: !!req.session.user,
+      message: 'Friend request sent!'
+    });
+  } catch (err) {
+    console.error('Error sending friend request:', err);
+    res.render('pages/myFriends', {
+      error: true,
+      message: err,
+    });
+  }
+});
+
+app.post('/accept-request', async (req, res) => {
+  const receiver = req.session.user.username;
+  const sender = req.body.senderUsername;
+
+  await db.none(
+    `UPDATE friend_requests
+     SET status = 'accepted'
+     WHERE senderUsername = ($1) AND receiverUsername = ($2)`,
+    [sender, receiver]
+  );
+
+  res.redirect('/myFriends');
+});
+
+app.post('/decline-request', async (req, res) => {
+  const receiver = req.session.user.username;
+  const sender = req.body.senderUsername;
+
+  await db.none(
+    `UPDATE friend_requests
+     SET status = 'declined'
+     WHERE senderUsername = ($1) AND receiverUsername = ($2)`,
+    [sender, receiver]
+  );
+
+  res.redirect('/myFriends');
+});
 
 // =========== Calendar/Events Route ===========        
 

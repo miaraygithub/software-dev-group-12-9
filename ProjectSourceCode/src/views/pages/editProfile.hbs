@@ -12,12 +12,6 @@
                             <label for="newUsername" class="form-label">Username</label>
                             <input type="text" class="form-control" id="newUsername" name="newUsername" placeholder="John Doe" />
                         </div>
-<!--
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email address</label>
-                            <input type="email" class="form-control" id="email" placeholder="john@example.com" />
-                        </div>
--->
                         <div class="mb-3">
                             <label for="newPassword" class="form-label">Password</label>
                             <input type="password" class="form-control" id="newPassword" name = "newPassword" placeholder="********" />
@@ -34,12 +28,6 @@
                         </div>
                         <!-- This is kinda clumsy right now, I want to work on making it look a little better for the user -->
 
-                        <!-- 
-                        <div id="formMessage" class="alert alert-danger d-none" role="alert">
-                            Please add changes before submitting.
-                        </div>
-                        -->
-
                         <div class="d-grid">
                             <button type="submit" class="btn btn-primary">Save Changes</button>
                         </div>
@@ -49,21 +37,3 @@
         </div>
     </div>
 </div>
-<!--
-<script>
-    document.getElementById('editProfile').addEventListener('submit', function (e) {
-        const username = document.getElementById('newUsername').value.trim();
-        const password = document.getElementById('newPassword').value.trim();
-        // const profilePic = document.getElementById('profilePic').files.length;
-
-        const formMessage = document.getElementById('formMessage');
-
-        if (!username && !password) {
-            e.preventDefault();
-            formMessage.classList.remove('d-none');
-        } else {
-            formMessage.classList.add('d-none');
-        }
-    });
-</script>
--->
