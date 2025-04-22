@@ -684,7 +684,10 @@ async function fetchAndInsertICSEvents() {
           [title, eventDate, startTime, endTime]
         );
         
-        if (duplicate) continue; //Skip if there is a match
+        if (duplicate){
+          console.log("❌ Duplicate event. Skipping.")
+          continue;
+        }  //Skip if there is a match
 
         //Debbugging
         console.log(`📅 Event inserted: ${title} at: ${eventDate} with description 🔭: ${description}`);
