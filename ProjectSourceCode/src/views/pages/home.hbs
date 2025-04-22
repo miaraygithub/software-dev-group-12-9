@@ -51,6 +51,21 @@
   </div>
 </main>
 
+<script>
+function submitFromElement(el) {
+  const id   = el.dataset.eventid;                       // "4"
+  const form = document.getElementById(`eventForm-${id}`);
+  if (!form) return;
+
+  /* NEW ─ copy the id into the hidden input */
+  const hidden = form.querySelector('input[name="eventID"]');
+  if (hidden) hidden.value = id;                         // ← ★
+
+  form.submit();
+}
+</script>
+
+
 <script id="sidebar-template" type="text/x-handlebars-template">
   <ul class="list-group">
     \{{#each fetchedEvents}}
@@ -94,6 +109,7 @@
 
 
 
+
 <script type="text/javascript">
   const mapMarkers = [];
   let initialGeoEvents;
@@ -112,10 +128,16 @@
     const events = {{{json events}}};
     initialGeoEvents = {{{geoEvents}}};
 
-    const sidebarTemplate = document.querySelector('#sidebar-template');
+    //grab <script id="sidebar-template">
+    const templateEl = document.querySelector('#sidebar-template');
     const sidebarContainer = document.querySelector('.sidebar-scroll-container');
 
-    sidebarContainer.innerHTML = Handlebars.compile(sidebarTemplate.innerHTML)({ fetchedEvents: events });
+    //strip ONE leading back‑slash
+    const tplSource = templateEl.innerHTML.replace(/\\(\{\{[^}]+\}\})/g, '$1');
+
+    //Compile and render
+    const sidebarTpl = Handlebars.compile(tplSource);
+    sidebarContainer.innerHTML = sidebarTpl({ fetchedEvents: events });
   });
 
   map.on('load', () => {
@@ -178,8 +200,6 @@
       })
       .catch(err => console.error("Error fetching events:", err));
   }
-
-
 
   function getEvents(startTime, endTime) {
     const params = new URLSearchParams({

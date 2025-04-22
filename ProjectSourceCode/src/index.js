@@ -214,6 +214,10 @@ app.get('/', async (req, res) => {
       'WHERE e.eventDate = $1::date',
       [todayStr]);
 
+    req.session.events = formattedEvents;
+    req.session.geoEvents = JSON.stringify(geoEvents);
+    req.session.save();
+
     res.render('pages/home', {
       login:  !!req.session.user,
       user:   req.session.user,  // lets the hbs {{#if user.useradmin}} work
@@ -278,6 +282,10 @@ app.get('/get-events', async (req, res) => {
 
     const formattedEvents = rows.map(toClientEvent);
     const geoEvents = await buildGeoJSON(db, whereSql, params);
+
+    req.session.events    = formattedEvents;
+    req.session.geoEvents = JSON.stringify(geoEvents);
+    req.session.save();  
 
     res.json({ events: formattedEvents, geoEvents });
   } catch (err) {
