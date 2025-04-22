@@ -13,8 +13,8 @@
         mapboxgl.accessToken = 'pk.eyJ1IjoibWFrZmF1YiIsImEiOiJjbTg2ZHBoODMwM2NtMm1xMnlmYXgzbTJuIn0.Q3Knt4QC1wNxRg0wGCc0Mw';
         const map = new mapboxgl.Map({
             container: 'map', // container ID
-            center: [-105.26598, 40.00777], // starting [lng, lat] of CU Boulder
-            zoom: 14.3 // starting zoom
+            center: [-105.265761, 40.006117], // starting [lng, lat] of CU Boulder
+            zoom: 15.5 // starting zoom
         });
 
         const geoEvents = JSON.parse('{{{geoEvents}}}'); 
@@ -48,6 +48,14 @@
                 const el = document.createElement('div');
                 el.id = `marker-${marker.properties.eventID}`;
                 el.className = 'marker';
+                
+                // color pins by category
+                const categoryID = marker.properties.categoryID;
+                el.classList.add(`category-${categoryID}`);
+                if (!categoryID) {
+                    el.classList.add('category-unknown');
+                }
+                
                 el.innerHTML = '<i class="fa-solid fa-location-dot"></i>'
 
                 // Click event listener

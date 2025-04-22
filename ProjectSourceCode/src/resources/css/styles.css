@@ -106,14 +106,26 @@
   height: 56px;
   width: 56px;
   font-size: 36px; /* Adjust size of the icon */
-  color: #e7b829; /* Adjust color of the icon */
   text-align: center;
   line-height: 56px; /* Center the icon vertically */
 }
 
 .marker i {
-  font-size: 36px; /* Adjust size of the icon if you want to modify the icon size further */
+  font-size: 36px; /* Adjust size of the icon */
 }
+
+/* adjust marker color based on event type */
+.category-1 i { color: #FFEB3B !important; }   /* Activism - Brighter Yellow */
+.category-2 i { color: #F57C00 !important; }   /* Athletics - Deep Orange */
+.category-3 i { color: #FFA726 !important; }   /* Community Service - Lighter Orange */
+.category-4 i { color: #FFD54F !important; }   /* Crafts & DIY - Goldenrod */
+.category-5 i { color: #A0522D !important; }   /* Cultural - Sienna */
+.category-6 i { color: #8D6E63 !important; }   /* Educational - Taupe Brown */
+.category-7 i { color: #6D4C41 !important; }   /* Ethics & Responsibility - Coffee Brown */
+.category-8 i { color: #4E342E !important; }   /* Leadership+ - Deep Mocha */
+.category-9 i { color: #3E2723 !important; }   /* Performances - Espresso */
+.category-10 i { color: #FFB300 !important; }  /* Social - Rich Amber */
+.category-unknown i { color: black !important; } /* Unknown category */
 
 .event-description {
   display: -webkit-box;
@@ -122,4 +134,10 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.nav-item.dropdown:hover .dropdown-menu {
+  display: block;
+  margin-top: 0; /* Optional: removes the small gap */
+}
+
   

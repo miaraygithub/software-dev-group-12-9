@@ -183,7 +183,13 @@ app.get('/', async (req, res) => {
               'properties', jsonb_build_object(
                   'eventID', events.eventID,
                   'buildingName', locations.buildingName,
-                  'roomNumber', events.roomNumber
+                  'roomNumber', events.roomNumber,
+                  'categoryID', (
+                    SELECT categoryID 
+                    FROM event_to_category 
+                    WHERE eventID = events.eventID 
+                    LIMIT 1
+                  )
               )
             )
           )
@@ -822,8 +828,7 @@ async function fetchAndInsertICSEvents() {
         const clubID = tempClubId != null ? tempClubId : null;
 
         const categoriesList = parseCategories(event.categories);
-        console.log(categoriesList);
-        //const chosenCategoryID = await pickCategory(categoriesList);
+        // console.log(categoriesList);
 
         //Values we cant access unless we are logged in are defaulted for now
         const defaultRoom = 'TBD';
@@ -852,7 +857,7 @@ async function fetchAndInsertICSEvents() {
         // console.log("♦️Detected building:", detectedBuilding);
         const buildingID = detectedBuilding || 1;
 
-        const eventID = await db.one(`
+        const insertResult = await db.one(`
           INSERT INTO events (
             eventName, building, eventDate, clubSponser,
             roomNumber, eventDescription, startTime, endTime
@@ -872,14 +877,17 @@ async function fetchAndInsertICSEvents() {
         ]);
         insertedCount++;
 
+        const eventID = insertResult.eventid;
+
         // Insert into event_to_category
-        for (category in categoriesList) {
+        for (category of categoriesList) {
           const categoryResult = await db.oneOrNone(`SELECT categoryID FROM category_aliases 
             WHERE alias = $1;`, [category]);
+          // console.log(`Category Alias: ${category} -> CategoryID:`, categoryResult);
 
           if (!categoryResult) continue; // alias not found, skip
 
-          const {categoryID} = categoryResult; // convert from object
+          const categoryID = categoryResult.categoryid;
 
           const exist = await db.oneOrNone(`SELECT 1 FROM event_to_category
             WHERE eventID = $1 AND categoryID = $2;`, [eventID, categoryID]);
@@ -887,6 +895,7 @@ async function fetchAndInsertICSEvents() {
           if (!exist) { // skip duplicates
             await db.none(`INSERT INTO event_to_category (eventID, categoryID)
               VALUES ($1, $2);`, [eventID, categoryID]);
+            console.log(`Inserted eventID ${eventID} and categoryID ${categoryID}`)
           }
         }
         
