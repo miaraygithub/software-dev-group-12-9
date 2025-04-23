@@ -683,7 +683,7 @@ app.get('/event-details', async (req, res) => {
 
     res.status(200).render('pages/events', {
       comments,
-      login: !!req.session.user,
+      user: !!req.session.user,
       event: formattedEvents[0],
       rsvpList: rsvp,
     })
@@ -692,7 +692,7 @@ app.get('/event-details', async (req, res) => {
     res.status(400).render('pages/home', {
       error: true,
       message: err,
-      login: !!req.session.login,
+      login: req.session.login,
       events: req.session.events,
       geoEvents: req.session.geoEvents,
       buildings: req.session.buildings,
@@ -755,7 +755,8 @@ app.get('/event/:id', async (req, res) => {
       event: formattedEvents[0],
       comments,
       rsvpList: rsvp,
-      user: req.session.user,
+      login : !!req.session.user,
+      user : req.session.user
     });
   } catch (err) {
     console.log('Error Reloading Event Page', err);
@@ -824,9 +825,11 @@ app.get("/event-details", async (req, res) => {
 
     res.render("pages/events", {
       comments,
-      login: !!req.session.user,
+      user: !!req.session.user,
       event: formattedEvents[0],
       rsvpList: rsvp,
+      login : !!req.session.user,
+      user : req.session.user
     });
   } catch (err) {
     console.log("error saving events", err);
@@ -912,7 +915,7 @@ app.get("/event/:id", async (req, res) => {
 app.post("/comment", async (req, res) => {
   const eventId = req.body.eventid;
   const commentText = req.body.comment_text;
-  const username = req.session.username || "Anonymous";
+  const username = req.session.user?.username || "Anonymous";
 
   try {
     await db.none(
@@ -1022,14 +1025,11 @@ app.post("/rsvp", async (req, res) => {
       ON CONFLICT DO NOTHING;`,
       [eventid, userid]
     );
-    res.status(302).redirect(`/event/${eventid}`, {
-      login: !!req.session.user
-    });
+    res.status(302).redirect(`/event/${eventid}`);
   } catch (err) {
 
     console.error('Error during rsvp:', err);
     res.status(400).render('pages/login', {
-      login: !!req.session.user,
       error: true,
       message: err,
     });
@@ -1393,12 +1393,14 @@ async function pickCategory(categoriesList) {
 }
 
 async function detectBuilding(rawDescription) {
-  let row = await db.oneOrNone(
+
+  //By Description
+  ;let row = await db.oneOrNone(
     `
     SELECT l.locationID
     FROM   building_aliases a
     JOIN   locations       l ON a.buildingID = l.locationID
-    WHERE  similarity(lower(a.alias), lower($1)) > 0.01   -- tweak cutoff
+    WHERE  similarity(lower(a.alias), lower($1)) > 0.1
     ORDER  BY similarity(lower(a.alias), lower($1)) DESC
     LIMIT  1
     `,
@@ -1406,16 +1408,27 @@ async function detectBuilding(rawDescription) {
   );
   if (row) return row.locationid;
 
-  // 2. Fallback: direct match on buildingName -----------------
+  //Fallback: direct match on buildingName
   row = await db.oneOrNone(
     `
     SELECT locationID
     FROM   locations
-    WHERE  similarity(lower(buildingName), lower($1)) > 0.01
+    WHERE  similarity(lower(buildingName), lower($1)) > 0.1
     ORDER  BY similarity(lower(buildingName), lower($1)) DESC
     LIMIT  1
     `,
     [rawDescription]
+  );
+  if(row) return row.locationid;
+
+   //Fallback: Pick a random location
+   row = await db.oneOrNone(
+    `
+    SELECT locationID
+    FROM   locations
+    ORDER  BY random()
+    LIMIT  1
+    `
   );
   return row?.locationid ?? null;
 }
