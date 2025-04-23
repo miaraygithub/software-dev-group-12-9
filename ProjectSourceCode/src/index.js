@@ -150,7 +150,7 @@ app.get('/', async (req, res) => {
       };
     });
 
-    console.log(formattedEvents);
+    //console.log(formattedEvents);
 
     // const formattedEvents = events.map(event => {
     //   const eventDate = utcToZonedTime(new Date(event.eventdate), timeZone);
@@ -215,15 +215,15 @@ app.get('/', async (req, res) => {
 // =========== /profile Route ===========
 app.get('/editProfile', (req, res) => {
   if (!req.session.user) {
-    return res.redirect('/login');
+    return res.status(302).redirect('/login');
   }
   
-  res.render('pages/editProfile', {login: !!req.session.user});
+  res.status(200).render('pages/editProfile', {login: !!req.session.user});
 }); 
 
 app.post('/editProfile', upload.single('profilePic'), async(req, res) => {
   if (!req.session.user) {
-    return res.redirect('/login');
+    return res.status(302).redirect('/login');
   }
 
   try {
@@ -264,7 +264,7 @@ app.post('/editProfile', upload.single('profilePic'), async(req, res) => {
           console.log(updatedPic);
         } catch (dbErr) {
           console.error('Database error:', dbErr);
-          res.render('pages/editProfile', {error: true, message: dbErr});
+          res.status(400).render('pages/editProfile', {error: true, message: dbErr});
         }
       }
       // const picQuery = 'INSERT INTO users (profilePic) VALUES ($1)';
@@ -281,19 +281,19 @@ app.post('/editProfile', upload.single('profilePic'), async(req, res) => {
       throw new Error('Please make changes before submitting.')
     } 
 
-    res.render('pages/profile', {
+    res.status(200).render('pages/profile', {
       login: !!req.session.user,
       message: 'Profile successfully edited!'
     });
   } catch (err) {
     console.error('Error sending updated profile data', err);
     // res.status(400).json({ error: err.message});
-    res.render('pages/editProfile', {login: !!req.session.user, error: true, message: err});
+    res.status(400).render('pages/editProfile', {login: !!req.session.user, error: true, message: err});
   }
 });
 
 app.get('/profile', (req, res) => {
-  res.render('pages/profile', {login: !!req.session.user});
+  res.status(200).render('pages/profile', {login: !!req.session.user});
 });
 
 // =========== /login Routes ===========
@@ -306,7 +306,7 @@ app.post('/login', async(req, res) => {
     const password = req.body.password;
    
     const user = await db.oneOrNone('SELECT DISTINCT * FROM users WHERE users.userName = ($1) LIMIT 1;', [req.body.username])
-    if (!user) { return res.redirect('/register'); }
+    if (!user) { return res.status(302).redirect('/register'); }
     
     // check if password from request matches with password in DB
     const hash = await bcrypt.hash(user.userpassword, 10);
@@ -319,11 +319,10 @@ app.post('/login', async(req, res) => {
 
     req.session.user = user;
     req.session.save();
-    res.redirect('/');
+    res.status(302).redirect('/');
   } catch (err) {
     console.error('Login failed:', err);
-    // res.status(400).json({ error: err.message});
-    res.render('pages/login', {
+    res.status(400).render('pages/login', {
       error: true,
       message: err
     });
@@ -333,7 +332,7 @@ app.post('/login', async(req, res) => {
 // =========== /register Routes ===========
 
 app.get('/register', (req, res) => {
-  res.render('pages/register');
+  res.status(200).render('pages/register');
 });
 
 app.post('/register', async(req,res) => {
@@ -345,9 +344,6 @@ app.post('/register', async(req,res) => {
     if (!req.body.useradmin) {
       userAdmin = false;
     }
-
-    console.log(req.body.useradmin)
-
     // Validation that user doesn't already exist in db
     var searchQuery = 'SELECT DISTINCT * FROM users WHERE users.userName = ($1)';
     var existingUser = await db.oneOrNone(searchQuery, [req.body.username]);
@@ -406,10 +402,10 @@ app.post('/register', async(req,res) => {
     var userInfo = await db.one(insertQuery, values);
     console.log('New User:', userInfo);
 
-    res.redirect('/login');
+    res.status(302).redirect('/login');
   } catch (err) {
     console.error('Error during registration:', err);
-    res.render('pages/register', {
+    res.status(400).render('pages/register', {
       error: true,
       message: err
     });
@@ -419,14 +415,13 @@ app.post('/register', async(req,res) => {
 // =========== /logout Route ===========
 app.get('/logout', (req, res) => {
   req.session.destroy(function(err) {
-    res.render('pages/logout', { message: 'Logged out successfully!'});
+    res.status(200).render('pages/logout', { message: 'Logged out successfully!'});
   });
   // res.render('pages/logout');
 });
 
 //=========== /saveEvent Route ===========
 app.post("/save-event", async (req, res) => {
-  console.log('Save Event')
   try {
     const eventName = req.body.event_name;
     const eventBuildingID = req.body.event_building;
@@ -446,13 +441,15 @@ app.post("/save-event", async (req, res) => {
     const eventSave = [eventName, eventBuildingID, eventDate, eventClub, eventRoomNumber, eventDescription, eventStartTime+':00', eventEndTime+':00']
 
     //insert event into database
-    console.log(eventSave)
+    //console.log(eventSave)
     insertEvent = await db.none(saveQuery, eventSave)
-    res.redirect('/')
+
+    res.status(302).redirect('/');
   } catch (err) {
     console.error('Error Saving Event:', err);
+    console.log('error saving events: ', err)
     // res.status(400).json({ error: err.message});
-    res.render('pages/home', {
+    res.status(400).render('pages/home', {
       error: true,
       message: err,
       login: req.session.login,
@@ -501,7 +498,7 @@ app.get('/event-details', async (req, res) => {
       ORDER BY created_at DESC;
     `, [eventid]);
 
-    res.render('pages/events', {
+    res.status(200).render('pages/events', {
       comments,
       user: !!req.session.user,
       event: formattedEvents[0],
@@ -509,7 +506,7 @@ app.get('/event-details', async (req, res) => {
     })
   } catch (err) {
     console.log('error saving events', err);
-    res.render('pages/home', {
+    res.status(400).render('pages/home', {
       error: true,
       message: err,
       login: req.session.login,
@@ -571,7 +568,7 @@ app.get('/event/:id', async (req, res) => {
       WHERE rsvp.eventID = $1;
       `, [eventid]);
 
-    res.render('pages/events', {
+    res.status(200).render('pages/events', {
       event: formattedEvents[0],
       comments,
       rsvpList: rsvp,
@@ -579,7 +576,7 @@ app.get('/event/:id', async (req, res) => {
     });
   } catch (err) {
     console.log('Error Reloading Event Page', err);
-    res.render('pages/home', {
+    res.status(400).render('pages/home', {
       error: true,
       message: err,
       login: req.session.login,
@@ -603,10 +600,10 @@ app.post('/comment', async (req, res) => {
     `, [eventId, commentText, username]);
 
     //Redirect to the GET route after comment submission
-    res.redirect(`/event/${eventId}`);
+    res.status(302).redirect(`/event/${eventId}`);
   } catch (err) {
     console.error('Error submitting comment:', err);
-    res.render('pages/home', {
+    res.status(400).render('pages/home', {
       error: true,
       message: err,
       login: req.session.login,
@@ -650,7 +647,7 @@ app.get("/search", async (req, res) => {
 
     const resultsBool = !!(clubs_results || events_results); // check if any results were output
 
-    res.render('pages/search-results', {
+    res.status(200).render('pages/search-results', {
       keyword: keyword,
       resultsBool: resultsBool,
       login: !!req.session.user,
@@ -661,7 +658,7 @@ app.get("/search", async (req, res) => {
     });
   }
   catch (err) {
-    res.render('pages/search-results', {
+    res.status(400).render('pages/search-results', {
       results: [],
       error: true,
       message: err.message
@@ -684,10 +681,10 @@ app.post("/rsvp", async (req, res) => {
       VALUES ($1, $2)
       ON CONFLICT DO NOTHING;`,[eventid, userid]
     );
-    res.redirect(`/event/${eventid}`);
+    res.status(302).redirect(`/event/${eventid}`);
   } catch (err) {
     console.error('Error during rsvp:', err);
-    res.render('pages/login', {
+    res.status(400).render('pages/login', {
       error: true,
       message: err,
     });
@@ -756,8 +753,8 @@ async function fetchAndInsertICSEvents() {
       //--end Parsing--
 
       //Debbugging
-      console.log('📝 Raw event data:', event);
-      console.log('Categories →', categoriesList);
+      //console.log('📝 Raw event data:', event);
+      //console.log('Categories →', categoriesList);
 
       await db.none(`
         INSERT INTO events (
@@ -851,7 +848,8 @@ fetchAndInsertICSEvents();
 // ====================== Server Initialization ======================
 
 //The app simply closes if it isn't listening for anything so this is load bearing. -- Julia
-const port = 3000
+const port = 3000;
+module.exports = app;
 app.listen(port, () => {
   console.log(`Buff's Bulletin listening on port ${port}`)
 });
