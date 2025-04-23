@@ -81,7 +81,7 @@
   width: 180px;
 }
 .popup-section-header {
-  background: #e7b829;
+  background: var(--color-crafts);
   color: #fff;
   margin: 0;
   padding: 10px;
@@ -99,7 +99,7 @@
 }
 
 .mapboxgl-popup-content div {
-  background: #e7b829;
+  background: var(--color-crafts);
   color: #fff;
   margin: 0;
   padding: 10px;
