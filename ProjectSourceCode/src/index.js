@@ -166,17 +166,24 @@ async function buildGeoJSON(db, whereSql = '', params = []) {
           'properties', jsonb_build_object(
             'eventID', e.eventID,
             'buildingName', l.buildingName,
-            'roomNumber',  e.roomNumber
+            'roomNumber',  e.roomNumber,
+            'categoryID', (
+              SELECT categoryID 
+              FROM event_to_category 
+              WHERE eventID = e.eventID 
+              LIMIT 1
+            )
           )
         )
       )
     ) AS geojson
-    FROM events   e
+    FROM events e
     JOIN locations l ON e.building = l.locationID
     ${whereSql}
   `,
     params
   );
+
   return geojson;
 }
 //--Helpers End--
@@ -214,15 +221,17 @@ app.get('/', async (req, res) => {
       'WHERE e.eventDate = $1::date',
       [todayStr]);
 
+    // console.log(geoEvents);
+
     req.session.events = formattedEvents;
-    req.session.geoEvents = JSON.stringify(geoEvents);
+    req.session.geoEvents = geoEvents;
     req.session.save();
 
     res.render('pages/home', {
       login:  !!req.session.user,
       user:   req.session.user,  // lets the hbs {{#if user.useradmin}} work
       events: formattedEvents,
-      geoEvents: JSON.stringify(geoEvents),
+      geoEvents: geoEvents,
       buildings: await db.any(`SELECT locationID, buildingName FROM locations`)
     });
   } catch (err) {
@@ -1153,7 +1162,7 @@ async function fetchAndInsertICSEvents() {
           if (!exist) { // skip duplicates
             await db.none(`INSERT INTO event_to_category (eventID, categoryID)
               VALUES ($1, $2);`, [eventID, categoryID]);
-            console.log(`Inserted eventID ${eventID} and categoryID ${categoryID}`)
+            // console.log(`Inserted eventID ${eventID} and categoryID ${categoryID}`)
           }
         }
         

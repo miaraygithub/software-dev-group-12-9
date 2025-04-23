@@ -126,17 +126,17 @@ li.list-group-item.sidebar-item.active:hover {
 }
 
 /* adjust marker color based on event type */
-.category-1 i { color: #FFEB3B !important; }   /* Activism - Brighter Yellow */
-.category-2 i { color: #F57C00 !important; }   /* Athletics - Deep Orange */
-.category-3 i { color: #FFA726 !important; }   /* Community Service - Lighter Orange */
-.category-4 i { color: #FFD54F !important; }   /* Crafts & DIY - Goldenrod */
-.category-5 i { color: #A0522D !important; }   /* Cultural - Sienna */
-.category-6 i { color: #8D6E63 !important; }   /* Educational - Taupe Brown */
-.category-7 i { color: #6D4C41 !important; }   /* Ethics & Responsibility - Coffee Brown */
-.category-8 i { color: #4E342E !important; }   /* Leadership+ - Deep Mocha */
-.category-9 i { color: #3E2723 !important; }   /* Performances - Espresso */
-.category-10 i { color: #FFB300 !important; }  /* Social - Rich Amber */
-.category-unknown i { color: black !important; } /* Unknown category */
+.marker.category-1 i { color: #FFEB3B !important; }   /* Activism - Brighter Yellow */
+.marker.category-2 i { color: #F57C00 !important; }   /* Athletics - Deep Orange */
+.marker.category-3 i { color: #FFA726 !important; }   /* Community Service - Lighter Orange */
+.marker.category-4 i { color: #FFD54F !important; }   /* Crafts & DIY - Goldenrod */
+.marker.category-5 i { color: #A0522D !important; }   /* Cultural - Sienna */
+.marker.category-6 i { color: #8D6E63 !important; }   /* Educational - Taupe Brown */
+.marker.category-7 i { color: #6D4C41 !important; }   /* Ethics & Responsibility - Coffee Brown */
+.marker.category-8 i { color: #4E342E !important; }   /* Leadership+ - Deep Mocha */
+.marker.category-9 i { color: #3E2723 !important; }   /* Performances - Espresso */
+.marker.category-10 i { color: #FFB300 !important; }  /* Social - Rich Amber */
+.marker.category-unknown i { color: black !important; } /* Unknown category */
 
 .event-description {
   display: -webkit-box;
