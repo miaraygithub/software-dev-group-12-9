@@ -1,3 +1,6 @@
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+
 CREATE TABLE clubs (
     clubID serial NOT NULL,
     clubName varchar(60) NOT NULL,
@@ -60,4 +63,9 @@ CREATE TABLE friendReq (
     receiverUsername VARCHAR(30) NOT NULL REFERENCES users(userName) ON DELETE CASCADE,
     status VARCHAR(20) DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE building_aliases (
+  alias TEXT PRIMARY KEY,
+  buildingID INT REFERENCES locations(locationID)
 );
