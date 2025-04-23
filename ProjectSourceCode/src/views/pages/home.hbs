@@ -52,7 +52,6 @@
         class="position-absolute top-0 start-0 m-3 p-3 bg-light border rounded-3 shadow d-flex flex-column gap-2"
         style="width: 300px; max-height: 90vh; overflow-y: auto; z-index: 999;"
       >
-        {{> new_event}}
         <!-- Fixed top content -->
         <div class="d-flex align-items-center justify-content-between">
           <h2 class="events-title mb-0">Upcoming Events</h2>
@@ -74,6 +73,60 @@
     </div>
   </div>
 </main>
+
+<!-- MODAL: Outside of #main -->
+<div class="modal fade" id="event_modal" tabindex="-1" aria-labelledby="event_modal_label" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg" style="max-width: 600px;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="event_modal_label">Add Event</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form action="/save-event" method="POST">
+          <div class="mb-3">
+            <label for="event_name" class="form-label">Event Name:</label>
+            <input type="text" class="form-control" id="event_name" name="event_name" required>
+          </div>
+          <div class="mb-3">
+            <label for="event_building" class="form-label">Event Building:</label>
+            <select class="form-control" id="event_building" name="event_building" required>
+              <option value="" disabled selected>Select a building</option>
+              {{#each buildings}}
+              <option value="{{this.locationid}}">{{this.buildingname}}</option>
+              {{/each}}
+            </select>
+          </div>
+          <input type="hidden" name="event_club" value="{{user.adminclub}}">
+          <div class="mb-3">
+            <label for="event_room_number" class="form-label">Room Number:</label>
+            <input type="text" class="form-control" id="event_room_number" name="event_room_number" required>
+          </div>
+          <div class="mb-3">
+            <label for="event_date" class="form-label">Date:</label>
+            <input type="date" class="form-control" id="event_date" name="event_date" required>
+          </div>
+          <div class="mb-3">
+            <label for="event_start_time" class="form-label">Start Time:</label>
+            <input type="time" id="event_start_time" name="event_start_time" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label for="event_end_time" class="form-label">End Time:</label>
+            <input type="time" id="event_end_time" name="event_end_time" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label for="event_description" class="form-label">Event Description:</label>
+            <textarea class="form-control" id="event_description" name="event_description" rows="4" required></textarea>
+          </div>
+          <div class="d-flex justify-content-between mt-3">
+            <button type="submit" class="btn btn-secondary">Create Event</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <script>
   window.geoEvents = {{{json geoEvents}}};
