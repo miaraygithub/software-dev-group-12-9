@@ -1,19 +1,37 @@
-CREATE TABLE users (
-    userID SERIAL NOT NULL,
-    userName VARCHAR(30) NOT NULL,
-    userPassword VARCHAR(60) NOT NULL,
-    userAdmin BOOL NOT NULL,
-    profilePic VARCHAR(200) DEFAULT './uploads/default.jpg',
-    PRIMARY KEY (userID)
-);
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
 
 CREATE TABLE clubs (
     clubID serial NOT NULL,
     clubName varchar(60) NOT NULL,
-    clubDescription text NOT NULL,
-    organizer int NOT NULL,
-    PRIMARY KEY (ClubID),
-    CONSTRAINT FK_OrganizerUserID FOREIGN KEY (organizer) REFERENCES users (userID)
+    PRIMARY KEY (ClubID)
+);
+
+CREATE TABLE categories (
+    categoryID SERIAL NOT NULL,
+    categoryName VARCHAR(30) NOT NULL,
+    PRIMARY KEY (categoryID)
+);
+
+CREATE TABLE category_aliases (
+    alias TEXT PRIMARY KEY,
+    categoryID INT REFERENCES categories(categoryID)
+);
+
+CREATE TABLE event_to_category (
+    eventID INT,
+    categoryID INT
+);
+
+CREATE TABLE users (
+    userID SERIAL NOT NULL,
+    userName VARCHAR(30) UNIQUE NOT NULL,
+    userPassword VARCHAR(60) NOT NULL,
+    userAdmin BOOL NOT NULL,
+    profilePic VARCHAR(200) DEFAULT './uploads/default.jpg',
+    adminClub int,
+    PRIMARY KEY (userID),
+    CONSTRAINT FK_AdminClubId FOREIGN KEY (adminClub) REFERENCES clubs (clubID)
 );
 
 CREATE TABLE locations (
@@ -31,7 +49,7 @@ CREATE TABLE events (
     eventDate date NOT NULL,
     clubSponser int NOT NULL,
     roomNumber varchar(10) NOT NULL,
-    eventDescription text NOT NULL,
+    eventDescription text,
     startTime time NOT NULL,
     endTime time NOT NULL,
     PRIMARY KEY (eventID),
@@ -53,4 +71,23 @@ CREATE TABLE rsvp (
     PRIMARY KEY (userID, eventID),
     CONSTRAINT FK_UserID FOREIGN KEY (userID) REFERENCES users (userID),
     CONSTRAINT FK_EventID FOREIGN KEY (eventID) REFERENCES events (eventID)
+);
+
+CREATE TABLE friendReq (
+    requestID SERIAL PRIMARY KEY,
+    senderUsername VARCHAR(30) NOT NULL REFERENCES users(userName) ON DELETE CASCADE,
+    receiverUsername VARCHAR(30) NOT NULL REFERENCES users(userName) ON DELETE CASCADE,
+    status VARCHAR(20) DEFAULT 'pending'
+);
+
+CREATE TABLE friends (
+    friendID SERIAL PRIMARY KEY,
+    user1 VARCHAR(30) NOT NULL REFERENCES users(userName) ON DELETE CASCADE,
+    user2 VARCHAR(30) NOT NULL REFERENCES users(userName) ON DELETE CASCADE,
+    UNIQUE(user1, user2)
+);
+
+CREATE TABLE building_aliases (
+  alias TEXT PRIMARY KEY,
+  buildingID INT REFERENCES locations(locationID)
 );

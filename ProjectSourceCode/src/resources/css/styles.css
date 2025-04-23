@@ -1,75 +1,86 @@
+:root {
+  --highlight-yellow: #f0d482;
+  --double-highlight: #f0c850;
+}
+
+#map {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+}
+
 .sidebar-extra {
-    opacity: 0;
-    max-height: 0;
-    overflow: hidden;
-    transition: opacity 0.3s ease, max-height 0.3s ease;
-  }
-  
-  /* Show when sidebar is expanded */
-  #sidebar.expanded .sidebar-extra {
-    opacity: 1;
-    max-height: 500px;
-  }  
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: opacity 0.3s ease, max-height 0.3s ease;
+}
 
-  .sidebar-scroll-container {
-    flex-grow: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    max-height: 100%;
-  }
-  
-  li.list-group-item.sidebar-item.active {
-    background-color: #f0d482 !important;
-    color: inherit !important;
-    border-color: transparent !important;
-  }
+/* Show when sidebar is expanded */
+#sidebar.expanded .sidebar-extra {
+  opacity: 1;
+  max-height: 500px;
+}
 
-    li.list-group-item.sidebar-item.active:focus,
-    li.list-group-item.sidebar-item.active:hover {
-      background-color: #f0c850 !important;
-      color: inherit !important;
-  }
+.sidebar-scroll-container {
+  flex-grow: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 100%;
+}
 
-  .event-item {
-    transition: background-color 0.3s ease;
-    cursor: default;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    white-space: normal;
-  }  
-  
-  .event-item:hover {
-    background-color: #f0d482; /* or a slightly darker Bootstrap gray like #e9ecef */
-    cursor: pointer;
-  }
+li.list-group-item.sidebar-item.active {
+  background-color: var(--highlight-yellow) !important;
+  color: inherit !important;
+  border-color: transparent !important;
+}
 
-  #sidebar {
-    overflow-x: hidden;
-    height: 100%;
-    width: 300px;
-    transition: all 0.3s;
-  }
+li.list-group-item.sidebar-item.active:focus,
+li.list-group-item.sidebar-item.active:hover {
+  background-color: var(--double-highlight) !important;
+  color: inherit !important;
+}
 
-  #sidebar.expanded {
-    width: 100%;
-  }
-  
-  /* Make event list scrollable without overflowing */
-  #sidebar ul.list-group {
-    width: 100%;
-    overflow-y: auto;
-  }
+.event-item {
+  transition: background-color 0.3s ease;
+  cursor: default;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
 
-  /* Marker tweaks */
+.event-item:hover {
+  background-color: var(
+    --highlight-yellow
+  ); /* or a slightly darker Bootstrap gray like #e9ecef */
+  cursor: pointer;
+}
+
+#sidebar {
+  overflow-x: hidden;
+  height: 100%;
+  width: 300px;
+  transition: all 0.3s;
+}
+
+#sidebar.expanded {
+  width: 100%;
+}
+
+/* Make event list scrollable without overflowing */
+#sidebar ul.list-group {
+  width: 100%;
+  overflow-y: auto;
+}
+
+/* Marker tweaks */
 .mapboxgl-popup-close-button {
   display: none;
 }
 
 .mapboxgl-popup-content {
-  font:
-    400 15px/22px 'Source Sans Pro',
-    'Helvetica Neue',
-    sans-serif;
+  font: 400 15px/22px "Source Sans Pro", "Helvetica Neue", sans-serif;
   padding: 0;
   width: 180px;
 }
@@ -91,7 +102,7 @@
   color: #333;
 }
 
-.mapboxgl-popup-content div{
+.mapboxgl-popup-content div {
   background: #e7b829;
   color: #fff;
   margin: 0;
@@ -106,14 +117,26 @@
   height: 56px;
   width: 56px;
   font-size: 36px; /* Adjust size of the icon */
-  color: #e7b829; /* Adjust color of the icon */
   text-align: center;
   line-height: 56px; /* Center the icon vertically */
 }
 
 .marker i {
-  font-size: 36px; /* Adjust size of the icon if you want to modify the icon size further */
+  font-size: 36px; /* Adjust size of the icon */
 }
+
+/* adjust marker color based on event type */
+.marker.category-1 i { color: #FFEB3B !important; }   /* Activism - Brighter Yellow */
+.marker.category-2 i { color: #F57C00 !important; }   /* Athletics - Deep Orange */
+.marker.category-3 i { color: #FFA726 !important; }   /* Community Service - Lighter Orange */
+.marker.category-4 i { color: #FFD54F !important; }   /* Crafts & DIY - Goldenrod */
+.marker.category-5 i { color: #A0522D !important; }   /* Cultural - Sienna */
+.marker.category-6 i { color: #8D6E63 !important; }   /* Educational - Taupe Brown */
+.marker.category-7 i { color: #6D4C41 !important; }   /* Ethics & Responsibility - Coffee Brown */
+.marker.category-8 i { color: #4E342E !important; }   /* Leadership+ - Deep Mocha */
+.marker.category-9 i { color: #3E2723 !important; }   /* Performances - Espresso */
+.marker.category-10 i { color: #FFB300 !important; }  /* Social - Rich Amber */
+.marker.category-unknown i { color: black !important; } /* Unknown category */
 
 .event-description {
   display: -webkit-box;
@@ -122,4 +145,10 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.nav-item.dropdown:hover .dropdown-menu {
+  display: block;
+  margin-top: 0; /* Optional: removes the small gap */
+}
+
   
