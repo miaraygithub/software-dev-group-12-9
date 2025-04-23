@@ -1035,6 +1035,114 @@ app.post("/rsvp", async (req, res) => {
   }
 });
 
+app.get('/myFriends', async(req, res) => {
+  try {
+    if (!req.session.user) {
+      res.redirect('/login');
+    }
+
+    const currentUser = req.session.user.username;
+
+    const incoming = await db.any(`SELECT * FROM friendReq WHERE receiverUsername = ($1) AND status = 'pending';`, [currentUser]);
+    const outgoing = await db.any(`SELECT * FROM friendReq WHERE senderUsername = ($1) AND status = 'pending';`, [currentUser]);
+    const friends = await db.any(`SELECT CASE WHEN user1 = ($1) THEN user2 ELSE user1 END AS friend FROM friends WHERE user1 = ($1) OR user2 = ($1);`, [currentUser]);
+
+    res.render('pages/myFriends', {
+      friends,
+      incoming,
+      outgoing,
+      login: !!req.session.user
+    });
+  } catch (err) {
+    console.error('Error loading my friends page', err);
+  }
+});
+
+app.post('/friend-req', async (req, res) => {
+  try {
+    if (!req.session.user) {
+      res.redirect('/login');
+    }
+  
+    const senderUsername = req.session.user.username;
+    const receiverUsername = req.body.receiverUsername;
+
+    if (!receiverUsername) {
+      throw new Error('Please enter a username.');
+    }
+    if (senderUsername == receiverUsername) {
+      throw new Error('You can\'t friend yourself!');
+    }
+    const existingUser = await db.oneOrNone(`SELECT DISTINCT * FROM users WHERE users.userName = ($1);`, [receiverUsername]);
+    if (!existingUser) {
+      throw new Error('User not found.');
+    }
+    const existingReq = await db.oneOrNone(`SELECT * FROM friendReq WHERE senderUsername = ($1) AND receiverUsername = ($2) AND status = 'pending';`, [senderUsername, receiverUsername]);
+    if (existingReq) {
+      throw new Error('Friend request has already been sent.');
+    }
+
+    const createReqQuery = `INSERT INTO friendReq(senderUsername, receiverUsername) VALUES ($1, $2)`;
+    await db.none(createReqQuery, [senderUsername, receiverUsername]);
+
+    const incoming = await db.any(`SELECT * FROM friendReq WHERE receiverUsername = ($1) AND status = 'pending';`, [senderUsername]);
+    const outgoing = await db.any(`SELECT * FROM friendReq WHERE senderUsername = ($1) AND status = 'pending';`, [senderUsername]);
+    const friends = await db.any(`SELECT CASE WHEN user1 = ($1) THEN user2 ELSE user1 END AS friend FROM friends WHERE user1 = ($1) OR user2 = ($1);`, [senderUsername]);
+
+    res.render('pages/myFriends', {
+      friends,
+      incoming,
+      outgoing,
+      login: !!req.session.user,
+      message: 'Friend request sent!'
+    });
+  } catch (err) {
+    console.error('Error sending friend request:', err);
+    res.render('pages/myFriends', {
+      error: true,
+      message: err,
+      login: !!req.session.user
+    });
+  }
+});
+
+app.post('/accept-req', async (req, res) => {
+  const currentUser = req.session.user.username;
+  const friendUser = req.body.senderUsername;
+
+  await db.none(
+    `UPDATE friendReq
+     SET status = 'accepted'
+     WHERE senderUsername = ($1) AND receiverUsername = ($2)`,
+    [friendUser, currentUser]
+  );
+
+  await db.none(`INSERT INTO friends(user1, user2) VALUES ($1, $2);`, [currentUser, friendUser]);
+  const friends = await db.any(`SELECT CASE WHEN user1 = ($1) THEN user2 ELSE user1 END AS friend FROM friends WHERE user1 = ($1) OR user2 = ($1);`, [currentUser]);
+  //const friends = await db.any('SELECT * FROM friends WHERE user1 = ($1) OR user2 = ($1);', [currentUser]);
+  console.log(friends);
+  // have to account for if user2 = receiver as well
+
+  res.render('pages/myFriends', {
+    friends,
+    login: !!req.session.user
+  });
+});
+
+app.post('/decline-req', async (req, res) => {
+  const receiver = req.session.user.username;
+  const sender = req.body.senderUsername;
+
+  await db.none(
+    `UPDATE friendReq
+     SET status = 'declined'
+     WHERE senderUsername = ($1) AND receiverUsername = ($2)`,
+    [sender, receiver]
+  );
+
+  res.redirect('/myFriends');
+});
+
 // =========== Calendar/Events Route ===========
 
 //URL of the events calendar
