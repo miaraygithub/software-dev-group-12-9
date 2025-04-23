@@ -374,7 +374,7 @@ app.post("/editProfile", upload.single("profilePic"), async (req, res) => {
           console.log(updatedPic);
         } catch (dbErr) {
           console.error('Database error:', dbErr);
-          res.status(400).render('pages/editProfile', {error: true, message: dbErr});
+          res.status(400).render('pages/editProfile', {error: true, message: dbErr, login:  !!req.session.user});
 
         }
       }
@@ -392,7 +392,6 @@ app.post("/editProfile", upload.single("profilePic"), async (req, res) => {
     }
 
     res.status(200).render('pages/profile', {
-
       login: !!req.session.user,
       message: "Profile successfully edited!",
     });
@@ -434,8 +433,8 @@ app.get('/myEvents', async (req, res) => {
   }));
 
   res.render('pages/my_events', {
-    login : true,
-    events: formattedEvents
+    events: formattedEvents,
+    login : !!req.session.user
   });
 });
 
@@ -464,7 +463,7 @@ app.post('/cancel-rsvp', async (req, res) => {
 
 // =========== /login Routes ===========
 app.get("/login", async (req, res) => {
-  res.render("pages/login");
+  res.render("pages/login", {login: !!req.session.user});
 });
 
 app.post("/login", async (req, res) => {
@@ -498,6 +497,7 @@ app.post("/login", async (req, res) => {
     res.status(400).render("pages/login", {
       error: true,
       message: err,
+      login: !!req.session.user
     });
   }
 });
@@ -506,7 +506,7 @@ app.post("/login", async (req, res) => {
 
 
 app.get('/register', (req, res) => {
-  res.status(200).render('pages/register');
+  res.status(200).render('pages/register', {login: !!req.session.user});
 
 });
 
@@ -585,6 +585,7 @@ app.post("/register", async (req, res) => {
     res.status(400).render('pages/register', {
       error: true,
       message: err,
+      login: !!req.session.user
     });
   }
 });
@@ -635,7 +636,7 @@ app.post("/save-event", async (req, res) => {
     res.status(400).render('pages/home', {
       error: true,
       message: err,
-      login: req.session.login,
+      login: !!req.session.user,
       events: req.session.events,
       geoEvents: req.session.geoEvents,
       buildings: req.session.buildings,
@@ -686,13 +687,14 @@ app.get('/event-details', async (req, res) => {
       user: !!req.session.user,
       event: formattedEvents[0],
       rsvpList: rsvp,
+      login: !!req.session.user
     })
   } catch (err) {
     console.log('error saving events', err);
     res.status(400).render('pages/home', {
       error: true,
       message: err,
-      login: req.session.login,
+      login: !!req.session.user,
       events: req.session.events,
       geoEvents: req.session.geoEvents,
       buildings: req.session.buildings,
@@ -756,13 +758,14 @@ app.get('/event/:id', async (req, res) => {
       comments,
       rsvpList: rsvp,
       user: req.session.user,
+      login : !!req.session.login
     });
   } catch (err) {
     console.log('Error Reloading Event Page', err);
     res.status(400).render('pages/home', {
       error: true,
       message: err,
-      login: req.session.login,
+      login: !!req.session.user,
       events: req.session.events,
       geoEvents: req.session.geoEvents,
       buildings: req.session.buildings,
@@ -827,13 +830,14 @@ app.get("/event-details", async (req, res) => {
       user: !!req.session.user,
       event: formattedEvents[0],
       rsvpList: rsvp,
+      login: !!req.session.user,
     });
   } catch (err) {
     console.log("error saving events", err);
     res.render("pages/home", {
       error: true,
       message: err,
-      login: req.session.login,
+      login: !!req.session.user,
       events: req.session.events,
       geoEvents: req.session.geoEvents,
       buildings: req.session.buildings,
@@ -895,13 +899,14 @@ app.get("/event/:id", async (req, res) => {
       event: formattedEvents[0],
       comments,
       rsvpList: rsvp,
+      login: !!req.session.user,
     });
   } catch (err) {
     console.log("Error Reloading Event Page", err);
     res.render("pages/home", {
       error: true,
       message: err,
-      login: req.session.login,
+      login: !!req.session.user,
       events: req.session.events,
       geoEvents: req.session.geoEvents,
       buildings: req.session.buildings,
@@ -931,7 +936,7 @@ app.post("/comment", async (req, res) => {
 
       error: true,
       message: err,
-      login: req.session.login,
+      login: !!req.session.user,
       events: req.session.events,
       geoEvents: req.session.geoEvents,
       buildings: req.session.buildings,
@@ -997,7 +1002,7 @@ app.get("/search", async (req, res) => {
   }
   catch (err) {
     res.status(400).render('pages/search-results', {
-
+      login: !!req.session.user,
       results: [],
       error: true,
       message: err.message,
@@ -1029,6 +1034,7 @@ app.post("/rsvp", async (req, res) => {
     res.status(400).render('pages/login', {
       error: true,
       message: err,
+      login: !!req.session.user,
     });
   }
 });
