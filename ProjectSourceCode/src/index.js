@@ -1123,8 +1123,12 @@ app.post('/accept-req', async (req, res) => {
   //const friends = await db.any('SELECT * FROM friends WHERE user1 = ($1) OR user2 = ($1);', [currentUser]);
   console.log(friends);
   // have to account for if user2 = receiver as well
+  const incoming = await db.any(`SELECT * FROM friendReq WHERE receiverUsername = ($1) AND status = 'pending';`, [currentUser]);
+  const outgoing = await db.any(`SELECT * FROM friendReq WHERE senderUsername = ($1) AND status = 'pending';`, [currentUser]);
 
   res.render('pages/myFriends', {
+    incoming,
+    outgoing,
     friends,
     login: !!req.session.user
   });
