@@ -3,6 +3,40 @@ VALUES
 ('Club1'),
 ('Club2');
 
+INSERT INTO categories (categoryName)
+VALUES
+('Activism'), --1
+('Athletics'), --2
+('Community Service'), --3
+('Crafts & DIY'), --4
+('Cultural'), --5
+('Educational'), --6
+('Ethics & Responsibility'), --7
+('Leadership'), --8
+('Performances'), --9
+('Social'); --10
+
+INSERT INTO category_aliases (alias, categoryID)
+VALUES
+('ResX: Social Justice Responsibility', 1),
+('Student Activism', 1),
+('Athletics', 2),
+('Athletic/Sports', 2),
+('Fundraiser', 3),
+('Community Service', 3),
+('Crafts & DIY', 4),
+('Cultural', 5),
+('Cultural Programming', 5),
+('Educational/Awareness', 6),
+('Workshop', 6),
+('Academic', 6),
+('ResX: Community Responsibility', 7),
+('ResX: Personal Responsibility', 7),
+('Leadership', 8),
+('Leadership Development', 8),
+('Concerts & Performances', 9),
+('Social', 10);
+
 INSERT INTO users (userName, userPassword, userAdmin, adminClub)
 VALUES --DO NOT USE THESE TO LOG IN. PASSWORD IS NOT ENCODED--
 ('Default Organizer 1', '123', True, 1),
@@ -27,8 +61,43 @@ VALUES
 ('Norlin Library', 40.00880772946871, -105.27078912943777),
 ('Kittredge Field', 40.003046875220576, -105.25962041124946),
 ('Koelbel', 40.00568493017682, -105.26347206326568),
-('CASE', 40.006414911245734, -105.2701860457083);
+('CASE', 40.006564686954675, -105.2705847384917),
+('Math Building', 40.007736584619046, -105.26455796220422), 
+('ATLAS', 40.007460476654884, -105.2699587766818),
+('Hallet Hall', 40.00503999333933, -105.26496743582884);
 
+INSERT INTO building_aliases (alias, buildingID)
+VALUES 
+  ('Engineering Center', 1),
+  ('EC', 1),
+  ('Eng Center', 1),
+  ('Farrand Field',2),
+  ('Farrand',2),
+  ('CU Events Center',3),
+  ('Recreation Center',3),
+  ('Rec Center',3),
+  ('Rec',3),
+  ('Fiske Planetarium', 4),
+  ('UMC',5),
+  ('University Memorial Center',5),
+  ('Muenzinger Auditorium', 6),
+  ('Muenzinger', 6),
+  ('MUEN', 6),
+  ('Folsom Field', 7),
+  ('Macky Auditorium', 8),
+  ('Norlin Library', 9),
+  ('Kittredge Field',10),
+  ('Kittredge',10),
+  ('Koelbel', 11),
+  ('CASE', 12),
+  ('Math Building', 13),
+  ('Mathematics', 13),
+  ('MATH', 13),
+  ('ATLAS',14),
+  ('Atlas Center',14),
+  ('Atlas',14),
+  ('Hallet Hall',15),
+  ('Hallet',15);
 
 INSERT INTO events (eventName, building, eventDate, clubSponser, roomNumber, eventDescription, startTime, endTime)
 VALUES 

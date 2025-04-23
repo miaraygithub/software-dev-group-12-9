@@ -1,7 +1,26 @@
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+
 CREATE TABLE clubs (
     clubID serial NOT NULL,
     clubName varchar(60) NOT NULL,
     PRIMARY KEY (ClubID)
+);
+
+CREATE TABLE categories (
+    categoryID SERIAL NOT NULL,
+    categoryName VARCHAR(30) NOT NULL,
+    PRIMARY KEY (categoryID)
+);
+
+CREATE TABLE category_aliases (
+    alias TEXT PRIMARY KEY,
+    categoryID INT REFERENCES categories(categoryID)
+);
+
+CREATE TABLE event_to_category (
+    eventID INT,
+    categoryID INT
 );
 
 CREATE TABLE users (
@@ -68,3 +87,7 @@ CREATE TABLE friends (
     UNIQUE(user1, user2)
 );
 
+CREATE TABLE building_aliases (
+  alias TEXT PRIMARY KEY,
+  buildingID INT REFERENCES locations(locationID)
+);

@@ -1,0 +1,120 @@
+{{> message}}
+
+<title>My Events – Buff's Bulletin</title>
+
+<head>
+  <link  rel="stylesheet"
+         href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css">
+
+  <!-- `defer` makes the browser download the file early but execute it only after HTML parsing is finished, so `mapboxgl` exists before any inline scripts are executed. -->
+  <script defer
+          src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js">
+  </script>
+
+  <!-- Set the token as soon as Mapbox GL JS is in scope -->
+  <script>
+    mapboxgl.accessToken =
+      'pk.eyJ1IjoibWFrZmF1YiIsImEiOiJjbTg2ZHBoODMwM2NtMm1xMnlmYXgzbTJuIn0.Q3Knt4QC1wNxRg0wGCc0Mw';
+  </script>
+</head>
+
+<main class="container py-4 d-flex flex-column gap-3 vh-100">
+  <!-- Heading -->
+  <div class="text-center">
+    <h1 class="display-6">My RSVPs</h1>
+    <p class="text-muted small">All events you've RSVP'd to</p>
+  </div>
+
+  <!-- Scrollable feed -->
+  <div class="overflow-auto flex-grow-1 border rounded shadow-sm p-3" style="max-height: 100%;">
+    {{#if events.length}}
+      {{#each events}}
+        <div class="border-bottom pb-3 mb-3 d-flex flex-row-reverse gap-3">
+          {{!-- ───────────── Mini‑map thumbnail ───────────── --}}
+          {{!-- Needed params: eventid, longitude, latitude, buildingname, roomnumber --}}
+          <div class="mini-map-wrapper">
+            <div id="map-{{eventid}}" class="mini-map rounded border" style="width:120px;height:120px;"></div>
+            <script>
+              (function makeMiniMap(){
+                const geoEvent = {
+                  type: 'FeatureCollection',
+                  features: [{
+                    type: 'Feature',
+                    geometry: { type: 'Point', coordinates: [{{longitude}}, {{latitude}}] },
+                    properties: {
+                      eventID: {{eventid}},
+                      buildingName: '{{buildingname}}',
+                      roomNumber: '{{roomnumber}}'
+                    }
+                  }]
+                };
+
+                const map = new mapboxgl.Map({
+                container: 'map-{{eventid}}',
+                style: 'mapbox://styles/mapbox/streets-v12',
+                center: [{{longitude}}, {{latitude}}],
+                zoom: 15,
+                interactive: false,
+                attributionControl: false
+                });
+
+                map.on('load', () => {
+                  map.setPaintProperty('building', 'fill-color', '#b8b8b8');
+                  map.setPaintProperty('building', 'fill-opacity', 0.8);
+
+                  map.addSource('place-{{eventid}}', { type:'geojson', data: geoEvent });
+                  new mapboxgl.Marker({ offset:[0,-23] })
+                    .setLngLat([{{longitude}}, {{latitude}}])
+                    .addTo(map);
+                });
+              })();
+            </script>
+          </div>
+
+          {{!-- ───────────── Event details ───────────── --}}
+          <div class="flex-grow-1">
+            <!-- Clickable title -->
+            <h4>
+              <a href="/event/{{eventid}}" class="text-decoration-none text-primary">
+                {{eventname}}
+              </a>
+            </h4>
+
+            <!-- Description with “Read more” -->
+            <p class="mb-2">
+              <span class="event-desc short">{{trim eventdescription 120}}</span>
+              <span class="event-desc full d-none">{{eventdescription}}</span>
+              <a href="#" class="desc-toggle small">… more</a>
+            </p>
+
+            <ul class="list-unstyled small mb-2">
+              <li><strong>Date:</strong> {{eventDateFormatted}}</li>
+              <li><strong>Room:</strong> {{roomnumber}}</li>
+              <li><strong>Time:</strong> {{startTimeFormatted}} – {{endTimeFormatted}}</li>
+            </ul>
+
+            <!-- Cancel RSVP button -->
+            <form method="POST" action="/cancel-rsvp" class="d-inline">
+              <input type="hidden" name="eventid" value="{{eventid}}">
+              <button class="btn btn-sm btn-outline-danger">Cancel RSVP</button>
+            </form>
+          </div>
+        </div>
+      {{/each}}
+    {{else}}
+      <p class="text-muted">You haven't RSVP'd to any events yet.</p>
+    {{/if}}
+  </div>
+</main>
+
+{{!-- Expand‑/‑collapse script (load once per page) --}}
+<script>
+document.addEventListener('click', e => {
+  if (!e.target.matches('.desc-toggle')) return;
+  e.preventDefault();
+  const p = e.target.closest('p');
+  p.querySelector('.short').classList.toggle('d-none');
+  p.querySelector('.full').classList.toggle('d-none');
+  e.target.textContent = e.target.textContent.includes('more') ? 'less' : '… more';
+});
+</script>

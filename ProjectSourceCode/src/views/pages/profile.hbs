@@ -8,14 +8,14 @@
                 </div>
                 <div class="card-body">
                     <form method="GET" action = "/profile">
-                        <div class="mb-3">
-                            <label for="profilePic" class="form-label">Profile Picture</label>
+                        <div class="mb-3 text-center">
+                            <p class="mb-1 fw-bold">Profile Picture</p>
                             <img src={{user.profilepic}} alt="Profile Picture" class="img-thumbnail" style="max-width: 300px;">
                         </div>
 
-                        <div class="mb-3">
-                            <label for="username" class="form-label">Username</label>
-                            <input type="text" class="form-control" id="newUsername" name="newUsername" placeholder="John Doe" />
+                        <div class="mb-3 text-center">
+                            <p class="mb-1 fw-bold">Username</p>
+                            <p>{{user.username}}</p>
                         </div>
 <!--
                         <div class="mb-3">
