@@ -1353,12 +1353,14 @@ async function pickCategory(categoriesList) {
 }
 
 async function detectBuilding(rawDescription) {
-  let row = await db.oneOrNone(
+
+  //By Description
+  ;let row = await db.oneOrNone(
     `
     SELECT l.locationID
     FROM   building_aliases a
     JOIN   locations       l ON a.buildingID = l.locationID
-    WHERE  similarity(lower(a.alias), lower($1)) > 0.01   -- tweak cutoff
+    WHERE  similarity(lower(a.alias), lower($1)) > 0.1
     ORDER  BY similarity(lower(a.alias), lower($1)) DESC
     LIMIT  1
     `,
@@ -1366,16 +1368,27 @@ async function detectBuilding(rawDescription) {
   );
   if (row) return row.locationid;
 
-  // 2. Fallback: direct match on buildingName -----------------
+  //Fallback: direct match on buildingName
   row = await db.oneOrNone(
     `
     SELECT locationID
     FROM   locations
-    WHERE  similarity(lower(buildingName), lower($1)) > 0.01
+    WHERE  similarity(lower(buildingName), lower($1)) > 0.1
     ORDER  BY similarity(lower(buildingName), lower($1)) DESC
     LIMIT  1
     `,
     [rawDescription]
+  );
+  if(row) return row.locationid;
+
+   //Fallback: Pick a random location
+   row = await db.oneOrNone(
+    `
+    SELECT locationID
+    FROM   locations
+    ORDER  BY random()
+    LIMIT  1
+    `
   );
   return row?.locationid ?? null;
 }

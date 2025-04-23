@@ -64,7 +64,11 @@ VALUES
 ('CASE', 40.006564686954675, -105.2705847384917),
 ('Math Building', 40.007736584619046, -105.26455796220422), 
 ('ATLAS', 40.007460476654884, -105.2699587766818),
-('Hallet Hall', 40.00503999333933, -105.26496743582884);
+('Hallet Hall', 40.00503999333933, -105.26496743582884),
+('CISC', 40.004387437126276, -105.26493695268402),
+('REC Center', 40.01021825808879, -105.26910203516167),
+('Sewall', 40.01043097528075, -105.27099375708775),
+('Libby', 40.00685746025232, -105.26638703711787);
 
 INSERT INTO building_aliases (alias, buildingID)
 VALUES 
@@ -97,7 +101,18 @@ VALUES
   ('Atlas Center',14),
   ('Atlas',14),
   ('Hallet Hall',15),
-  ('Hallet',15);
+  ('Hallet',15),
+  ('CISC',16),
+  ('Center For Student Involvement',16),
+  ('Center For Community',16),
+  ('C4C',16),
+  ('Pride Office',16),
+  ('REC Center',17),
+  ('REC',17),
+  ('Sewall',18),
+  ('Sewall Hall',18),
+  ('Libby',19),
+  ('Libby Hall',19);
 
 INSERT INTO events (eventName, building, eventDate, clubSponser, roomNumber, eventDescription, startTime, endTime)
 VALUES 
