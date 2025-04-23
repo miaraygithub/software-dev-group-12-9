@@ -396,6 +396,7 @@ app.post("/editProfile", upload.single("profilePic"), async (req, res) => {
 
 app.get('/profile', (req, res) => {
   res.status(200).render('pages/profile', {login: !!req.session.user});
+});
 
 // =========== /myEvents Routes ===========
 
@@ -1154,6 +1155,7 @@ async function fetchAndInsertICSEvents() {
         console.error('⚠️ Skipping event due to error:', eventError.message);
       }
     console.log(insertedCount, '✅ICS events imported to DB.');
+    }
   } catch (error) {
     console.error('❌Error importing ICS:', error);
   } 
@@ -1260,4 +1262,4 @@ module.exports = app;
 
 app.listen(port, () => {
   console.log(`Buff's Bulletin listening on port ${port}`);
-});
+})
