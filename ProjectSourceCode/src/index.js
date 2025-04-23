@@ -683,7 +683,7 @@ app.get('/event-details', async (req, res) => {
 
     res.status(200).render('pages/events', {
       comments,
-      user: !!req.session.user,
+      login: !!req.session.user,
       event: formattedEvents[0],
       rsvpList: rsvp,
     })
@@ -692,7 +692,7 @@ app.get('/event-details', async (req, res) => {
     res.status(400).render('pages/home', {
       error: true,
       message: err,
-      login: req.session.login,
+      login: !!req.session.login,
       events: req.session.events,
       geoEvents: req.session.geoEvents,
       buildings: req.session.buildings,
@@ -824,7 +824,7 @@ app.get("/event-details", async (req, res) => {
 
     res.render("pages/events", {
       comments,
-      user: !!req.session.user,
+      login: !!req.session.user,
       event: formattedEvents[0],
       rsvpList: rsvp,
     });
@@ -1022,11 +1022,14 @@ app.post("/rsvp", async (req, res) => {
       ON CONFLICT DO NOTHING;`,
       [eventid, userid]
     );
-    res.status(302).redirect(`/event/${eventid}`);
+    res.status(302).redirect(`/event/${eventid}`, {
+      login: !!req.session.user
+    });
   } catch (err) {
 
     console.error('Error during rsvp:', err);
     res.status(400).render('pages/login', {
+      login: !!req.session.user,
       error: true,
       message: err,
     });

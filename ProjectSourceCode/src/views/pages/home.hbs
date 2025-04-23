@@ -23,6 +23,30 @@
       
       {{>map}}
 
+      <!-- Pin Legend -->
+      <div id="map-legend" class="position-absolute top-0 end-0 mt-3 me-3 bg-white p-3 rounded-3 shadow-sm" style="z-index: 1000; width: 220px">
+        <h6 class="mb-2 d-flex justify-content-between align-items-center" role="button" onclick="toggleLegend()">
+          Event Types
+          <i id="legend-toggle-icon" class="fa-solid fa-chevron-down"></i>
+        </h6>
+
+        <div id="legend-list-wrapper" class="legend-collapse">
+          <ul class="list-unstyled mb-0 small">
+            <li class="d-flex align-items-center mb-1"><span class="legend-pin" style="background-color: #FFEB3B;"></span> Activism</li>
+            <li class="d-flex align-items-center mb-1"><span class="legend-pin" style="background-color: #F57C00;"></span> Athletics</li>
+            <li class="d-flex align-items-center mb-1"><span class="legend-pin" style="background-color: #FFA726;"></span> Community Service</li>
+            <li class="d-flex align-items-center mb-1"><span class="legend-pin" style="background-color: #FFB300;"></span> Social</li>
+            <li class="d-flex align-items-center mb-1"><span class="legend-pin" style="background-color: #FFD54F;"></span> Crafts & DIY</li>
+            <li class="d-flex align-items-center mb-1"><span class="legend-pin" style="background-color: #A0522D;"></span> Cultural</li>
+            <li class="d-flex align-items-center mb-1"><span class="legend-pin" style="background-color: #8D6E63;"></span> Educational</li>
+            <li class="d-flex align-items-center mb-1"><span class="legend-pin" style="background-color: #6D4C41;"></span> Ethics & Responsibility</li>
+            <li class="d-flex align-items-center mb-1"><span class="legend-pin" style="background-color: #4E342E;"></span> Leadership</li>
+            <li class="d-flex align-items-center mb-1"><span class="legend-pin" style="background-color: #3E2723;"></span> Performances</li>
+          </ul>
+        </div>
+      </div>
+
+
       <!-- Sidebar -->
       <div id="sidebar" 
         class="position-absolute top-0 start-0 m-3 p-3 bg-light border rounded-3 shadow d-flex flex-column gap-2"
@@ -43,9 +67,6 @@
             {{/if}}
           </div>
         </div>
- 
-
-        
 
         <!-- Scrollable Event List container -->
         <div class="sidebar-scroll-container"></div>
@@ -72,6 +93,15 @@
     if (hidden) hidden.value = id;                         // ← ★
 
     form.submit();
+  }
+
+  function toggleLegend() {
+    const wrapper = document.getElementById('legend-list-wrapper');
+    const icon = document.getElementById('legend-toggle-icon');
+
+    wrapper.classList.toggle('open');
+    icon.classList.toggle('fa-chevron-down');
+    icon.classList.toggle('fa-chevron-up');
   }
 </script>
 

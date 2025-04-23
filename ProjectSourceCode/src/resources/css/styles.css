@@ -134,6 +134,24 @@
 .marker.category-10 i { color: #FFB300 !important; }  /* Social - Rich Amber */
 .marker.category-unknown i { color: black !important; } /* Unknown category */
 
+.legend-pin {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+#legend-list-wrapper {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-in-out;
+}
+
+#legend-list-wrapper.open {
+  max-height: 500px; /* Should be larger than the full height of the content */
+}
+
 /* ----- SIDEBAR STYLES ----- */
 .sidebar-extra {
   opacity: 0;
