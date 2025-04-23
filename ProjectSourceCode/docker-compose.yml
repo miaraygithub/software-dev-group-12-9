@@ -21,6 +21,6 @@ services:
     volumes:
       - ./:/home/node/app
       - ./uploads:/app/uploads
-    command: 'npm start'
+    command: 'npm run testandrun'
 volumes:
   group-project:
