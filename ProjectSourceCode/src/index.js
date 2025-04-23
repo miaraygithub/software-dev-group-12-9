@@ -755,7 +755,8 @@ app.get('/event/:id', async (req, res) => {
       event: formattedEvents[0],
       comments,
       rsvpList: rsvp,
-      user: req.session.user,
+      login : !!req.session.user,
+      user : req.session.user
     });
   } catch (err) {
     console.log('Error Reloading Event Page', err);
@@ -827,6 +828,8 @@ app.get("/event-details", async (req, res) => {
       user: !!req.session.user,
       event: formattedEvents[0],
       rsvpList: rsvp,
+      login : !!req.session.user,
+      user : req.session.user
     });
   } catch (err) {
     console.log("error saving events", err);
@@ -912,7 +915,7 @@ app.get("/event/:id", async (req, res) => {
 app.post("/comment", async (req, res) => {
   const eventId = req.body.eventid;
   const commentText = req.body.comment_text;
-  const username = req.session.username || "Anonymous";
+  const username = req.session.user?.username || "Anonymous";
 
   try {
     await db.none(
