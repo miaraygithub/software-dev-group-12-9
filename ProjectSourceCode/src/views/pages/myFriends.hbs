@@ -1,36 +1,44 @@
 {{> message}}
 <!-- Search Bar -->
-<div class="mb-3">
-    <form action="/friend-req" method="POST">
+<div class="mt-2 mb-3 d-flex flex-column align-items-center">
+    <h5 class="fw-bold">Search for New Friends</h5>
+    <form action="/friend-req" method="POST" class="text-center" style="max-width: 600px; width: 100%;">
         <input type="text" name="receiverUsername" class="form-control" placeholder="Enter username" />
-        <button type="submit" class="btn btn-primary mt-2">Send Friend Request</button>
+        <button type="submit" class="btn btn-primary mt-2 w-100">Send Friend Request</button>
     </form>
 </div>
 <!-- Display Friend Requests-->
 <hr class="my-4" />
 
-<div class="mb-3 d-flex gap-2">
+<div class="mb-3 d-flex gap-2 ms-4">
   <button class="btn btn-outline-primary" onclick="showSection('friends')">Show Friends</button>
   <button class="btn btn-outline-secondary" onclick="showSection('requests')">Show Friend Requests</button>
 </div>
 
+
+<div class="ms-4">
+
 <!-- Friends -->
 <div id="friendsSection" style="display: block;">
-    <h4>Your Friends</h4>
+    <h4 class="fw-bold border-bottom pb-2"><i class="bi bi-people-fill me-2"></i>Your Friends</h4>
     {{#if friends.length}}
-        <ul>
-            {{#each friends}}
-                <li>{{this.user2}}</li>
-            {{/each}}
-        </ul>
+        <table class="table table-striped">
+            <tbody>
+                {{#each friends}}
+                <tr>
+                    <td>{{this.friend}}</td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
     {{else}}
-        <p>You have no friends yet.</p>
+        <p class="text-muted fst-italic">You have no friends yet.</p>
     {{/if}}
 </div>
 
 <!-- Requests -->
 <div id="requestsSection" style="display: none;">
-    <h4>Pending Friend Requests</h4>
+    <h4 class="fw-bold border-bottom pb-2"><i class="bi bi-hourglass-split"></i>Pending Friend Requests</h4>
     {{#if incoming.length}}
         <table class="table table-striped mt-3">
             <thead class="thead-dark">
@@ -58,18 +66,25 @@
             </tbody>
         </table>
     {{else}}
-        <p>No pending incoming friend requests.</p>
+        <p class="text-muted fst-italic">No pending incoming friend requests.</p>
     {{/if}}
 
 <!-- Need to fix the outgoing UI, looks janky-->
+    <h4 class="fw-bold border-bottom pb-2"><i class="bi bi-send-fill"></i>Sent Friend Requests</h5>
     {{#if outgoing.length}}
-        <h5>Sent Friend Requests</h5>
-        <ul>
-            {{#each outgoing}}
-            <li>Waiting for {{this.receiverusername}} to respond...</li>
-            {{/each}}
-        </ul>
+        <table class="table table-striped">
+            <tbody>
+                {{#each outgoing}}
+                <tr>
+                    <td>Waiting for {{this.receiverusername}} to respond...</td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    {{else}}
+        <p class="text-muted fst-italic">No outgoing friend requests.</p>
     {{/if}}
+</div>
 </div>
 
 <script>

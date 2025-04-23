@@ -704,8 +704,10 @@ app.get('/myFriends', async(req, res) => {
 
     const incoming = await db.any(`SELECT * FROM friendReq WHERE receiverUsername = ($1) AND status = 'pending';`, [currentUser]);
     const outgoing = await db.any(`SELECT * FROM friendReq WHERE senderUsername = ($1) AND status = 'pending';`, [currentUser]);
+    const friends = await db.any(`SELECT CASE WHEN user1 = ($1) THEN user2 ELSE user1 END AS friend FROM friends WHERE user1 = ($1) OR user2 = ($1);`, [currentUser]);
 
     res.render('pages/myFriends', {
+      friends,
       incoming,
       outgoing,
       login: !!req.session.user
@@ -744,8 +746,10 @@ app.post('/friend-req', async (req, res) => {
 
     const incoming = await db.any(`SELECT * FROM friendReq WHERE receiverUsername = ($1) AND status = 'pending';`, [senderUsername]);
     const outgoing = await db.any(`SELECT * FROM friendReq WHERE senderUsername = ($1) AND status = 'pending';`, [senderUsername]);
+    const friends = await db.any(`SELECT CASE WHEN user1 = ($1) THEN user2 ELSE user1 END AS friend FROM friends WHERE user1 = ($1) OR user2 = ($1);`, [senderUsername]);
 
     res.render('pages/myFriends', {
+      friends,
       incoming,
       outgoing,
       login: !!req.session.user,
@@ -773,7 +777,8 @@ app.post('/accept-req', async (req, res) => {
   );
 
   await db.none(`INSERT INTO friends(user1, user2) VALUES ($1, $2);`, [currentUser, friendUser]);
-  const friends = await db.any('SELECT * FROM friends WHERE user1 = ($1);', [currentUser]);
+  const friends = await db.any(`SELECT CASE WHEN user1 = ($1) THEN user2 ELSE user1 END AS friend FROM friends WHERE user1 = ($1) OR user2 = ($1);`, [currentUser]);
+  //const friends = await db.any('SELECT * FROM friends WHERE user1 = ($1) OR user2 = ($1);', [currentUser]);
   console.log(friends);
   // have to account for if user2 = receiver as well
 
