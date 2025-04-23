@@ -1,52 +1,55 @@
 {{>message}}
 <title>Buff's Bulletin</title>
-<main role="main" class="d-flex flex-column vh-100">
-  <!-- Page Heading (fixed height) -->
-  <div class="mb-1 text-center">
-    <h1 class="display-6">Welcome to Buff's Bulletin!</h1>
-    <p class="lead text-muted small">See what's happening around campus</p>
-  </div>
-  
+<main role="main" class="d-flex flex-column" style="height: calc(100vh - 56px);">
   <!-- Layout: Sidebar + Map (fills remaining height) -->
   <div class="d-flex flex-grow-1 overflow-hidden">
-    <!-- Sidebar -->
-      <div id="sidebar" class="bg-light border-end d-flex flex-column gap-2 p-2">
+    
+    <!-- Map -->
+    <div id="map-container" class="flex-grow-1 position-relative">
+      <!-- Date filter drop down -->
+      <div id="date-filter-container" class="dropdown position-absolute top-0 start-0 mt-3 p-3 bg-light shadow rounded-3"
+      style="z-index: 1000; margin-left: 330px; max-width: 250px;"
+      >
+        <button class="btn w-100 text-start dropdown-toggle" type="button" id="dateDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+          Filter by Date
+        </button>
+        <ul class="dropdown-menu w-100" aria-labelledby="dateDropdown">
+          <li><button class="dropdown-item" onclick="handleDateFilterSubmit('today')">Today</button></li>
+          <li><button class="dropdown-item" onclick="handleDateFilterSubmit('today-tomorrow')">Today & Tomorrow</button></li>
+          <li><button class="dropdown-item" onclick="handleDateFilterSubmit('next-week')">Next 7 Days</button></li>
+          <li><button class="dropdown-item" onclick="handleDateFilterSubmit('next-month')">Next 30 Days</button></li>
+        </ul>
+      </div>
+      
+      {{>map}}
+
+      <!-- Sidebar -->
+      <div id="sidebar" 
+        class="position-absolute top-0 start-0 m-3 p-3 bg-light border rounded-3 shadow d-flex flex-column gap-2"
+        style="width: 300px; max-height: 90vh; overflow-y: auto; z-index: 999;"
+      >
         {{> new_event}}
         <!-- Fixed top content -->
-        <div class="d-flex align-items-center justify-content-between gap-2">
-          <button class="btn btn-sm btn-outline-secondary" id="expandSidebarBtn">Expand</button>
-          {{#if user.useradmin}}
-          <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#event_modal">
-            Create Event
-          </button>
-          {{/if}}
+        <div class="d-flex align-items-center justify-content-between">
+          <h2 class="events-title mb-0">Upcoming Events</h2>
+          <div class="d-flex gap-2 align-items-center">
+            <button class="bg-transparent border-0 p-0 ms-2" id="expandSidebarBtn" style="font-size: 1.5rem">
+              <i id="expandIcon" class="fa-solid fa-circle-chevron-right" style="color: var(--color-social);"></i>
+            </button>
+            {{#if user.useradmin}}
+            <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#event_modal">
+              Create Event
+            </button>
+            {{/if}}
+          </div>
         </div>
  
 
-        <h2 class="events-title">Events</h2>
+        
 
-        <div>
-          <div class="mb-3">
-            <label for="date-filter" class="form-label">Show events for:</label>
-            <select id="date-filter" class="form-select">
-              <option value="today" selected>Today</option>
-              <option value="today-tomorrow">Today & Tomorrow</option>
-              <option value="next-week">Next 7 Days</option>
-              <option value="next-month">Next 30 Days</option>
-            </select>
-          </div>
-
-          <button id="sidebar-submit-button" class="btn btn-primary" onclick="handleDateFilterSubmit()">Submit</button>
-        </div>
-
-    
         <!-- Scrollable Event List container -->
         <div class="sidebar-scroll-container"></div>
       </div>
-
-    <!-- Map -->
-    <div id="map-container" class="flex-grow-1 position-relative" style="height: 100%;">
-      {{>map}}
     </div>
   </div>
 </main>
@@ -129,10 +132,7 @@
     sidebarContainer.innerHTML = sidebarTpl({ fetchedEvents: events });
   });
 
-  function handleDateFilterSubmit() {
-    const filterSelect = document.querySelector('#date-filter');
-    const filterValue = filterSelect.value;
-
+  function handleDateFilterSubmit(filterValue) {
     let startDate = new Date();
     let endDate = new Date();
 

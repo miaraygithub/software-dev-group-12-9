@@ -9,13 +9,11 @@
     <div class="row mb-3">
       <div class="col-md-6">
         <p><strong>Building:</strong> {{event.building}}</p>
-        <p><strong>Room Number:</strong> {{event.roomnumber}}</p>
         <p><strong>Brought to You By:</strong> {{event.clubsponser}}</p>
       </div>
       <div class="col-md-6">
         <p><strong>Date:</strong> {{event.eventDateFormatted}}</p>
-        <p><strong>Start Time:</strong> {{event.startTimeFormatted}}</p>
-        <p><strong>End Time:</strong> {{event.endTimeFormatted}}</p>
+        <p><strong>Time:</strong> {{event.startTimeFormatted}} to {{event.endTimeFormatted}}</p>
       </div>
 
     </div>
@@ -27,7 +25,7 @@
       </p>
       <form action="/rsvp" method="POST" >
         <input type="hidden" name="eventId" value="{{event.eventid}}">
-        <button type="submit" class="btn btn-primary">RSVP</button>
+        <button type="submit" class="btn btn-secondary">RSVP</button>
       </form>   
     </div>
   </section>
@@ -41,7 +39,7 @@
   <div class="mb-3">
     <textarea name="comment_text" class="form-control" rows="3" placeholder="Your comment here..." required></textarea>
   </div>
-  <button type="submit" class="btn btn-primary">Post Comment</button>
+  <button type="submit" class="btn btn-secondary">Post Comment</button>
 </form>
 
 </section>
