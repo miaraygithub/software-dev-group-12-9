@@ -10,90 +10,54 @@
   --color-educational: #8D6E63;
   --color-ethics: #6D4C41;
   --color-leadership: #4E342E;
-  --color-performances: #3E2723;
+  --color-performances: #3b2521;
   --color-social: #FFB300;
   --color-unknown: #000000;
 
-  /* Optional UI-focused palette */
-  --color-primary: var(--color-athletics);
-  --color-secondary: var(--color-community);
-  --color-accent: var(--color-activism);
-  --color-bg-light: #fdf7f2;
-  --color-bg-dark: #1e1e1e;
+  --color-primary: var(--color-leadership);
+  --color-secondary: var(--color-social);
+  --color-accent: var(--color-educational);
 }
 
+/* Override default button coloring */
+.btn-primary {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  color: white !important;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-performances) !important;
+  border-color: var(--color-performances) !important;
+}
+
+.btn-outline-primary {
+  color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--color-primary) !important;
+  color: white !important;
+}
+
+.btn-secondary {
+  background-color: var(--color-secondary) !important;
+  border-color: var(--color-secondary) !important;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-social);
+  border-color: var(--color-social);
+}
+
+/* ----- MAP STYLES ----- */
 #map {
   position: absolute;
   top: 0;
   bottom: 0;
   width: 100%;
-}
-
-.sidebar-extra {
-  opacity: 0;
-  max-height: 0;
-  overflow: hidden;
-  transition: opacity 0.3s ease, max-height 0.3s ease;
-}
-
-/* Show when sidebar is expanded */
-#sidebar.expanded .sidebar-extra {
-  opacity: 1;
-  max-height: 500px;
-}
-
-.sidebar-scroll-container {
-  flex-grow: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  max-height: 100%;
-}
-
-li.list-group-item.sidebar-item.active {
-  background-color: var(--highlight-yellow) !important;
-  color: inherit !important;
-  border-color: transparent !important;
-}
-
-li.list-group-item.sidebar-item.active:focus,
-li.list-group-item.sidebar-item.active:hover {
-  background-color: var(--double-highlight) !important;
-  color: inherit !important;
-}
-
-.event-item {
-  transition: background-color 0.3s ease;
-  cursor: default;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  white-space: normal;
-}
-
-.event-item:hover {
-  background-color: var(
-    --highlight-yellow
-  ); /* or a slightly darker Bootstrap gray like #e9ecef */
-  cursor: pointer;
-}
-
-#sidebar {
-  overflow-x: hidden;
-  height: 100%;
-  width: 300px;
-  transition: width 0.3s ease, max-width 0.3s ease;
-  backdrop-filter: blur(6px);
-  background-color: rgba(255, 255, 255, 0.85);
-}
-
-#sidebar.expanded {
-  width: 35vw !important;
-  max-width: 90vw;
-}
-
-/* Make event list scrollable without overflowing */
-#sidebar ul.list-group {
-  width: 100%;
-  overflow-y: auto;
 }
 
 /* Marker tweaks */
@@ -160,6 +124,87 @@ li.list-group-item.sidebar-item.active:hover {
 .marker.category-10 i { color: #FFB300 !important; }  /* Social - Rich Amber */
 .marker.category-unknown i { color: black !important; } /* Unknown category */
 
+/* ----- SIDEBAR STYLES ----- */
+.sidebar-extra {
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: opacity 0.3s ease, max-height 0.3s ease;
+}
+
+/* Show when sidebar is expanded */
+#sidebar.expanded .sidebar-extra {
+  opacity: 1;
+  max-height: 500px;
+}
+
+.sidebar-scroll-container {
+  flex-grow: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 100%;
+}
+
+li.list-group-item.sidebar-item.active {
+  background-color: var(--color-crafts) !important;
+  color: inherit !important;
+  border-color: transparent !important;
+}
+
+li.list-group-item.sidebar-item.active:focus,
+li.list-group-item.sidebar-item.active:hover {
+  background-color: var(--color-crafts) !important;
+  color: inherit !important;
+}
+
+.event-item {
+  transition: background-color 0.3s ease;
+  cursor: default;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+
+#sidebar {
+  overflow-x: hidden;
+  height: 100%;
+  width: 300px;
+  transition: width 0.3s ease, max-width 0.3s ease;
+  backdrop-filter: blur(6px);
+  background-color: rgba(255, 255, 255, 0.85);
+}
+
+#sidebar .btn-outline-secondary {
+  color: var(--highlight-yellow);
+  border-color: var(--highlight-yellow);
+}
+
+#sidebar .btn-outline-secondary:hover {
+  background-color: var(--highlight-yellow);
+  color: var(--color-primary);
+}
+
+#sidebar .event-item {
+  margin-bottom: 0.5rem;
+  border-radius: 0.5rem;
+}
+
+#sidebar .event-item:hover {
+  background-color: var(--color-crafts);
+  cursor: pointer;
+}
+
+#sidebar.expanded {
+  width: 35vw !important;
+  max-width: 90vw;
+}
+
+/* Make event list scrollable without overflowing */
+#sidebar ul.list-group {
+  width: 100%;
+  overflow-y: auto;
+}
+
 .event-description {
   display: -webkit-box;
   -webkit-line-clamp: 3; /* Number of lines you want */
@@ -168,11 +213,19 @@ li.list-group-item.sidebar-item.active:hover {
   text-overflow: ellipsis;
 }
 
+/* ----- NAVBAR STYLES ----- */
+.navbar-brand {
+  color: var(--color-performances) !important;
+  font-weight: 650;
+  font-size: 1.5rem;
+}
+
 .nav-item.dropdown:hover .dropdown-menu {
   display: block;
   margin-top: 0; /* Optional: removes the small gap */
 }
 
+/* ----- DATE FILTER SYTLES ----- */
 #date-filter-container {
   transition: all 0.3s ease;
 }
