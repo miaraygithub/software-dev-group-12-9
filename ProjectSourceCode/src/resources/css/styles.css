@@ -228,4 +228,10 @@ li.list-group-item.sidebar-item.active:hover {
 /* ----- DATE FILTER SYTLES ----- */
 #date-filter-container {
   transition: all 0.3s ease;
-} 
+}
+
+/* ----- POPOVER HEADER ----- */
+.popover-header {
+  background-color: var(--color-accent); /* Replace with your desired color */
+  color: white;
+}
