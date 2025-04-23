@@ -135,6 +135,7 @@ db.connect()
 
 // =========== / Route ===========
 
+
 //--Helpers--
 function toClientEvent(row) {
   return {
@@ -307,15 +308,17 @@ app.get('/get-events', async (req, res) => {
 // =========== /profile Route ===========
 app.get("/editProfile", (req, res) => {
   if (!req.session.user) {
-    return res.redirect("/login");
-  }
 
-  res.render("pages/editProfile", { login: !!req.session.user });
-});
+    return res.status(302).redirect('/login');
+  }
+  
+  res.status(200).render('pages/editProfile', {login: !!req.session.user});
+}); 
 
 app.post("/editProfile", upload.single("profilePic"), async (req, res) => {
   if (!req.session.user) {
-    return res.redirect("/login");
+    return res.status(302).redirect('/login');
+
   }
 
   try {
@@ -370,8 +373,9 @@ app.post("/editProfile", upload.single("profilePic"), async (req, res) => {
           );
           console.log(updatedPic);
         } catch (dbErr) {
-          console.error("Database error:", dbErr);
-          res.render("pages/editProfile", { error: true, message: dbErr });
+          console.error('Database error:', dbErr);
+          res.status(400).render('pages/editProfile', {error: true, message: dbErr});
+
         }
       }
       // const picQuery = 'INSERT INTO users (profilePic) VALUES ($1)';
@@ -387,23 +391,20 @@ app.post("/editProfile", upload.single("profilePic"), async (req, res) => {
       throw new Error("Please make changes before submitting.");
     }
 
-    res.render("pages/profile", {
+    res.status(200).render('pages/profile', {
+
       login: !!req.session.user,
       message: "Profile successfully edited!",
     });
   } catch (err) {
     console.error("Error sending updated profile data", err);
     // res.status(400).json({ error: err.message});
-    res.render("pages/editProfile", {
-      login: !!req.session.user,
-      error: true,
-      message: err,
-    });
+    res.status(400).render('pages/editProfile', {login: !!req.session.user, error: true, message: err});
   }
 });
 
-app.get("/profile", (req, res) => {
-  res.render("pages/profile", { login: !!req.session.user });
+app.get('/profile', (req, res) => {
+  res.status(200).render('pages/profile', {login: !!req.session.user});
 });
 
 // =========== /myEvents Routes ===========
@@ -458,6 +459,7 @@ app.post('/cancel-rsvp', async (req, res) => {
     console.error('Error cancelling RSVP:', err);
     res.status(500).send('Internal server error');
   }
+
 });
 
 // =========== /login Routes ===========
@@ -469,14 +471,14 @@ app.post("/login", async (req, res) => {
   try {
     const password = req.body.password;
 
+
     const user = await db.oneOrNone(
       "SELECT DISTINCT * FROM users WHERE users.userName = ($1) LIMIT 1;",
       [req.body.username]
     );
     if (!user) {
-      return res.redirect("/register");
+      return res.status(302).redirect("/register");
     }
-
     // check if password from request matches with password in DB
     const hash = await bcrypt.hash(user.userpassword, 10);
     const match = await bcrypt.compare(password, hash);
@@ -488,11 +490,12 @@ app.post("/login", async (req, res) => {
 
     req.session.user = user;
     req.session.save();
-    res.redirect("/");
+
+    res.status(302).redirect("/");
   } catch (err) {
     console.error("Login failed:", err);
     // res.status(400).json({ error: err.message});
-    res.render("pages/login", {
+    res.status(400).render("pages/login", {
       error: true,
       message: err,
     });
@@ -501,8 +504,10 @@ app.post("/login", async (req, res) => {
 
 // =========== /register Routes ===========
 
-app.get("/register", (req, res) => {
-  res.render("pages/register");
+
+app.get('/register', (req, res) => {
+  res.status(200).render('pages/register');
+
 });
 
 app.post("/register", async (req, res) => {
@@ -514,9 +519,6 @@ app.post("/register", async (req, res) => {
     if (!req.body.useradmin) {
       userAdmin = false;
     }
-
-    // console.log(req.body.useradmin)
-
     // Validation that user doesn't already exist in db
     const searchQuery =
       "SELECT DISTINCT * FROM users WHERE users.userName = ($1)";
@@ -576,10 +578,11 @@ app.post("/register", async (req, res) => {
     var userInfo = await db.one(insertQuery, values);
     // console.log('New User:', userInfo);
 
-    res.redirect("/login");
+
+    res.status(302).redirect('/login');
   } catch (err) {
-    console.error("Error during registration:", err);
-    res.render("pages/register", {
+    console.error('Error during registration:', err);
+    res.status(400).render('pages/register', {
       error: true,
       message: err,
     });
@@ -587,9 +590,11 @@ app.post("/register", async (req, res) => {
 });
 
 // =========== /logout Route ===========
+
 app.get("/logout", (req, res) => {
   req.session.destroy(function (err) {
     res.render("pages/logout", { message: "Logged out successfully!" });
+
   });
   // res.render('pages/logout');
 });
@@ -623,13 +628,13 @@ app.post("/save-event", async (req, res) => {
     ];
 
     //insert event into database
-    console.log(eventSave);
+
     insertEvent = await db.none(saveQuery, eventSave);
-    res.redirect("/");
+    res.status(302).redirect("/");
   } catch (err) {
     console.error("Error Saving Event:", err);
     // res.status(400).json({ error: err.message});
-    res.render('pages/home', {
+    res.status(400).render('pages/home', {
       error: true,
       message: err,
       login: req.session.login,
@@ -678,15 +683,15 @@ app.get('/event-details', async (req, res) => {
       ORDER BY created_at DESC;
     `, [eventid]);
 
-    res.render('pages/events', {
+    res.status(200).render('pages/events', {
       comments,
       user: !!req.session.user,
       event: formattedEvents[0],
       rsvpList: rsvp,
     })
   } catch (err) {
-    // console.log('error saving events', err);
-    res.render('pages/home', {
+    console.log('error saving events', err);
+    res.status(400).render('pages/home', {
       error: true,
       message: err,
       login: req.session.login,
@@ -748,7 +753,7 @@ app.get('/event/:id', async (req, res) => {
       WHERE rsvp.eventID = $1;
       `, [eventid]);
 
-    res.render('pages/events', {
+    res.status(200).render('pages/events', {
       event: formattedEvents[0],
       comments,
       rsvpList: rsvp,
@@ -756,7 +761,7 @@ app.get('/event/:id', async (req, res) => {
     });
   } catch (err) {
     console.log('Error Reloading Event Page', err);
-    res.render('pages/home', {
+    res.status(400).render('pages/home', {
       error: true,
       message: err,
       login: req.session.login,
@@ -921,10 +926,11 @@ app.post("/comment", async (req, res) => {
     );
 
     //Redirect to the GET route after comment submission
-    res.redirect(`/event/${eventId}`);
+    res.status(302).redirect(`/event/${eventId}`);
   } catch (err) {
-    console.error("Error submitting comment:", err);
-    res.render("pages/home", {
+    console.error('Error submitting comment:', err);
+    res.status(400).render('pages/home', {
+
       error: true,
       message: err,
       login: req.session.login,
@@ -980,7 +986,9 @@ app.get("/search", async (req, res) => {
 
     const resultsBool = !!(clubs_results || events_results); // check if any results were output
 
-    res.render("pages/search-results", {
+
+    res.status(200).render('pages/search-results', {
+
       keyword: keyword,
       resultsBool: resultsBool,
       login: !!req.session.user,
@@ -988,8 +996,10 @@ app.get("/search", async (req, res) => {
       clubs: clubs_results,
       events: formattedEvents,
     });
-  } catch (err) {
-    res.render("pages/search-results", {
+  }
+  catch (err) {
+    res.status(400).render('pages/search-results', {
+
       results: [],
       error: true,
       message: err.message,
@@ -1014,10 +1024,11 @@ app.post("/rsvp", async (req, res) => {
       ON CONFLICT DO NOTHING;`,
       [eventid, userid]
     );
-    res.redirect(`/event/${eventid}`);
+    res.status(302).redirect(`/event/${eventid}`);
   } catch (err) {
-    console.error("Error during rsvp:", err);
-    res.render("pages/login", {
+
+    console.error('Error during rsvp:', err);
+    res.status(400).render('pages/login', {
       error: true,
       message: err,
     });
@@ -1047,6 +1058,7 @@ async function fetchAndInsertICSEvents() {
 
     //Events is an object populated by multiple events differentiated by a 'key', thus iterate through all the events from 0<key<n 
     for (const key in events) {
+
       try {
         const event = events[key];
         //The event file may contain other objects not of type 'event' which are irrelevant and we ignore
@@ -1169,8 +1181,8 @@ async function fetchAndInsertICSEvents() {
       } catch (eventError) {
         console.error('⚠️ Skipping event due to error:', eventError.message);
       }
-    }
     console.log(insertedCount, '✅ICS events imported to DB.');
+    }
   } catch (error) {
     console.error('❌Error importing ICS:', error);
   } 
@@ -1272,6 +1284,9 @@ fetchAndInsertICSEvents();
 
 //The app simply closes if it isn't listening for anything so this is load bearing. -- Julia
 const port = 3000;
+
+module.exports = app;
+
 app.listen(port, () => {
   console.log(`Buff's Bulletin listening on port ${port}`);
-});
+})
