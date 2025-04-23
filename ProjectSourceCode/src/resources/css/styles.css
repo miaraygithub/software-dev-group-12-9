@@ -134,6 +134,11 @@
 .marker.category-10 i { color: #FFB300 !important; }  /* Social - Rich Amber */
 .marker.category-unknown i { color: black !important; } /* Unknown category */
 
+.custom-mini-marker i {
+  font-size: 35px;
+  color: var(--color-secondary); /* Only the icon is colored now */
+}
+
 .legend-pin {
   display: inline-block;
   width: 12px;

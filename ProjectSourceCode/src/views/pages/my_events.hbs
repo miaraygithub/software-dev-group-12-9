@@ -63,7 +63,12 @@
                   map.setPaintProperty('building', 'fill-opacity', 0.8);
 
                   map.addSource('place-{{eventid}}', { type:'geojson', data: geoEvent });
-                  new mapboxgl.Marker({ offset:[0,-23] })
+                  
+                  const el = document.createElement('div');
+                  el.className = 'custom-mini-marker';
+                  el.innerHTML = '<i class="fa-solid fa-location-dot"></i>'
+
+                  new mapboxgl.Marker({ element: el, offset: [0, -23] })
                     .setLngLat([{{longitude}}, {{latitude}}])
                     .addTo(map);
                 });
@@ -75,7 +80,7 @@
           <div class="flex-grow-1">
             <!-- Clickable title -->
             <h4>
-              <a href="/event/{{eventid}}" class="text-decoration-none text-primary">
+              <a href="/event/{{eventid}}" class="text-decoration-none" style="color: var(--color-primary)">
                 {{eventname}}
               </a>
             </h4>
@@ -84,7 +89,7 @@
             <p class="mb-2">
               <span class="event-desc short">{{trim eventdescription 120}}</span>
               <span class="event-desc full d-none">{{eventdescription}}</span>
-              <a href="#" class="desc-toggle small">… more</a>
+              <a href="#" class="desc-toggle small" style="color: var(--color-secondary)">… more</a>
             </p>
 
             <ul class="list-unstyled small mb-2">
@@ -96,7 +101,7 @@
             <!-- Cancel RSVP button -->
             <form method="POST" action="/cancel-rsvp" class="d-inline">
               <input type="hidden" name="eventid" value="{{eventid}}">
-              <button class="btn btn-sm btn-outline-danger">Cancel RSVP</button>
+              <button class="btn btn-sm btn-outline-secondary">Cancel RSVP</button>
             </form>
           </div>
         </div>
