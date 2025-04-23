@@ -52,6 +52,16 @@
   border-color: var(--color-social);
 }
 
+.btn-outline-secondary {
+  color: var(--color-secondary) !important;
+  border-color: var(--color-secondary) !important;
+}
+
+.btn-outline-secondary:hover {
+  background-color: var(--color-secondary) !important;
+  color: white !important;
+}
+
 /* ----- MAP STYLES ----- */
 #map {
   position: absolute;
@@ -234,4 +244,5 @@ li.list-group-item.sidebar-item.active:hover {
 .popover-header {
   background-color: var(--color-accent); /* Replace with your desired color */
   color: white;
+  font-weight: bold;
 }

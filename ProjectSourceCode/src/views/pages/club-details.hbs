@@ -1,0 +1,48 @@
+{{>message}}
+<title>Buff's Bulletin | {{club.clubname}}</title>
+<main role="main" class="flex-grow-1 container my-5">
+  <div class="text-center mb-4">
+    <h1 style="color: var(--color-primary); font-weight: 650;">{{club.clubname}} Club</h1>
+    <h4 style="color: var(--color-accent);">Upcoming Events</h4>
+  </div>
+
+  <!-- Upcoming Events -->
+  <section class="mt-5">
+    <div class="row">
+      {{#each events}}
+        <div class="col-md-6 col-lg-4 mb-4">
+          <div class="card shadow h-100 border-0">
+            <div class="card-body position-relative">
+              <h4 class="card-title text-dark">{{this.eventname}}</h4>
+              <p class="card-text mb-2"><strong>Date:</strong> {{this.eventDateFormatted}}</p>
+              <p class="card-text event-description text-muted">{{this.eventdescription}}</p>
+            </div>
+            <div class="card-footer bg-white border-0 text-center">
+              <a href="/event-details?eventID={{this.eventid}}" target="_blank" class="btn btn-outline-primary btn-sm">View Details</a>
+            </div>
+          </div>
+        </div>
+      {{/each}}
+    </div>
+  </section>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const eventCards = document.querySelectorAll('.card');
+      eventCards.forEach(function (card) {
+        const description = card.querySelector('.event-description');
+
+        if (description && description.scrollHeight > description.clientHeight) {
+          const popoverTrigger = card.querySelector('.card-body');
+          popoverTrigger.setAttribute('data-bs-toggle', 'popover');
+          popoverTrigger.setAttribute('data-bs-trigger', 'hover focus');
+          popoverTrigger.setAttribute('data-bs-placement', 'right');
+          popoverTrigger.setAttribute('title', 'Full Description');
+          popoverTrigger.setAttribute('data-bs-content', description.textContent);
+          popoverTrigger.classList.add('custom-popover');
+
+          new bootstrap.Popover(popoverTrigger);
+        }
+      });
+    });
+  </script>
+</main>

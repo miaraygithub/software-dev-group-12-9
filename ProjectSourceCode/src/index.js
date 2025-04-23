@@ -1141,6 +1141,43 @@ app.post('/decline-req', async (req, res) => {
   res.redirect('/myFriends');
 });
 
+// =========== /club-details Route ===========
+app.get("/club-details", async(req, res) => {
+  try{
+    const club = await db.one(`SELECT * FROM clubs
+      WHERE clubID = $1
+      LIMIT 1;`, [req.query.club]);
+
+  
+    const events = await db.any(`SELECT events.* FROM events 
+      INNER JOIN clubs ON events.clubSponser = clubs.clubID
+      WHERE clubs.clubID = $1
+      ORDER BY events.eventDate ASC, events.startTime ASC;`, [club.clubid]);
+
+    const formattedEvents = events.map(events => {
+      return {
+        ...events,
+        eventDateFormatted: format(new Date(events.eventdate), 'MMM d, yyyy'),
+        startTimeFormatted: format(new Date(`1970-01-01T${events.starttime}`), 'h:mm a'),
+        endTimeFormatted: format(new Date(`1970-01-01T${events.endtime}`), 'h:mm a'),
+      };
+    });
+
+    res.render('pages/club-details', {
+      club: club,
+      events: formattedEvents,
+    })
+  }
+  catch (err) {
+    res.render('pages/club-details', {
+      club: [],
+      events: [],
+      error: true,
+      message: err.message
+    })
+  }
+});
+
 // =========== Calendar/Events Route ===========
 
 //URL of the events calendar
