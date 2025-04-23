@@ -1,6 +1,25 @@
 :root {
   --highlight-yellow: #f0d482;
   --double-highlight: #f0c850;
+  
+  --color-activism: #FFEB3B;
+  --color-athletics: #F57C00;
+  --color-community: #FFA726;
+  --color-crafts: #FFD54F;
+  --color-cultural: #A0522D;
+  --color-educational: #8D6E63;
+  --color-ethics: #6D4C41;
+  --color-leadership: #4E342E;
+  --color-performances: #3E2723;
+  --color-social: #FFB300;
+  --color-unknown: #000000;
+
+  /* Optional UI-focused palette */
+  --color-primary: var(--color-athletics);
+  --color-secondary: var(--color-community);
+  --color-accent: var(--color-activism);
+  --color-bg-light: #fdf7f2;
+  --color-bg-dark: #1e1e1e;
 }
 
 #map {
@@ -61,11 +80,14 @@ li.list-group-item.sidebar-item.active:hover {
   overflow-x: hidden;
   height: 100%;
   width: 300px;
-  transition: all 0.3s;
+  transition: width 0.3s ease, max-width 0.3s ease;
+  backdrop-filter: blur(6px);
+  background-color: rgba(255, 255, 255, 0.85);
 }
 
 #sidebar.expanded {
-  width: 100%;
+  width: 35vw !important;
+  max-width: 90vw;
 }
 
 /* Make event list scrollable without overflowing */
@@ -151,4 +173,7 @@ li.list-group-item.sidebar-item.active:hover {
   margin-top: 0; /* Optional: removes the small gap */
 }
 
+#date-filter-container {
+  transition: all 0.3s ease;
+}
   
