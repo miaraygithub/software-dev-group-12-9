@@ -1,7 +1,7 @@
 {{> message}}
-<div class="container-fluid mt-4">
-    <form method = "POST" action="/register" >
-        <h1>Register</h1>
+<div class="container mt-4 d-flex justify-content-center">
+    <form method = "POST" action="/register" class="p-4 mt-5 mb-5 rounded shadow" style="width: 100%; max-width: 500px; background-color: #fff;">
+        <h1 class="text-center mb-4">Register</h1>
         <div class= "mb-3">
             <label for="username" class="form-label">Username</label>
             <input type="text" class="form-control" id="username" name="username" required>
@@ -25,7 +25,8 @@
             </div>
 
         </div>
-        <button type="submit" class="btn btn-primary">Register</button>
+        <button type="submit" class="btn btn-primary w-100">Register</button>
+        <p class="text-center text-muted mt-3 mb-0">Already have an account? <a href="/login">Login</a></p>
     </form>
 </div>
 

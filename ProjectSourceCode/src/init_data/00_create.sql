@@ -49,7 +49,7 @@ CREATE TABLE events (
     eventDate date NOT NULL,
     clubSponser int NOT NULL,
     roomNumber varchar(10) NOT NULL,
-    eventDescription text NOT NULL,
+    eventDescription text,
     startTime time NOT NULL,
     endTime time NOT NULL,
     PRIMARY KEY (eventID),
@@ -77,8 +77,14 @@ CREATE TABLE friendReq (
     requestID SERIAL PRIMARY KEY,
     senderUsername VARCHAR(30) NOT NULL REFERENCES users(userName) ON DELETE CASCADE,
     receiverUsername VARCHAR(30) NOT NULL REFERENCES users(userName) ON DELETE CASCADE,
-    status VARCHAR(20) DEFAULT 'pending',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    status VARCHAR(20) DEFAULT 'pending'
+);
+
+CREATE TABLE friends (
+    friendID SERIAL PRIMARY KEY,
+    user1 VARCHAR(30) NOT NULL REFERENCES users(userName) ON DELETE CASCADE,
+    user2 VARCHAR(30) NOT NULL REFERENCES users(userName) ON DELETE CASCADE,
+    UNIQUE(user1, user2)
 );
 
 CREATE TABLE building_aliases (
