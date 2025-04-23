@@ -1,14 +1,11 @@
-<div class="modal" tabindex="-1" id="event_modal">
+{{!-- <div class="modal fade" tabindex="-1" id="event_modal" aria-lebelledby="event_modal_label" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg" style="max-width: 600px;">
     <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Add Event</h5>
+                <h5 class="modal-title" id="event_modal_label">Add Event</h5>
             </div>
-
             <div class="modal-body">
                 <form action="/save-event" method="POST">
-                    <h2>Event Details</h2>
-                    
                     <div class="mb-3">
                         <label for="event_name" class="form-label">Event Name:</label>
                         <input type="text" class="form-control" id="event_name" name="event_name" placeholder="Enter event name" required>
@@ -24,7 +21,7 @@
                         </select>
                     </div>
                     
-                    <input type="hidden" class="form-control" id="event_club" name="event_club" value={{user.adminclub}}>
+                    <input type="hidden" class="form-control" id="event_club" name="event_club" value="{{user.adminclub}}">
 
                     <div class="mb-3">
                         <label for="event_room_number" class="form-label">Room Number:</label>
@@ -58,10 +55,10 @@
                     </div>    
                     <div class="d-flex justify-content-between mt-3">
                         <button type="submit" class="btn btn-primary">Create Event</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-label="Close">Close</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-</div>
+</div> --}}

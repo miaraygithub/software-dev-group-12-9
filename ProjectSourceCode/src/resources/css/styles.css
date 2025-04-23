@@ -248,6 +248,10 @@ li.list-group-item.sidebar-item.active:hover {
   font-size: 1.5rem;
 }
 
+.dropdown-menu {
+  z-index: 1050;
+}
+
 .nav-item.dropdown:hover .dropdown-menu {
   display: block;
   margin-top: 0; /* Optional: removes the small gap */
