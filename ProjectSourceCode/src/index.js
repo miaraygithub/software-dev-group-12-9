@@ -590,11 +590,9 @@ app.post("/register", async (req, res) => {
 });
 
 // =========== /logout Route ===========
-
-app.get("/logout", (req, res) => {
-  req.session.destroy(function (err) {
-    res.render("pages/logout", { message: "Logged out successfully!" });
-
+app.get('/logout', (req, res) => {
+  req.session.destroy(function(err) {
+    res.redirect('/');
   });
   // res.render('pages/logout');
 });
