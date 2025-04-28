@@ -17,8 +17,6 @@ Mia Ray, Jessie Hsu, Jules Novoa, Julia Aronow, & Makaela Fauber
 Front-end: HTML, CSS, Bootstrap, Handlebars, JS
 Back-end: PostgreSQL, Node.js, Express in JS, Handlebars, Mapbox API
 
-## Prerequisites
-
 ## How to run the application locally
 1. Create .env file in ProjectSourceCode folder and copy following code into .env:
 ```
