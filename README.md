@@ -8,14 +8,14 @@ Attendees cannot create or delete events, only RSVP to/comment/rate events, whic
 
 Users should be able to filter events by time, showing events in a specific time frame or period. Users should expand the sidebar to see more event details such as the event description.
 
-(Time allowing, users should be able to send friend requests to other users, allowing them to view the events their friends have RSVP'd to).
+Users are also able to send and receive friend requests from other users.
 
 ## Contributors
 Mia Ray, Jessie Hsu, Jules Novoa, Julia Aronow, & Makaela Fauber
 
 ## Technology Stack
-Front-end: HTML, CSS, and Bootstrap
-Back-end: PostgreSQL, JS, Handlebars
+Front-end: HTML, CSS, Bootstrap, Handlebars, JS
+Back-end: PostgreSQL, Node.js, Express in JS, Handlebars, Mapbox API
 
 ## Prerequisites
 
@@ -24,6 +24,7 @@ Back-end: PostgreSQL, JS, Handlebars
 ```
 POSTGRES_USER="postgres"
 POSTGRES_PASSWORD="pwd"
+POSTGRES_HOST="db"
 POSTGRES_DB="buff_bulletin_db"
 ```
 2. Start Docker application and services 
