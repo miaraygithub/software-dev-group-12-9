@@ -115,16 +115,18 @@ function createPopUp(currentFeature) {
 
     const { buildingName, roomNumber } = currentFeature.properties;
 
+    const popupHTML = `
+        <div>
+            <strong>${buildingName || 'Unknown Building'}</strong>
+            <div class="popup-room">Room: ${roomNumber || 'N/A'}</div>
+        </div>
+    `;
+
     const popup = new mapboxgl.Popup({ closeOnClick: false })
         .setLngLat(currentFeature.geometry.coordinates)
-        .setHTML(`
-            <div class="popup-section-header">Building</div>
-            <p class="popup-section-body">${buildingName || 'Unknown'}</p>
-            <div class="popup-section-header">Room</div>
-            <p class="popup-section-body">${roomNumber || 'N/A'}</p>
-            `)
+        .setHTML(popupHTML)
         .addTo(map);
-}   
+}
 
 // make global
 window.clearMarkers = clearMarkers;
