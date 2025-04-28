@@ -32,3 +32,4 @@ docker compose up
 3. Go to localhost:3000
 
 ## Link to Deployed Application
+[https://buffs-bulletin.onrender.com](url)
