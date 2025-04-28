@@ -6,29 +6,29 @@ Organizers should be linked to a specific group or club on campus, and each club
 
 Attendees cannot create or delete events, only RSVP to/comment/rate events, which causes them to appear on a custom 'My Events' map that users can toggle.
 
-Users should be able to filter events by time, showing events in a specific time frame or period. Users should also be able to hide the map, replacing it with a list of events.
+Users should be able to filter events by time, showing events in a specific time frame or period. Users should expand the sidebar to see more event details such as the event description.
 
-(Time allowing, users should be able to send friend requests to other users, allowing them to view the events their friends have RSVP'd to)
+(Time allowing, users should be able to send friend requests to other users, allowing them to view the events their friends have RSVP'd to).
 
 ## Contributors
 Mia Ray, Jessie Hsu, Jules Novoa, Julia Aronow, & Makaela Fauber
 
 ## Technology Stack
 Front-end: HTML, CSS, and Bootstrap
-Back-end: PostgreSQL, JS 
+Back-end: PostgreSQL, JS, Handlebars
 
 ## Prerequisites
 
 ## How to run the application locally
-1. Start Docker application and services 
-```
-docker compose up
-```
-2. Create .env file in ProjectSourceCode folder and copy following code into .env:
+1. Create .env file in ProjectSourceCode folder and copy following code into .env:
 ```
 POSTGRES_USER="postgres"
 POSTGRES_PASSWORD="pwd"
 POSTGRES_DB="buff_bulletin_db"
+```
+2. Start Docker application and services 
+```
+docker compose up
 ```
 3. Go to localhost:3000
 
