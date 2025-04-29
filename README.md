@@ -24,6 +24,7 @@ POSTGRES_USER="postgres"
 POSTGRES_PASSWORD="pwd"
 POSTGRES_HOST="db"
 POSTGRES_DB="buff_bulletin_db"
+SESSION_SECRET="session_secret"
 ```
 2. Start Docker application and services 
 ```
